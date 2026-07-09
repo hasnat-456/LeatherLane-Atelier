@@ -1,3 +1,4 @@
+
 # LeatherLane Atelier
 
 A full-stack e-commerce application for a leather products store with authentication and transaction management.
@@ -53,3 +54,4 @@ A full-stack e-commerce application for a leather products store with authentica
    ```
 
 Backend runs on http://localhost:5000, frontend on http://localhost:3000
+
