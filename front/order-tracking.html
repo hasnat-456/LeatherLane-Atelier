@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Order Tracking | LeatherLane Atelier</title>
+    <link rel="stylesheet" href="css/global.css">
+    <link rel="stylesheet" href="css/timeline.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .container { max-width: 1000px; margin: 2rem auto; padding: 2rem; background: #fff; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); color: #333; }
+        h2 { color: var(--primary-bg); font-family: var(--font-heading); margin-bottom: 1.5rem; text-align: center; }
+        .details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 2rem; background: #f9f9f9; padding: 1.5rem; border-radius: 8px; }
+        .details-col div { margin-bottom: 0.5rem; }
+        .details-label { font-weight: bold; color: #666; font-size: 0.9rem; }
+        .btn-back { display: inline-block; margin-top: 1rem; padding: 8px 16px; background: #eee; color: #333; text-decoration: none; border-radius: 4px; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Order Tracking</h2>
+        
+        <div id="trackingInfoCard"></div>
+
+        <div class="details-grid" id="orderDetails">
+            <div style="text-align: center; grid-column: 1 / -1;">Loading details...</div>
+        </div>
+
+        <h3 style="color: var(--primary-bg); font-family: var(--font-heading); margin-top: 2rem;">Order Timeline</h3>
+        
+        <div class="timeline-container">
+            <ul class="timeline-horizontal" id="timeline">
+                <!-- Timeline items injected here -->
+            </ul>
+        </div>
+
+        <a href="transactions.html" class="btn-back"><i class="fas fa-arrow-left"></i> Back to Orders</a>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const orderId = urlParams.get('id');
+
+        function getIconForStatus(status) {
+            const s = status.toLowerCase();
+            if (s.includes('placed')) return 'fa-shopping-bag';
+            if (s.includes('payment')) return 'fa-credit-card';
+            if (s.includes('confirm')) return 'fa-check';
+            if (s.includes('prepar')) return 'fa-box-open';
+            if (s.includes('pack')) return 'fa-box';
+            if (s.includes('courier')) return 'fa-truck-loading';
+            if (s.includes('transit')) return 'fa-shipping-fast';
+            if (s.includes('out for delivery')) return 'fa-truck';
+            if (s.includes('delivered')) return 'fa-check-circle';
+            if (s.includes('cancel') || s.includes('reject')) return 'fa-times-circle';
+            return 'fa-circle';
+        }
+
+        async function loadTracking() {
+            const token = localStorage.getItem('token');
+            if (!token) { window.location.href = 'login.html'; return; }
+
+            if (!orderId) {
+                document.getElementById('orderDetails').innerHTML = '<div style="color:red; grid-column:1/-1; text-align:center;">Invalid Request ID</div>';
+                return;
+            }
+
+            try {
+                const res = await fetch(`/api/tracking/order/${orderId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    
+                    const detailsHtml = `
+                        <div class="details-col">
+                            <div><span class="details-label">Order ID:</span> #${data.orderId}</div>
+                            <div><span class="details-label">Order Date:</span> ${new Date(data.orderDate).toLocaleDateString()}</div>
+                        </div>
+                        <div class="details-col">
+                            <div><span class="details-label">Payment Method:</span> ${data.paymentMethod.toUpperCase()}</div>
+                            <div><span class="details-label">Status:</span> <strong style="color: var(--primary-gold);">${data.paymentStatus}</strong></div>
+                        </div>
+                    `;
+                    document.getElementById('orderDetails').innerHTML = detailsHtml;
+
+                    let timelineHtml = '';
+                    let latestTracking = null;
+
+                    if (data.timeline && data.timeline.length > 0) {
+                        data.timeline.forEach((event) => {
+                            let typeClass = 'step-pending';
+                            if (event.isCompleted) typeClass = 'step-completed';
+                            if (event.isCurrent) typeClass = 'step-current';
+                            if (event.status.toLowerCase().includes('reject') || event.status.toLowerCase().includes('cancel')) {
+                                typeClass = 'step-rejected';
+                            }
+
+                            if (event.trackingNumber) {
+                                latestTracking = event;
+                            }
+
+                            timelineHtml += `
+                                <li class="timeline-step ${typeClass}">
+                                    <div class="step-circle"><i class="fas ${getIconForStatus(event.status)}"></i></div>
+                                    <div class="step-content">
+                                        <div class="step-title">${event.status}</div>
+                                        <div class="step-date">${new Date(event.eventDateTime).toLocaleString()}</div>
+                                        <div class="step-desc">${event.description}</div>
+                                        ${event.courierName ? `<div style="margin-top:5px; font-size:0.8rem;"><b>Courier:</b> ${event.courierName}</div>` : ''}
+                                        ${event.trackingNumber ? `<div style="font-size:0.8rem;"><b>Tracking ID:</b> ${event.trackingNumber}</div>` : ''}
+                                    </div>
+                                </li>
+                            `;
+                        });
+                    } else {
+                        timelineHtml = '<li>No tracking history available yet.</li>';
+                    }
+                    document.getElementById('timeline').innerHTML = timelineHtml;
+
+                    if (latestTracking && latestTracking.trackingNumber) {
+                        const trackUrl = latestTracking.courierName.toLowerCase().includes('tcs') ? `https://www.tcsexpress.com/tracking?trackNo=${latestTracking.trackingNumber}` : '#';
+                        document.getElementById('trackingInfoCard').innerHTML = `
+                            <div class="tracking-card">
+                                <div class="tracking-info">
+                                    <div><strong>Courier Name:</strong> ${latestTracking.courierName}</div>
+                                    <div><strong>Tracking Number:</strong> ${latestTracking.trackingNumber}</div>
+                                    <div style="font-size: 0.85rem; color: #666; margin-top: 5px;">Enter this Tracking ID on the courier website.</div>
+                                </div>
+                                <div>
+                                    <button class="track-btn" onclick="window.open('${trackUrl}', '_blank')"><i class="fas fa-search-location"></i> Track Shipment</button>
+                                </div>
+                            </div>
+                        `;
+                    }
+
+                } else {
+                    document.getElementById('orderDetails').innerHTML = '<div style="color:red; grid-column:1/-1; text-align:center;">Failed to load tracking data.</div>';
+                }
+            } catch (err) {
+                console.error(err);
+                document.getElementById('orderDetails').innerHTML = '<div style="color:red; grid-column:1/-1; text-align:center;">Connection error.</div>';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', loadTracking);
+    </script>
+</body>
+</html>
+
+
