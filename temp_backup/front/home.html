@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Home | LeatherLane Atelier</title>
+    <link rel="stylesheet" href="css/global.css">
+    <style>
+        /* Navbar */
+        .navbar {
+            background-color: var(--primary-bg);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        
+        .nav-brand {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .nav-brand h1 {
+            font-size: 1.5rem;
+            margin: 0;
+            color: #fff;
+            letter-spacing: 1px;
+            text-transform: none;
+        }
+
+        .nav-brand span {
+            font-size: 0.7rem;
+            color: var(--secondary-text);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            font-size: 0.9rem;
+        }
+
+        .nav-links a {
+            color: #ddd;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary-gold);
+        }
+        
+        .btn-register {
+            background-color: var(--primary-gold);
+            color: #111;
+            padding: 6px 16px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        .btn-register:hover {
+            background-color: var(--secondary-gold);
+            color: #111;
+        }
+
+        /* Hero Section */
+        .hero {
+            position: relative;
+            padding: 8rem 2rem;
+            text-align: center;
+            color: #fff;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 400px;
+        }
+
+        .hero-slider {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 0;
+            background-color: #8C5E3C;
+        }
+
+        .hero-slide {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-size: cover;
+            background-position: center;
+            opacity: 0;
+            animation: slideAnimation 20s infinite;
+        }
+
+        /* Update these paths to match your image filenames! */
+        .hero-slide:nth-child(1) { background-image: url('https://images.unsplash.com/photo-1547949003-9792a18a2601?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80'); animation-delay: 0s; }
+        .hero-slide:nth-child(2) { background-image: url('https://images.unsplash.com/photo-1553062407-98eeb64c6a62?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80'); animation-delay: 5s; }
+        .hero-slide:nth-child(3) { background-image: url('https://images.unsplash.com/photo-1590874103328-eac38a683ce7?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80'); animation-delay: 10s; }
+        .hero-slide:nth-child(4) { background-image: url('https://images.unsplash.com/photo-1614252235316-8c857d38b5f4?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80'); animation-delay: 15s; }
+
+        @keyframes slideAnimation {
+            0% { opacity: 0; transform: scale(1.05); }
+            5% { opacity: 1; transform: scale(1); }
+            25% { opacity: 1; transform: scale(1); }
+            30% { opacity: 0; transform: scale(1.05); }
+            100% { opacity: 0; }
+        }
+
+        .hero-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: linear-gradient(to right, rgba(43, 29, 23, 0.4), rgba(140, 94, 60, 0.4));
+            z-index: 1;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .hero h2 {
+            font-size: 3.5rem;
+            color: #fff;
+            margin-bottom: 1rem;
+            text-transform: none;
+            letter-spacing: 1px;
+            text-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            color: #f0f0f0;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            text-shadow: 0 2px 5px rgba(0,0,0,0.5);
+        }
+
+        .btn-explore {
+            background-color: var(--primary-gold);
+            color: #111;
+            padding: 12px 32px;
+            border-radius: 4px;
+            font-weight: 600;
+            font-family: var(--font-body);
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+
+        .btn-explore:hover {
+            background-color: var(--secondary-gold);
+            transform: scale(1.02);
+        }
+
+        /* Features */
+        .features {
+            background-color: #fff;
+            padding: 4rem 2rem;
+            display: flex;
+            justify-content: center;
+            gap: 4rem;
+            text-align: center;
+            color: #333;
+        }
+
+        .feature-item {
+            max-width: 250px;
+        }
+
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .feature-item h4 {
+            font-family: var(--font-heading);
+            color: #333;
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .feature-item p {
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        /* Featured Products */
+        .products-section {
+            background-color: var(--light-bg);
+            padding: 4rem 2rem;
+            text-align: center;
+        }
+
+        .products-section h3 {
+            font-size: 2rem;
+            color: var(--primary-bg);
+            margin-bottom: 0.5rem;
+        }
+
+        .products-section > p {
+            color: #666;
+            margin-bottom: 3rem;
+            font-size: 0.9rem;
+        }
+
+        .product-grid {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .product-card {
+            background: #fff;
+            border-radius: 8px;
+            overflow: hidden;
+            width: 300px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            text-align: left;
+            transition: transform 0.2s;
+        }
+
+        .product-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .product-img {
+            height: 250px;
+            background-color: #eee;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #999;
+            font-size: 0.9rem;
+        }
+
+        .product-info {
+            padding: 1.5rem;
+        }
+
+        .product-category {
+            font-size: 0.75rem;
+            color: var(--primary-gold);
+            text-transform: uppercase;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .product-title {
+            font-family: var(--font-heading);
+            font-size: 1.1rem;
+            color: var(--primary-bg);
+            margin-bottom: 1rem;
+            font-weight: 700;
+        }
+
+        .product-bottom {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .product-price {
+            font-weight: 600;
+            color: var(--primary-bg);
+            font-size: 1.1rem;
+        }
+
+        .btn-cart {
+            background-color: var(--primary-bg);
+            color: #fff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: var(--font-body);
+            font-size: 0.85rem;
+            transition: background-color 0.2s;
+        }
+
+        .btn-cart:hover {
+            background-color: var(--secondary-bg);
+        }
+
+        /* Footer */
+        .footer {
+            background-color: var(--primary-bg);
+            color: var(--primary-text);
+            padding: 4rem 2rem 2rem;
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            margin-bottom: 3rem;
+        }
+
+        .footer-col h5 {
+            color: var(--primary-gold);
+            font-family: var(--font-body);
+            font-size: 1rem;
+            margin-bottom: 1.5rem;
+            text-transform: none;
+        }
+        
+        .footer-col.brand h5 {
+            font-family: var(--font-heading);
+            font-size: 1.5rem;
+            color: #fff;
+        }
+
+        .footer-col p {
+            font-size: 0.85rem;
+            color: var(--secondary-text);
+            line-height: 1.8;
+            margin-bottom: 1rem;
+        }
+
+        .footer-col ul {
+            list-style: none;
+        }
+
+        .footer-col ul li {
+            margin-bottom: 0.8rem;
+        }
+
+        .footer-col ul li a {
+            color: var(--primary-text);
+            font-size: 0.85rem;
+        }
+
+        .footer-col ul li a:hover {
+            color: var(--primary-gold);
+        }
+
+        .footer-bottom {
+            max-width: 1200px;
+            margin: 0 auto;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            padding-top: 2rem;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: var(--secondary-text);
+        }
+
+        .footer-bottom-links a {
+            color: var(--secondary-text);
+            margin-left: 1.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .footer-grid {
+                grid-template-columns: 1fr;
+            }
+            .features {
+                flex-direction: column;
+                align-items: center;
+                gap: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+        <!-- Navbar -->
+    <nav class="navbar">
+        <div class="nav-brand">
+            <h1>LeatherLane</h1>
+            <span>Atelier</span>
+        </div>
+        <div class="nav-links">
+            <a href="home.html">Home</a>
+            <a href="products.html">Shop</a>
+            <a href="about.html">About</a>
+            <a href="faq.html">FAQ</a>
+            <a href="contact.html">Contact</a>
+            <a href="cart.html">🛒</a>
+            <a href="login.html">Login</a>
+            <a href="signup.html" class="btn-register">Register</a>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <!-- Slider Images -->
+        <div class="hero-slider">
+            <div class="hero-slide"></div>
+            <div class="hero-slide"></div>
+            <div class="hero-slide"></div>
+            <div class="hero-slide"></div>
+        </div>
+        <!-- Gradient Overlay -->
+        <div class="hero-overlay"></div>
+        
+        <!-- Text Content -->
+        <div class="hero-content">
+            <h2>Timeless Craftsmanship</h2>
+            <p>Handcrafted leather goods made with passion, precision, and the finest materials</p>
+            <button class="btn-explore" onclick="window.location.href='products.html'">Explore Collection</button>
+        </div>
+    </section>
+
+    <!-- Features -->
+    <section class="features">
+        <div class="feature-item">
+            <div class="feature-icon">🌟</div>
+            <h4>Premium Quality</h4>
+            <p>Only the finest full-grain leather sourced sustainably</p>
+        </div>
+        <div class="feature-item">
+            <div class="feature-icon">🌟</div>
+            <h4>Handcrafted</h4>
+            <p>Each piece meticulously made by skilled artisans</p>
+        </div>
+        <div class="feature-item">
+            <div class="feature-icon">🌟</div>
+            <h4>Lifetime Warranty</h4>
+            <p>Quality that lasts generations</p>
+        </div>
+    </section>
+
+    <!-- Featured Products Removed as requested -->
+
+        <!-- Footer -->
+        <footer class="footer">
+        <div class="footer-grid">
+            <div class="footer-col brand">
+                <h5>LeatherLane</h5>
+                <p>Premium handcrafted men's footwear. Specializing in Chappals, Peshawari Chappals, Shoes, and Sandals.</p>
+                <div style="font-size: 1.2rem; display: flex; gap: 10px;">
+                    <a href="https://www.instagram.com/leatherlane_atelier?igsh=Znk1Y2ZsNDkyZHZy&utm_source=qr" target="_blank" style="text-decoration: none;">📷</a>
+                </div>
+            </div>
+            <div class="footer-col">
+                <h5>Shop Men's</h5>
+                <ul>
+                    <li><a href="products.html?category=Chappal">Chappal</a></li>
+                    <li><a href="products.html?category=Peshawari Chappal">Peshawari Chappal</a></li>
+                    <li><a href="products.html?category=Shoes">Shoes</a></li>
+                    <li><a href="products.html?category=Sandals">Sandals</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h5>Customer Service</h5>
+                <ul>
+                    <li><a href="shipping-policy.html">Shipping Policy</a></li>
+                    <li><a href="return-refund-policy.html">Return & Refund Policy</a></li>
+                    <li><a href="faq.html">FAQ</a></li>
+                    <li><a href="contact.html">Contact Us</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h5>Contact Info</h5>
+                <ul>
+                    <li>📍 Ward no 7, street 14, house 143, Mohallah Ansarian Jhang City, Punjab, 35200</li>
+                    <li>✉️ leatherlaneatelier@gmail.com</li>
+                    <li>📞 03376306162</li>
+                    <li>🕒 Mon-Sat: 10 AM - 7 PM</li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <div>&copy; 2026 LeatherLane. All rights reserved.</div>
+            <div class="footer-bottom-links">
+                <a href="privacy-policy.html">Privacy Policy</a>
+                <a href="terms-and-conditions.html">Terms & Conditions</a>
+            </div>
+        </div>
+    </footer>
+    <script src="js/auth.js?v=5"></script>
+</body>
+</html>
+
+
+

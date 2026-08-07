@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Admin Dashboard | LeatherLane Atelier</title>
+    <link rel="stylesheet" href="css/global.css">
+    <style>
+        body { 
+            background-color: #F5EFE7; /* Matches light background of user site */
+            margin: 0; 
+            font-family: 'Poppins', sans-serif; 
+            color: #333; 
+        }
+
+        /* Navbar Matches User Site */
+        .navbar {
+            background-color: var(--primary-bg);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .nav-brand { display: flex; flex-direction: column; }
+        .nav-brand h1 { color: #fff; margin: 0; font-size: 1.5rem; }
+        .nav-brand span { color: var(--primary-gold); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 2px; }
+        
+        .admin-nav { display: flex; gap: 1.5rem; align-items: center; }
+        .admin-nav .nav-item { color: #ddd; cursor: pointer; text-decoration: none; font-weight: 500; font-size: 0.95rem; }
+        .admin-nav .nav-item:hover { color: #fff; }
+        .admin-nav .nav-item.active { color: var(--primary-gold); font-weight: bold; border-bottom: 2px solid var(--primary-gold); padding-bottom: 4px; }
+        
+        .container { max-width: 1100px; margin: 3rem auto; padding: 0 2rem; }
+        
+        /* Sections */
+        .section { display: none; animation: fadeIn 0.4s ease-out; }
+        .section.active { display: block; }
+        
+        .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; border-bottom: 1px solid #ddd; padding-bottom: 1rem; }
+        .topbar h1 { color: var(--primary-bg); font-family: var(--font-heading); margin: 0; font-size: 2rem; }
+        
+        /* Cards */
+        .card { 
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 2rem; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
+            margin-bottom: 2rem; 
+        }
+
+        .stat-card {
+            text-align: center;
+            padding: 2.5rem;
+        }
+        .stat-card h3 { color: #666; margin-bottom: 10px; font-size: 1rem; text-transform: uppercase; letter-spacing: 1px; font-family: var(--font-body); }
+        .stat-card div { font-size: 3.5rem; font-weight: bold; color: var(--primary-bg); font-family: var(--font-heading); }
+        
+        /* Tables */
+        .table { width: 100%; border-collapse: collapse; }
+        .table th, .table td { padding: 1.2rem 1rem; text-align: left; border-bottom: 1px solid #eee; }
+        .table th { color: #666; font-weight: 600; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px; }
+        .table td { color: #333; }
+        .table tr:hover { background-color: #fafafa; }
+        
+        /* Badges */
+        .badge { padding: 6px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+        .badge-pending { background: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
+        .badge-processing { background: #cce5ff; color: #004085; border: 1px solid #b8daff; }
+        .badge-dispatched { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .badge-delivered { background: #e2e3e5; color: #383d41; border: 1px solid #d6d8db; }
+        .badge-cancelled { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        
+        .status-select { 
+            padding: 6px 10px; 
+            border-radius: 4px; 
+            border: 1px solid #ccc; 
+            background: #fff; 
+            color: #333;
+            font-family: inherit; 
+            font-size: 0.85rem; 
+            cursor: pointer;
+        }
+        
+        /* Forms */
+        .admin-form .form-group { margin-bottom: 1.5rem; }
+        .admin-form label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 0.9rem; color: #444; }
+        .admin-form .form-control { 
+            background: #fff; 
+            border: 1px solid #ccc; 
+            color: #333; 
+            padding: 12px; 
+            border-radius: 6px;
+        }
+        .admin-form .form-control:focus { border-color: var(--primary-gold); outline: none; box-shadow: 0 0 5px rgba(199, 154, 82, 0.3); }
+        .admin-form .form-control::placeholder { color: #aaa; }
+        
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.5rem; }
+        
+        .section-title { font-family: var(--font-heading); color: var(--primary-bg); font-size: 1.3rem; margin: 2rem 0 1rem; border-bottom: 1px solid #eee; padding-bottom: 8px; }
+    </style>
+</head>
+<body>
+
+    <!-- Top Navbar Matching User Side -->
+    <nav class="navbar">
+        <div class="nav-brand">
+            <h1>LeatherLane</h1>
+            <span>Admin Portal</span>
+        </div>
+        <div class="admin-nav">
+            <a class="nav-item active" onclick="switchTab('dashboard')">Dashboard</a>
+            <a class="nav-item" onclick="switchTab('orders')">Orders</a>
+            <a class="nav-item" onclick="switchTab('products')">Products</a>
+            <a class="nav-item" href="admin-exchanges.html">Exchanges</a>
+            <a class="nav-item" onclick="switchTab('settings')">Settings</a>
+            <div class="notification-wrapper" style="margin-left: 10px;">
+                <button onclick="toggleNotificationDropdown()" style="background:none; border:none; font-size:1.2rem; cursor:pointer;">&#x1F514;<span id="notifBadge" class="notification-badge"></span></button>
+                <div id="notifDropdown" class="notification-dropdown">
+                    <div class="notification-header">Admin Alerts <button onclick="markAllRead()" style="background:none;border:none;color:var(--primary-gold);cursor:pointer;font-size:0.8rem;">Mark all as read</button></div>
+                    <div id="notifItems">
+                        <div style="padding:1rem;text-align:center;color:#777;">Loading...</div>
+                    </div>
+                    <div class="notification-footer"><a href="admin-notifications.html">View All Alerts</a></div>
+                </div>
+            </div>
+            <a style="color: #ff6b6b; cursor: pointer; font-weight: bold; margin-left: 10px;" onclick="adminLogout()">Sign Out</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Dashboard Section -->
+        <div id="dashboard" class="section active">
+            <div class="topbar">
+                <h1>Overview</h1>
+            </div>
+            <div class="grid-2">
+                <div class="card stat-card">
+                    <h3>Total Orders</h3>
+                    <div id="statOrders">0</div>
+                </div>
+                <div class="card stat-card">
+                    <h3>Total Revenue</h3>
+                    <div id="statRevenue" style="color: var(--primary-gold);">Rs. 0.00</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Orders Section -->
+        <div id="orders" class="section">
+            <div class="topbar">
+                <h1>Order Management</h1>
+            </div>
+            <div class="card" style="padding: 0; overflow-x: auto;">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Date</th>
+                            <th>Customer</th>
+                            <th>Amount</th>
+                            <th>Current Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ordersTableBody">
+                        <!-- Orders populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Products Section -->
+        <div id="products" class="section">
+            <div class="topbar">
+                <h1>Product Inventory</h1>
+                <button class="btn-primary" style="width: auto; padding: 10px 20px;" onclick="showAddProduct()">+ Add Product</button>
+            </div>
+            
+            <div id="productsList" class="card" style="padding: 0; overflow-x: auto;">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Image</th>
+                            <th>Name</th>
+                            <th>Category</th>
+                            <th>Price</th>
+                            <th>Stock</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="productsTableBody">
+                        <!-- Products populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Add/Edit Product Form -->
+            <div id="addProductForm" class="card admin-form" style="display: none;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; border-bottom: 1px solid #eee; padding-bottom: 1rem;">
+                    <h2 id="formTitle" style="color: var(--primary-bg); margin: 0; font-family: var(--font-heading); font-size: 1.8rem;">Add New Product</h2>
+                    <button class="btn-secondary" style="width: auto; padding: 6px 16px; font-size: 0.8rem;" onclick="hideAddProduct()">Cancel</button>
+                </div>
+                
+                <form onsubmit="event.preventDefault(); saveProduct();">
+                    <h3 class="section-title" style="margin-top: 0;">Basic Information</h3>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label>Product Name</label>
+                            <input type="text" id="pName" class="form-control" required placeholder="e.g. Classic Oxford Shoes">
+                        </div>
+                        <div class="form-group">
+                            <label>Category</label>
+                            <select id="pCategory" class="form-control" required>
+                                <option value="Chappal">Chappal</option>
+                                <option value="Peshawari Chappal">Peshawari Chappal</option>
+                                <option value="Shoes">Shoes</option>
+                                <option value="Sandals">Sandals</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label>Price (Rs.)</label>
+                            <input type="number" id="pPrice" class="form-control" step="0.01" required placeholder="0.00">
+                        </div>
+                        <div class="form-group">
+                            <label>Product Image (Optional if editing)</label>
+                            <input type="file" id="pImage" class="form-control" accept="image/*" style="padding: 9px;">
+                        </div>
+                    </div>
+
+                    <h3 class="section-title">Comprehensive Details</h3>
+                    <div class="form-group">
+                        <label>1. Product Description</label>
+                        <textarea id="pDesc_Desc" class="form-control" rows="3" required placeholder="A beautiful description of the product..."></textarea>
+                    </div>
+                    
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label>2. Key Features</label>
+                            <textarea id="pDesc_Features" class="form-control" rows="2" placeholder="e.g. Hand-stitched, Water resistant..."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>3. Material</label>
+                            <input type="text" id="pDesc_Material" class="form-control" placeholder="e.g. Full-Grain Italian Leather" required>
+                        </div>
+                    </div>
+
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label>4. Available Sizes (Comma separated)</label>
+                            <input type="text" id="pDesc_Sizes" class="form-control" value="6, 7, 8, 9, 10, 11" placeholder="e.g. 6, 7, 8, 9, 10, 11">
+                        </div>
+                        <div class="form-group">
+                            <label>5. Comfort & Fit</label>
+                            <input type="text" id="pDesc_Fit" class="form-control" placeholder="e.g. True to size, padded insole...">
+                        </div>
+                    </div>
+
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label>6. Sole Type</label>
+                            <input type="text" id="pDesc_Sole" class="form-control" placeholder="e.g. Goodyear Welted Leather Sole">
+                        </div>
+                        <div class="form-group">
+                            <label>7. Craftsmanship</label>
+                            <input type="text" id="pDesc_Craft" class="form-control" placeholder="e.g. Hand-burnished edges, 120 hours of labor...">
+                        </div>
+                    </div>
+
+                    <div class="grid-3">
+                        <div class="form-group">
+                            <label>8. Care Instructions</label>
+                            <textarea id="pDesc_Care" class="form-control" rows="2" placeholder="Use leather conditioner monthly..."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>9. Warranty & Returns</label>
+                            <textarea id="pDesc_Warranty" class="form-control" rows="2" placeholder="Lifetime warranty. 30-day returns."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>10. Shipping Info</label>
+                            <textarea id="pDesc_Shipping" class="form-control" rows="2" placeholder="Free worldwide express shipping."></textarea>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 2rem; text-align: right;">
+                        <button type="submit" class="btn-primary" style="width: auto; padding: 12px 30px;">Publish Product</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Settings Section -->
+        <div id="settings" class="section">
+            <div class="topbar">
+                <h1>Security Settings</h1>
+            </div>
+            <div class="card admin-form" style="max-width: 500px;">
+                <h3 style="margin-bottom: 1.5rem; color: var(--primary-bg); font-family: var(--font-heading);">Change Credentials</h3>
+                <form onsubmit="event.preventDefault(); changePassword();">
+                    <div id="pwdMsg" style="margin-bottom: 1.5rem; font-size: 0.9rem; display: none; padding: 10px; border-radius: 6px;"></div>
+                    
+                    <div class="form-group">
+                        <label>New Email Address (Optional)</label>
+                        <input type="email" id="newEmail" class="form-control" placeholder="Leave blank to keep current">
+                    </div>
+                    <div class="form-group">
+                        <label>New Password (Optional)</label>
+                        <input type="password" id="newPwd" class="form-control" placeholder="Leave blank to keep current">
+                    </div>
+                    <button type="submit" class="btn-primary" style="margin-top: 1rem;">Update Credentials</button>
+                </form>
+            </div>
+
+            <div class="card admin-form" style="max-width: 500px; margin-top: 2rem;">
+                <h3 style="margin-bottom: 1.5rem; color: var(--primary-bg); font-family: var(--font-heading);">Site Content</h3>
+                <form onsubmit="event.preventDefault(); uploadAboutImage();" id="aboutImgForm">
+                    <div id="imgMsg" style="margin-bottom: 1.5rem; font-size: 0.9rem; display: none; padding: 10px; border-radius: 6px;"></div>
+                    
+                    <div class="form-group">
+                        <label>About Page Hero Image</label>
+                        <input type="file" id="aboutImageFile" class="form-control" accept="image/*" required style="padding: 9px;">
+                        <div style="font-size: 0.8rem; color: #666; margin-top: 5px;">This will replace the placeholder image on the About Us page.</div>
+                    </div>
+                    
+                    <button type="submit" class="btn-primary" style="margin-top: 1rem;">Upload Image</button>
+                </form>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-grid">
+            <div class="footer-col brand">
+                <h5>LeatherLane</h5>
+                <p>Premium handcrafted men's footwear. Specializing in Chappals, Peshawari Chappals, Shoes, and Sandals.</p>
+                <div style="font-size: 1.2rem; display: flex; gap: 10px;">
+                    <a href="https://www.instagram.com/leatherlane_atelier?igsh=Znk1Y2ZsNDkyZHZy&utm_source=qr" target="_blank" style="text-decoration: none;">📷</a>
+                </div>
+            </div>
+            <div class="footer-col">
+                <h5>Shop Men's</h5>
+                <ul id="footerCategoriesList">
+                    <li><a href="products.html?category=Chappal">Chappal</a></li>
+                    <li><a href="products.html?category=Peshawari Chappal">Peshawari Chappal</a></li>
+                    <li><a href="products.html?category=Shoes">Shoes</a></li>
+                    <li><a href="products.html?category=Sandals">Sandals</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h5>Customer Service</h5>
+                <ul>
+                    <li><a href="shipping-policy.html">Shipping Policy</a></li>
+                    <li><a href="return-refund-policy.html">Return & Refund Policy</a></li>
+                    <li><a href="faq.html">FAQ</a></li>
+                    <li><a href="contact.html">Contact Us</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h5>Contact Info</h5>
+                <ul>
+                    <li>📍 Ward no 7, street 14, house 143, Mohallah Ansarian Jhang City, Punjab, 35200</li>
+                    <li>✉️ leatherlaneatelier@gmail.com</li>
+                    <li>📞 03376306162</li>
+                    <li>🕒 Mon-Sat: 10 AM - 7 PM</li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <div>&copy; 2026 LeatherLane. All rights reserved.</div>
+            <div class="footer-bottom-links">
+                <a href="privacy-policy.html">Privacy Policy</a>
+                <a href="terms-and-conditions.html">Terms & Conditions</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Script must run immediately to prevent flash of unauthenticated content -->
+    <script>
+        if (!localStorage.getItem('token')) {
+            window.location.href = 'login.html';
+        }
+    </script>
+    <script src="js/admin.js?v=3"></script>
+</body>
+</html>
+
+
+

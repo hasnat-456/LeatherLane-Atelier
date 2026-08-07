@@ -1,0 +1,170 @@
+@{
+    ViewData["Title"] = "Our Story - LeatherLane Atelier";
+}
+
+<style>
+    .about-hero {
+        background: linear-gradient(135deg, #8b5a2b 0%, #5c3d2e 100%);
+        padding: 5rem 2rem;
+        text-align: center;
+        color: #f5f0eb;
+    }
+    .about-hero-content {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    .about-hero-title {
+        font-size: 3rem;
+        margin-bottom: 0.75rem;
+        font-weight: 700;
+    }
+    .about-hero-subtitle {
+        font-size: 1.3rem;
+        opacity: 0.9;
+    }
+    .about-story {
+        padding: 5rem 2rem;
+        background-color: #ffffff;
+    }
+    .about-story-grid {
+        max-width: 1200px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 4rem;
+        align-items: center;
+    }
+    @@media (max-width: 768px) {
+        .about-story-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+    .about-story-content {
+        padding-right: 2rem;
+    }
+    .about-story-title {
+        font-size: 2.2rem;
+        color: #3d2914;
+        margin-bottom: 1.5rem;
+    }
+    .about-story-text {
+        color: #5c4a3a;
+        font-size: 1.05rem;
+        line-height: 1.8;
+        margin-bottom: 1.25rem;
+    }
+    .about-story-image {
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 12px 40px rgba(92,61,46,0.15);
+    }
+    .about-image {
+        width: 100%;
+        height: 450px;
+        object-fit: cover;
+    }
+    .about-values {
+        padding: 5rem 2rem;
+        background-color: #f5f0eb;
+    }
+    .about-values-title {
+        font-size: 2.5rem;
+        color: #3d2914;
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+    .about-values-grid {
+        max-width: 1200px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 2rem;
+    }
+    .about-value-card {
+        background-color: #ffffff;
+        padding: 2.5rem;
+        border-radius: 16px;
+        text-align: center;
+        box-shadow: 0 4px 16px rgba(92,61,46,0.08);
+        transition: all 0.3s ease;
+    }
+    .about-value-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 12px 40px rgba(92,61,46,0.15);
+    }
+    .about-value-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+    .about-value-title {
+        font-size: 1.4rem;
+        color: #3d2914;
+        margin-bottom: 0.75rem;
+    }
+    .about-value-desc {
+        color: #7a6b5d;
+        line-height: 1.6;
+    }
+</style>
+
+<div>
+    <!-- Hero Section -->
+    <section class="about-hero">
+        <div class="about-hero-content">
+            <h1 class="about-hero-title">Our Story</h1>
+            <p class="about-hero-subtitle">Crafting Excellence Since 1985</p>
+        </div>
+    </section>
+
+    <!-- Story Section -->
+    <section class="about-story">
+        <div class="about-story-grid">
+            <div class="about-story-content">
+                <h2 class="about-story-title">The Art of Leather Crafting</h2>
+                <p class="about-story-text">
+                    LeatherLane Atelier was founded with a simple yet profound belief: that true luxury lies in the marriage of timeless design and meticulous craftsmanship. For over three decades, we have dedicated ourselves to the art of creating leather goods that not only stand the test of time but become more beautiful with age.
+                </p>
+                <p class="about-story-text">
+                    Every piece in our collection is handcrafted by skilled artisans who bring decades of experience to their work. We source only the finest full-grain leather from sustainable tanneries around the world, ensuring both quality and ethical responsibility.
+                </p>
+                <p class="about-story-text">
+                    From our classic wallets to our signature bags, each item tells a story of passion, precision, and pride. We don't just make products—we create heirlooms.
+                </p>
+            </div>
+            <div class="about-story-image">
+                <img 
+                    src="https://images.unsplash.com/photo-1544816155-12df9643f363?q=80&w=1974&auto=format&fit=crop" 
+                    alt="Artisan at Work" 
+                    class="about-image"
+                />
+            </div>
+        </div>
+    </section>
+
+    <!-- Values Section -->
+    <section class="about-values">
+        <h2 class="about-values-title">Our Values</h2>
+        <div class="about-values-grid">
+            <div class="about-value-card">
+                <div class="about-value-icon">🌱</div>
+                <h3 class="about-value-title">Sustainability</h3>
+                <p class="about-value-desc">We are committed to environmentally responsible practices, from sourcing to production.</p>
+            </div>
+            <div class="about-value-card">
+                <div class="about-value-icon">⚒️</div>
+                <h3 class="about-value-title">Craftsmanship</h3>
+                <p class="about-value-desc">Every piece is meticulously handcrafted by our skilled artisans.</p>
+            </div>
+            <div class="about-value-card">
+                <div class="about-value-icon">💯</div>
+                <h3 class="about-value-title">Quality</h3>
+                <p class="about-value-desc">We never compromise on quality. Only the finest materials make the cut.</p>
+            </div>
+            <div class="about-value-card">
+                <div class="about-value-icon">🤝</div>
+                <h3 class="about-value-title">Community</h3>
+                <p class="about-value-desc">We believe in supporting our artisans and local communities.</p>
+            </div>
+        </div>
+    </section>
+</div>

@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Account | LeatherLane Atelier</title>
+    <link rel="stylesheet" href="css/global.css">
+    <style>
+        .auth-layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .auth-image {
+            flex: 1;
+            background-color: var(--secondary-bg);
+            background-image: linear-gradient(rgba(43, 29, 23, 0.4), rgba(43, 29, 23, 0.8)), url('https://images.unsplash.com/photo-1544816155-12df9643f363?q=80&w=1974&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+        }
+
+        .auth-image-content {
+            text-align: center;
+            color: var(--primary-text);
+            max-width: 400px;
+        }
+
+        .auth-image-content h2 {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            color: var(--primary-gold);
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .auth-form-container {
+            flex: 1.2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+            position: relative;
+            overflow-y: auto;
+        }
+
+        .auth-card {
+            background-color: var(--secondary-bg);
+            width: 100%;
+            max-width: 580px;
+            padding: 48px;
+            border-radius: var(--radius);
+            box-shadow: 0 20px 40px var(--shadow);
+            border: 1px solid var(--borders);
+            margin: auto;
+        }
+
+        .auth-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .auth-logo {
+            font-family: var(--font-heading);
+            font-size: 2rem;
+            color: var(--primary-gold);
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .auth-subtitle {
+            color: var(--secondary-text);
+            margin-top: 8px;
+        }
+
+        .row {
+            display: flex;
+            gap: 20px;
+        }
+
+        .row .form-group {
+            flex: 1;
+        }
+
+        .password-input-wrapper {
+            position: relative;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--primary-gold);
+            cursor: pointer;
+            font-size: 0.9rem;
+            padding: 4px;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: flex-start;
+            cursor: pointer;
+            color: var(--secondary-text);
+            margin-bottom: 32px;
+            font-size: 0.9rem;
+        }
+
+        .checkbox-label input {
+            margin-right: 12px;
+            margin-top: 4px;
+            accent-color: var(--primary-gold);
+            width: 16px;
+            height: 16px;
+            flex-shrink: 0;
+        }
+        
+        .checkbox-label a {
+            text-decoration: underline;
+        }
+
+        .login-link-container {
+            text-align: center;
+            margin-top: 24px;
+            color: var(--secondary-text);
+        }
+
+        .login-link-container a {
+            font-weight: 600;
+        }
+
+        .auth-footer {
+            margin-top: 32px;
+            text-align: center;
+            width: 100%;
+            color: var(--secondary-text);
+            font-size: 0.85rem;
+        }
+
+        /* Password strength indicator */
+        .password-strength {
+            height: 4px;
+            background-color: var(--input-bg);
+            border-radius: 2px;
+            margin-top: 8px;
+            overflow: hidden;
+            display: none;
+        }
+
+        .password-strength-bar {
+            height: 100%;
+            width: 0%;
+            transition: all 0.3s ease;
+        }
+
+        .strength-weak { width: 33%; background-color: var(--error); }
+        .strength-medium { width: 66%; background-color: var(--primary-gold); }
+        .strength-strong { width: 100%; background-color: var(--success); }
+
+        .password-feedback {
+            font-size: 0.8rem;
+            margin-top: 4px;
+            display: block;
+        }
+
+        .input-error {
+            border-color: var(--error) !important;
+        }
+        .error-message {
+            color: #FFFFFF;
+            font-size: 0.8rem;
+            margin-top: 4px;
+            display: none;
+        }
+
+        @@media (max-width: 992px) {
+            .auth-image {
+                display: none;
+            }
+            .auth-form-container {
+                background-image: linear-gradient(rgba(43, 29, 23, 0.85), rgba(43, 29, 23, 0.95)), url('https://images.unsplash.com/photo-1544816155-12df9643f363?q=80&w=1974&auto=format&fit=crop');
+                background-size: cover;
+                background-position: center;
+            }
+            .auth-card {
+                background-color: rgba(74, 46, 36, 0.95);
+                backdrop-filter: blur(10px);
+            }
+        }
+        @@media (max-width: 768px) {
+            .row {
+                flex-direction: column;
+                gap: 0;
+            }
+        }
+        @@media (max-width: 480px) {
+            .auth-card {
+                padding: 32px 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="auth-layout">
+        <div class="auth-form-container">
+            <div class="auth-card slide-up">
+                <div class="auth-header">
+                    <a href="/" class="auth-logo">LeatherLane Atelier</a>
+                    <h2>Create Account</h2>
+                    <p class="auth-subtitle">Join us to experience exceptional craftsmanship.</p>
+                </div>
+
+                <form id="signupForm" novalidate>
+                    <div class="row">
+                        <div class="form-group">
+                            <label for="firstName">First Name</label>
+                            <input type="text" id="firstName" class="form-control" placeholder="John" required>
+                            <span class="error-message">First name is required</span>
+                        </div>
+                        <div class="form-group">
+                            <label for="lastName">Last Name</label>
+                            <input type="text" id="lastName" class="form-control" placeholder="Doe" required>
+                            <span class="error-message">Last name is required</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">Email Address</label>
+                        <input type="email" id="email" class="form-control" placeholder="john.doe@example.com" required>
+                        <span class="error-message">Please enter a valid email address</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="phone">Phone Number</label>
+                        <input type="tel" id="phone" class="form-control" placeholder="+1 (555) 000-0000">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="signupPassword">Password</label>
+                        <div class="password-input-wrapper">
+                            <input type="password" id="signupPassword" class="form-control" placeholder="Create a strong password" required>
+                            <button type="button" class="toggle-password" onclick="togglePassword('signupPassword')">Show</button>
+                        </div>
+                        <div class="password-strength" id="strengthContainer">
+                            <div class="password-strength-bar" id="strengthBar"></div>
+                        </div>
+                        <span class="password-feedback" id="strengthFeedback"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="confirmPassword">Confirm Password</label>
+                        <div class="password-input-wrapper">
+                            <input type="password" id="confirmPassword" class="form-control" placeholder="Confirm your password" required>
+                            <button type="button" class="toggle-password" onclick="togglePassword('confirmPassword')">Show</button>
+                        </div>
+                        <span class="error-message" id="matchError">Passwords do not match</span>
+                    </div>
+
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="terms" required> 
+                        <span>I agree to the <a href="#">Terms & Conditions</a> and <a href="#">Privacy Policy</a> of LeatherLane Atelier.</span>
+                    </label>
+
+                    <button type="submit" class="btn-primary" id="submitBtn">Create Account</button>
+
+                    <div class="login-link-container">
+                        Already have an account? <a href="/login">Login</a>
+                    </div>
+                </form>
+                
+                <div class="auth-footer fade-in">
+                    &copy; 2026 LeatherLane Atelier. All rights reserved.
+                </div>
+            </div>
+        </div>
+        
+        <div class="auth-image fade-in">
+            <div class="auth-image-content">
+                <h2>The Art of Craft</h2>
+                <p>Every piece is a testament to our dedication to traditional leatherworking techniques, crafted to last a lifetime.</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+    <script>
+        // Form Validation specific to Signup
+        const signupForm = document.getElementById('signupForm');
+        const passInput = document.getElementById('signupPassword');
+        const confirmInput = document.getElementById('confirmPassword');
+        const strengthContainer = document.getElementById('strengthContainer');
+        const strengthBar = document.getElementById('strengthBar');
+        const strengthFeedback = document.getElementById('strengthFeedback');
+        const matchError = document.getElementById('matchError');
+
+        passInput.addEventListener('input', function() {
+            const val = this.value;
+            if(val.length > 0) {
+                strengthContainer.style.display = 'block';
+                let strength = 0;
+                if(val.length >= 8) strength++;
+                if(/[A-Z]/.test(val) && /[0-9]/.test(val)) strength++;
+                if(/[^A-Za-z0-9]/.test(val)) strength++;
+                
+                strengthBar.className = 'password-strength-bar';
+                if(strength === 0 || strength === 1) {
+                    strengthBar.classList.add('strength-weak');
+                    strengthFeedback.textContent = 'Weak';
+                    strengthFeedback.style.color = 'var(--error)';
+                } else if (strength === 2) {
+                    strengthBar.classList.add('strength-medium');
+                    strengthFeedback.textContent = 'Good';
+                    strengthFeedback.style.color = 'var(--primary-gold)';
+                } else {
+                    strengthBar.classList.add('strength-strong');
+                    strengthFeedback.textContent = 'Strong';
+                    strengthFeedback.style.color = 'var(--success)';
+                }
+            } else {
+                strengthContainer.style.display = 'none';
+                strengthFeedback.textContent = '';
+            }
+            checkMatch();
+        });
+
+        confirmInput.addEventListener('input', checkMatch);
+
+        function checkMatch() {
+            if(confirmInput.value.length > 0) {
+                if(passInput.value !== confirmInput.value) {
+                    confirmInput.classList.add('input-error');
+                    matchError.style.display = 'block';
+                } else {
+                    confirmInput.classList.remove('input-error');
+                    matchError.style.display = 'none';
+                }
+            }
+        }
+
+        signupForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            let isValid = true;
+            
+            // Basic required check
+            const requiredFields = signupForm.querySelectorAll('[required]');
+            requiredFields.forEach(field => {
+                if(!field.value && field.type !== 'checkbox' || field.type === 'checkbox' && !field.checked) {
+                    isValid = false;
+                    field.classList.add('input-error');
+                    const errorMsg = field.parentElement.querySelector('.error-message');
+                    if(errorMsg) errorMsg.style.display = 'block';
+                } else {
+                    field.classList.remove('input-error');
+                    const errorMsg = field.parentElement.querySelector('.error-message');
+                    if(errorMsg) errorMsg.style.display = 'none';
+                }
+            });
+
+            // Email check
+            const email = document.getElementById('email');
+            if(email.value && !/^\S+@@\S+\.\S+$/.test(email.value)) {
+                isValid = false;
+                email.classList.add('input-error');
+                email.parentElement.querySelector('.error-message').style.display = 'block';
+            }
+
+            if(passInput.value !== confirmInput.value) {
+                isValid = false;
+            }
+
+            if(isValid) {
+                // Simulate account creation
+                const btn = document.getElementById('submitBtn');
+                btn.textContent = 'Creating...';
+                btn.style.opacity = '0.8';
+                setTimeout(() => {
+                    window.location.href = '/'; // back to splash or login
+                }, 1500);
+            }
+        });
+        
+        // Remove error styling on input
+        signupForm.querySelectorAll('input').forEach(input => {
+            input.addEventListener('input', function() {
+                this.classList.remove('input-error');
+                const errorMsg = this.parentElement.querySelector('.error-message');
+                if(errorMsg && this.id !== 'confirmPassword') errorMsg.style.display = 'none';
+            });
+        });
+    </script>
+</body>
+</html>

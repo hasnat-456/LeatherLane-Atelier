@@ -1,0 +1,30 @@
+@model IEnumerable<LeatherLane_Atelier.Models.Product>
+@{
+    ViewData["Title"] = "Our Products";
+}
+
+<div class="products-header">
+    <h1>Our Exclusive Collection</h1>
+    <p>Discover our meticulously handcrafted leather goods.</p>
+</div>
+
+<div class="products-grid">
+    @if (!Model.Any())
+    {
+        <p>No products currently available. Check back soon!</p>
+    }
+    else
+    {
+        @foreach (var product in Model)
+        {
+            <div class="product-card">
+                <img src="@product.Thumbnail" alt="@product.Name" class="product-image" />
+                <div class="product-info">
+                    <h3>@product.Name</h3>
+                    <p class="price">$@product.Price.ToString("0.00")</p>
+                    <a href="/products/@product.Id" class="btn-primary">View Details</a>
+                </div>
+            </div>
+        }
+    }
+</div>

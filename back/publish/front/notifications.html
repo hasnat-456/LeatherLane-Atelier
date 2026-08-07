@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All Notifications | LeatherLane Atelier</title>
+    <link rel="stylesheet" href="css/global.css">
+    <style>
+        .notifications-container { max-width: 800px; margin: 2rem auto; padding: 2rem; background: #fff; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); color: #333; }
+        .full-notif-item { padding: 1.5rem; border-bottom: 1px solid #eee; display: flex; flex-direction: column; text-decoration: none; color: #333; transition: background 0.2s; border-radius: 4px; margin-bottom: 1rem; }
+        .full-notif-item:hover { background: #f9f9f9; }
+        .full-notif-item.unread { background: #f0f7f4; border-left: 4px solid var(--primary-gold); }
+        .notif-title { font-weight: bold; font-size: 1.1rem; color: var(--primary-bg); margin-bottom: 5px; }
+        .notif-msg { font-size: 0.95rem; color: #555; }
+        .notif-time { font-size: 0.8rem; color: #888; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <nav class="navbar" style="background-color: var(--primary-bg); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100;">
+        <div class="nav-brand" style="display: flex; flex-direction: column;">
+            <h1 style="color: #fff; margin: 0; font-size: 1.5rem;">LeatherLane</h1>
+            <span style="color: var(--secondary-text); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 2px;">Atelier</span>
+        </div>
+        <div class="nav-links" style="display: flex; gap: 1.5rem; align-items: center;">
+            <!-- Links loaded by auth.js -->
+        </div>
+    </nav>
+
+    <div class="main-section" style="background: var(--primary-bg);">
+        <div class="container">
+            <div class="notifications-container">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                    <h2 style="color: var(--primary-bg); font-size: 2rem; margin: 0;">All Notifications</h2>
+                    <button onclick="markAllReadPage()" style="background:none;border:none;color:var(--primary-gold);cursor:pointer;font-weight:bold;font-size:1rem;">Mark All as Read</button>
+                </div>
+                <div id="fullNotifList">
+                    <div style="text-align: center; color: #666; font-size: 1.2rem; padding: 2rem;">Loading notifications...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/auth.js?v=6"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', loadAllNotifications);
+
+        async function loadAllNotifications() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/notifications', { headers: { 'Authorization': `Bearer ${token}` } });
+                if (res.ok) {
+                    const notifs = await res.json();
+                    const container = document.getElementById('fullNotifList');
+                    
+                    if (notifs.length === 0) {
+                        container.innerHTML = '<div style="text-align: center; color: #666; padding: 2rem;">You have no notifications.</div>';
+                        return;
+                    }
+
+                    let html = '';
+                    notifs.forEach(n => {
+                        const date = new Date(n.createdAt).toLocaleString();
+                        html += `
+                            <a href="${n.actionUrl || '#'}" class="full-notif-item ${n.isRead ? '' : 'unread'}" onclick="markRead(${n.id})">
+                                <div class="notif-title">${n.title}</div>
+                                <div class="notif-msg">${n.message}</div>
+                                <div class="notif-time">${date}</div>
+                            </a>
+                        `;
+                    });
+                    container.innerHTML = html;
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function markAllReadPage() {
+            const token = localStorage.getItem('token');
+            if (!token) return;
+            await fetch(`/api/notifications/read-all`, { method: 'PUT', headers: { 'Authorization': `Bearer ${token}` } });
+            loadAllNotifications();
+            // also trigger auth.js badge update
+            if (typeof loadNotifications === 'function') loadNotifications();
+        }
+    </script>
+</body>
+</html>
+
+

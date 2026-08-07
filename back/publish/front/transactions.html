@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Transaction History | LeatherLane Atelier</title>
+    <link rel="stylesheet" href="css/global.css">
+    <style>
+        .main-section { background-color: #fff; color: #333; min-height: 100vh; padding: 4rem 2rem; }
+        .container { max-width: 1200px; margin: 0 auto; width: 95%; }
+        #txContainer { display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 2rem; }
+        .tx-card { background: var(--light-bg); padding: 1.8rem; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); color: #333; display: flex; flex-direction: column; }
+        .tx-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ddd; padding-bottom: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 10px; }
+        .tx-status { padding: 4px 10px; border-radius: 4px; font-weight: bold; font-size: 0.9rem; }
+        .status-completed { background-color: #d5f5e3; color: #27ae60; }
+        .tx-payment { background: #fff; padding: 1.5rem; border-radius: 8px; margin-bottom: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
+        .tx-items { margin-bottom: 1.5rem; }
+        .item-row { display: flex; justify-content: space-between; padding: 0.8rem 0; color: #555; border-bottom: 1px dashed #ddd; }
+        .item-row:last-child { border-bottom: none; }
+        .review-section { margin-top: 1rem; padding: 1rem; background: #fff; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
+        .tx-footer { display: flex; justify-content: space-between; padding-top: 1.5rem; border-top: 2px solid #ddd; font-weight: bold; font-size: 1.3rem; color: var(--primary-bg); }
+        .loading { text-align: center; color: #666; font-size: 1.2rem; margin-top: 3rem; }
+        
+        /* Review Modal */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); align-items: center; justify-content: center; }
+        .modal-content { background-color: #fff; padding: 2rem; border-radius: 8px; width: 90%; max-width: 500px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        .modal-header { font-size: 1.5rem; color: var(--primary-bg); font-family: var(--font-heading); margin-bottom: 1rem; }
+        .star-rating { display: flex; gap: 5px; flex-direction: row-reverse; justify-content: flex-end; margin-bottom: 1rem; }
+        .star-rating input { display: none; }
+        .star-rating label { font-size: 2rem; color: #ccc; cursor: pointer; transition: color 0.2s; }
+        .star-rating input:checked ~ label, .star-rating label:hover, .star-rating label:hover ~ label { color: var(--primary-gold); }
+        .review-textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 1rem; font-family: inherit; }
+        .btn-review { background-color: var(--primary-gold); color: #fff; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .btn-review:hover { background-color: var(--secondary-gold); }
+        .btn-close { background-color: #ccc; color: #333; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; margin-right: 10px; }
+    </style>
+</head>
+<body>
+        <!-- Navbar -->
+    <nav class="navbar">
+        <div class="nav-brand">
+            <h1>LeatherLane</h1>
+            <span>Atelier</span>
+        </div>
+        <div class="nav-links">
+            <a href="home.html">Home</a>
+            <a href="products.html">Shop</a>
+            <a href="about.html">About</a>
+            <a href="faq.html">FAQ</a>
+            <a href="contact.html">Contact</a>
+            <a href="cart.html">🛒</a>
+            <a href="login.html">Login</a>
+            <a href="signup.html" class="btn-register">Register</a>
+        </div>
+    </nav>
+
+    <div class="main-section">
+        <div class="container">
+            <h2 style="color: var(--primary-bg); margin-bottom: 2rem; text-align: center; font-size: 2.2rem; font-family: var(--font-heading);">Transaction History</h2>
+            
+            <div id="authError" class="loading" style="display: none; color: #dc3545;">
+                Please <a href="login.html" style="color: #dc3545; text-decoration: underline;">login</a> to view your transactions.
+            </div>
+            <div id="loadingMsg" class="loading">Loading transactions...</div>
+            <div id="txContainer"></div>
+        </div>
+    </div>
+
+    <!-- Review Modal -->
+    <div id="reviewModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">Rate this Product</div>
+            <input type="hidden" id="reviewProductId">
+            <div class="star-rating">
+                <input type="radio" id="star5" name="rating" value="5"><label for="star5" title="5 stars">★</label>
+                <input type="radio" id="star4" name="rating" value="4"><label for="star4" title="4 stars">★</label>
+                <input type="radio" id="star3" name="rating" value="3"><label for="star3" title="3 stars">★</label>
+                <input type="radio" id="star2" name="rating" value="2"><label for="star2" title="2 stars">★</label>
+                <input type="radio" id="star1" name="rating" value="1"><label for="star1" title="1 star">★</label>
+            </div>
+            <textarea id="reviewText" class="review-textarea" rows="4" placeholder="Write your review here..."></textarea>
+            <div style="text-align: right;">
+                <button class="btn-close" onclick="closeReviewModal()">Cancel</button>
+                <button class="btn-review" onclick="submitReview()">Submit Review</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function loadTransactions() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                document.getElementById('loadingMsg').style.display = 'none';
+                document.getElementById('authError').style.display = 'block';
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/transactions', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (res.ok) {
+                    const txs = await res.json();
+                    document.getElementById('loadingMsg').style.display = 'none';
+                    
+                    if (txs.length === 0) {
+                        document.getElementById('txContainer').innerHTML = '<div style="text-align: center; color: #666; font-size: 1.1rem; margin-top: 2rem;">No transactions found.</div>';
+                        return;
+                    }
+
+                    const container = document.getElementById('txContainer');
+                    let html = '';
+                    txs.forEach(tx => {
+                        let paymentMethodDisplay = tx.paymentMethod === 'card' ? 'Credit/Debit Card' : tx.paymentMethod;
+                        let paymentDetailsHtml = tx.paymentCardLast4 ? `<div style="color: #7a6b5d; font-size: 0.9rem;">Card ending in: ${tx.paymentCardLast4}</div>` : '';
+                        let shippingHtml = `
+                            <div style="background: #fdfaf6; padding: 1rem; border-radius: 4px; margin-bottom: 1rem;">
+                                <div style="font-weight: bold; color: var(--primary-bg); margin-bottom: 5px;">Shipping Address</div>
+                                <div style="font-size: 0.9rem; color: #333;">
+                                    <strong>${tx.shippingName || 'Guest'}</strong> (${tx.shippingPhone || 'N/A'})<br>
+                                    ${tx.shippingAddress || 'N/A'}
+                                </div>
+                            </div>
+                        `;
+                        let itemsHtml = '';
+                        if (tx.items) {
+                            tx.items.forEach(item => {
+                                itemsHtml += `
+                                    <div class="item-row" style="flex-direction: column; gap: 0.5rem;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                                            <span style="font-weight: 500;">${item.name} x ${item.quantity}</span>
+                                            <span style="font-weight: bold;">Rs. ${(item.price * item.quantity).toFixed(2)}</span>
+                                        </div>
+                                `;
+                                
+                                if (tx.status.toLowerCase() === 'delivered') {
+                                    const deliveryDate = new Date(tx.updatedAt || tx.createdAt);
+                                    const now = new Date();
+                                    const diffTime = Math.abs(now - deliveryDate);
+                                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                                    
+                                    let exchangeHtml = '';
+                                    if (item.hasBeenExchanged) {
+                                        exchangeHtml = `<span style="background: #e0e0e0; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; color: #333; font-weight: bold;">Replacement Requested</span>
+                                                        <a href="exchange-tracking.html?id=${item.exchangeRequestId}" style="font-size: 0.8rem; color: var(--primary-bg); font-weight: bold; margin-left: 10px; text-decoration: underline;">Track Replacement</a>`;
+                                    } else if (diffDays > 7) {
+                                        exchangeHtml = `<span style="background: #e0e0e0; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; color: #333; font-weight: bold;">Not Eligible (Expired)</span>`;
+                                    } else {
+                                        exchangeHtml = `<a href="replacement-request.html?orderId=${tx.id}&itemId=${item.id}&productId=${item.productId}" style="background: var(--primary-bg); color: #fff; padding: 4px 10px; border-radius: 4px; font-size: 0.8rem; text-decoration: none;">Request Replacement</a>`;
+                                    }
+
+                                    itemsHtml += `
+                                        <div style="display: flex; flex-direction: column; gap: 0.6rem; margin-top: 10px; padding-top: 10px; border-top: 1px dashed #ddd;">
+                                            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; color: #333; font-weight: 500;">
+                                                <span>Leave feedback?</span>
+                                                <button onclick="openReviewModal(${item.productId})" style="background-color: #2B1D17; color: #ffffff; border: none; font-weight: 600; border-radius: 4px; padding: 6px 12px; font-size: 0.75rem; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">Write a Review</button>
+                                            </div>
+                                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                                <span style="font-size: 0.85rem; color: #333; font-weight: 500;">Replacement:</span>
+                                                <div style="display: flex; align-items: center; gap: 5px; flex-wrap: wrap; justify-content: flex-end;">
+                                                    ${exchangeHtml}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    `;
+                                }
+                                itemsHtml += `</div>`;
+                            });
+                        }
+                        const dateStr = new Date(tx.createdAt).toLocaleDateString();
+
+                        const cancelableStatuses = ['order placed', 'order confirmed', 'preparing order', 'packed'];
+                        const canCancel = cancelableStatuses.includes(tx.status.toLowerCase());
+                        
+                        let cancelBtnHtml = '';
+                        if (canCancel) {
+                            cancelBtnHtml = `<button onclick="cancelOrder(${tx.id})" style="background: transparent; color: #dc3545; border: 1px solid #dc3545; padding: 6px 14px; border-radius: 4px; font-size: 0.8rem; cursor: pointer; font-weight: 600; white-space: nowrap;">Cancel Order</button>`;
+                        }
+
+                        // Dynamic status badge styling
+                        let badgeBg = '#d5f5e3';
+                        let badgeColor = '#27ae60';
+                        const statusLower = tx.status.toLowerCase();
+                        if (statusLower === 'cancelled' || statusLower === 'rejected') {
+                            badgeBg = '#f8d7da';
+                            badgeColor = '#721c24';
+                        } else if (statusLower === 'order placed' || statusLower === 'preparing order') {
+                            badgeBg = '#fff3cd';
+                            badgeColor = '#856404';
+                        }
+
+                        html += `
+                            <div class="tx-card">
+                                <div class="tx-header" style="display: flex; flex-direction: column; gap: 0.8rem; border-bottom: 1px solid #ddd; padding-bottom: 1rem; margin-bottom: 1.5rem;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; gap: 10px;">
+                                        <span style="color: #333; font-weight: 600; font-size: 1rem; white-space: nowrap;">Date: ${dateStr}</span>
+                                        <span class="tx-status" style="background-color: ${badgeBg}; color: ${badgeColor}; white-space: nowrap; font-size: 0.8rem;">${tx.status}</span>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; gap: 10px;">
+                                        <a href="order-tracking.html?id=${tx.id}" style="font-size: 0.85rem; color: var(--primary-bg); font-weight: bold; text-decoration: underline; white-space: nowrap;">Track Order</a>
+                                        <div>
+                                            ${cancelBtnHtml}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="tx-payment">
+                                    <div style="font-weight: bold; color: var(--primary-bg);">Payment: ${paymentMethodDisplay}</div>
+                                    ${paymentDetailsHtml}
+                                </div>
+                                ${shippingHtml}
+                                <div class="tx-items">
+                                    <div style="font-weight: bold; color: var(--primary-bg); margin-bottom: 0.5rem;">Order Items</div>
+                                    ${itemsHtml}
+                                </div>
+                                <div class="tx-footer" style="margin-top: 1.5rem;">
+                                    <span>Total:</span>
+                                    <span>Rs. ${tx.totalAmount.toFixed(2)}</span>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    container.innerHTML = html;
+                } else {
+                    document.getElementById('loadingMsg').innerText = "Failed to load transactions.";
+                }
+            } catch (err) {
+                document.getElementById('loadingMsg').innerText = "Connection error.";
+            }
+        }
+
+        async function cancelOrder(id) {
+            if (!confirm('Are you sure you want to cancel this order?')) return;
+
+            const token = localStorage.getItem('token');
+            try {
+                const res = await fetch(`/api/transactions/${id}/cancel`, {
+                    method: 'PUT',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (res.ok) {
+                    alert('Order cancelled successfully.');
+                    loadTransactions();
+                } else {
+                    const data = await res.json();
+                    alert(data.message || 'Failed to cancel order.');
+                }
+            } catch (err) {
+                alert('Connection error.');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', loadTransactions);
+
+        // Review Modal Logic
+        function openReviewModal(productId) {
+            document.getElementById('reviewProductId').value = productId;
+            document.getElementById('reviewText').value = '';
+            document.querySelectorAll('input[name="rating"]').forEach(r => r.checked = false);
+            document.getElementById('reviewModal').style.display = 'flex';
+        }
+
+        function closeReviewModal() {
+            document.getElementById('reviewModal').style.display = 'none';
+        }
+
+        async function submitReview() {
+            const productId = document.getElementById('reviewProductId').value;
+            const text = document.getElementById('reviewText').value;
+            const ratingInput = document.querySelector('input[name="rating"]:checked');
+            
+            if (!ratingInput) {
+                alert("Please select a star rating.");
+                return;
+            }
+            const rating = parseInt(ratingInput.value);
+
+            const token = localStorage.getItem('token');
+            try {
+                const res = await fetch(`/api/products/${productId}/reviews`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        rating: rating,
+                        title: "Review",
+                        comment: text
+                    })
+                });
+
+                if (res.ok) {
+                    alert("Review submitted successfully! Thank you.");
+                    closeReviewModal();
+                } else {
+                    alert("Failed to submit review.");
+                }
+            } catch (err) {
+                alert("Error connecting to server.");
+            }
+        }
+    </script>
+    <script src="js/auth.js?v=5"></script>
+</body>
+</html>
+
+
+

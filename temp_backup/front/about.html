@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>About | LeatherLane Atelier</title>
+    <link rel="stylesheet" href="css/global.css">
+    <style>
+        /* Navbar */
+        .navbar {
+            background-color: var(--primary-bg);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        .nav-brand { display: flex; flex-direction: column; }
+        .nav-brand h1 { font-size: 1.5rem; margin: 0; color: #fff; letter-spacing: 1px; text-transform: none; }
+        .nav-brand span { font-size: 0.7rem; color: var(--secondary-text); text-transform: uppercase; letter-spacing: 2px; }
+        .nav-links { display: flex; align-items: center; gap: 1.5rem; font-size: 0.9rem; }
+        .nav-links a { color: #ddd; }
+        .nav-links a:hover { color: var(--primary-gold); }
+        .btn-register { background-color: var(--primary-gold); color: #111; padding: 6px 16px; border-radius: 4px; font-weight: 600; }
+        .btn-register:hover { background-color: var(--secondary-gold); color: #111; }
+
+        /* Hero */
+        .hero {
+            position: relative;
+            background-color: #6a4a35;
+            padding: 8rem 2rem;
+            text-align: center;
+            color: #fff;
+            overflow: hidden;
+        }
+        .hero-bg {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-size: cover;
+            background-position: center;
+            z-index: 1;
+            opacity: 0;
+            animation: fadeSlide 15s infinite;
+        }
+        .hero-bg:nth-child(1) { background-image: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1590736704728-f4730bb30770?ixlib=rb-1.2.1&auto=format&fit=crop&w=1600&q=80'); animation-delay: 0s; }
+        .hero-bg:nth-child(2) { background-image: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1548036328-c9fa89d128fa?ixlib=rb-1.2.1&auto=format&fit=crop&w=1600&q=80'); animation-delay: 5s; }
+        .hero-bg:nth-child(3) { background-image: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1627123424574-724758594e93?ixlib=rb-1.2.1&auto=format&fit=crop&w=1600&q=80'); animation-delay: 10s; }
+        
+        @keyframes fadeSlide {
+            0% { opacity: 0; transform: scale(1.05); }
+            10% { opacity: 1; }
+            33% { opacity: 1; }
+            43% { opacity: 0; }
+            100% { opacity: 0; transform: scale(1); }
+        }
+        .hero-content {
+            position: relative;
+            z-index: 2;
+        }
+        .hero h2 { font-size: 2.8rem; color: #fff; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 2px;}
+        .hero p { font-size: 1.1rem; color: #e0e0e0; font-family: var(--font-body); letter-spacing: 1px;}
+
+        /* Story Section */
+        .story-section {
+            background-color: #fff;
+            padding: 5rem 2rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 4rem;
+            color: #333;
+        }
+        .story-text {
+            max-width: 500px;
+        }
+        .story-text h3 {
+            color: var(--primary-bg);
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+        }
+        .story-text p {
+            margin-bottom: 1rem;
+            font-size: 0.95rem;
+            color: #333;
+            line-height: 1.8;
+        }
+        .story-image {
+            width: 450px;
+            height: 350px;
+            background-color: #f5f5f5;
+            border: 1px solid #ddd;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #999;
+            font-size: 0.9rem;
+        }
+
+        /* Values Section */
+        .values-section {
+            background-color: var(--light-bg);
+            padding: 5rem 2rem;
+            text-align: center;
+        }
+        .values-section h3 {
+            color: var(--primary-bg);
+            font-size: 2rem;
+            margin-bottom: 3rem;
+        }
+        .values-grid {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .value-card {
+            background: #fff;
+            border-radius: 8px;
+            padding: 2rem 1.5rem;
+            width: 260px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        .value-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        .value-card h4 {
+            color: var(--primary-bg);
+            font-family: var(--font-heading);
+            font-size: 1.2rem;
+            margin-bottom: 0.8rem;
+        }
+        .value-card p {
+            font-size: 0.85rem;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        /* Footer */
+        .footer { background-color: var(--primary-bg); color: var(--primary-text); padding: 4rem 2rem 2rem; }
+        .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 2rem; max-width: 1200px; margin: 0 auto; margin-bottom: 3rem; }
+        .footer-col h5 { color: var(--primary-gold); font-family: var(--font-body); font-size: 1rem; margin-bottom: 1.5rem; font-weight: 600; }
+        .footer-col.brand h5 { font-family: var(--font-heading); font-size: 1.5rem; color: #fff; }
+        .footer-col p { font-size: 0.85rem; color: var(--secondary-text); line-height: 1.8; margin-bottom: 1rem; }
+        .footer-col ul { list-style: none; }
+        .footer-col ul li { margin-bottom: 0.8rem; }
+        .footer-col ul li a { color: var(--primary-text); font-size: 0.85rem; }
+        .footer-col ul li a:hover { color: var(--primary-gold); }
+        .footer-bottom { max-width: 1200px; margin: 0 auto; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 2rem; display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--secondary-text); }
+        .footer-bottom-links a { color: var(--secondary-text); margin-left: 1.5rem; }
+        
+        @media (max-width: 900px) {
+            .story-section { flex-direction: column; text-align: center; }
+            .footer-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+        <!-- Navbar -->
+    <nav class="navbar">
+        <div class="nav-brand">
+            <h1>LeatherLane</h1>
+            <span>Atelier</span>
+        </div>
+        <div class="nav-links">
+            <a href="home.html">Home</a>
+            <a href="products.html">Shop</a>
+            <a href="about.html">About</a>
+            <a href="faq.html">FAQ</a>
+            <a href="contact.html">Contact</a>
+            <a href="cart.html">🛒</a>
+            <a href="login.html">Login</a>
+            <a href="signup.html" class="btn-register">Register</a>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-bg"></div>
+        <div class="hero-bg"></div>
+        <div class="hero-bg"></div>
+        <div class="hero-content">
+            <h2>Our Story</h2>
+            <p>Crafting Excellence Since 1985</p>
+        </div>
+    </section>
+
+    <!-- Story Section -->
+    <section class="story-section">
+        <div class="story-text">
+            <h3>The Art of Leather Crafting</h3>
+            <p>LeatherLane Atelier was founded with a simple yet profound belief: that true luxury lies in the marriage of timeless design and meticulous craftsmanship. For over three decades, we have dedicated ourselves to the art of creating leather goods that not only stand the test of time but become more beautiful with age.</p>
+            <p>Every piece in our collection is handcrafted by skilled artisans who bring decades of experience to their work. We source only the finest full-grain leather from sustainable tanneries around the world, ensuring both quality and ethical responsibility.</p>
+            <p>From our classic wallets to our signature bags, each item tells a story of passion, precision, and pride. We don't just make products—we create heirlooms.</p>
+        </div>
+        <div class="story-image" style="background: none; border: none; padding: 0;">
+            <img src="/images/site/about-image.jpg" alt="About LeatherLane" style="width: 100%; height: 100%; object-fit: cover; border-radius: 4px;" onerror="this.onerror=null; this.style.display='none'; document.getElementById('aboutPlaceholder').style.display='flex';">
+            <div id="aboutPlaceholder" style="display: none; width: 100%; height: 100%; background-color: #f5f5f5; border: 1px solid #ddd; justify-content: center; align-items: center; color: #999; font-size: 0.9rem; border-radius: 4px; text-align: center;">
+                <div>
+                    <div>[ Image Placeholder ]</div>
+                    <div style="font-size: 0.8rem; margin-top: 5px;">No image uploaded yet.</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Values Section -->
+    <section class="values-section">
+        <h3>Our Values</h3>
+        <div class="values-grid">
+            <div class="value-card">
+                <div class="value-icon">??</div>
+                <h4>Sustainability</h4>
+                <p>We are committed to environmentally responsible practices, from sourcing to production.</p>
+            </div>
+            <div class="value-card">
+                <div class="value-icon">???</div>
+                <h4>Craftsmanship</h4>
+                <p>Every piece is meticulously handcrafted by our skilled artisans.</p>
+            </div>
+            <div class="value-card">
+                <div class="value-icon">??</div>
+                <h4>Quality</h4>
+                <p>We never compromise on quality. Only the finest materials make the cut.</p>
+            </div>
+            <div class="value-card">
+                <div class="value-icon">??</div>
+                <h4>Community</h4>
+                <p>We believe in supporting our artisans and local communities.</p>
+            </div>
+        </div>
+    </section>
+
+        <!-- Footer -->
+        <footer class="footer">
+        <div class="footer-grid">
+            <div class="footer-col brand">
+                <h5>LeatherLane</h5>
+                <p>Premium handcrafted men's footwear. Specializing in Chappals, Peshawari Chappals, Shoes, and Sandals.</p>
+                <div style="font-size: 1.2rem; display: flex; gap: 10px;">
+                    <a href="https://www.instagram.com/leatherlane_atelier?igsh=Znk1Y2ZsNDkyZHZy&utm_source=qr" target="_blank" style="text-decoration: none;">📷</a>
+                </div>
+            </div>
+            <div class="footer-col">
+                <h5>Shop Men's</h5>
+                <ul>
+                    <li><a href="products.html?category=Chappal">Chappal</a></li>
+                    <li><a href="products.html?category=Peshawari Chappal">Peshawari Chappal</a></li>
+                    <li><a href="products.html?category=Shoes">Shoes</a></li>
+                    <li><a href="products.html?category=Sandals">Sandals</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h5>Customer Service</h5>
+                <ul>
+                    <li><a href="shipping-policy.html">Shipping Policy</a></li>
+                    <li><a href="return-refund-policy.html">Return & Refund Policy</a></li>
+                    <li><a href="faq.html">FAQ</a></li>
+                    <li><a href="contact.html">Contact Us</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h5>Contact Info</h5>
+                <ul>
+                    <li>📍 Ward no 7, street 14, house 143, Mohallah Ansarian Jhang City, Punjab, 35200</li>
+                    <li>✉️ leatherlaneatelier@gmail.com</li>
+                    <li>📞 03376306162</li>
+                    <li>🕒 Mon-Sat: 10 AM - 7 PM</li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <div>&copy; 2026 LeatherLane. All rights reserved.</div>
+            <div class="footer-bottom-links">
+                <a href="privacy-policy.html">Privacy Policy</a>
+                <a href="terms-and-conditions.html">Terms & Conditions</a>
+            </div>
+        </div>
+    </footer>
+    <script src="js/auth.js?v=5"></script>
+</body>
+</html>
+
+
+

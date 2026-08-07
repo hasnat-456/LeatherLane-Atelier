@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Products | LeatherLane Atelier</title>
+    <link rel="stylesheet" href="css/global.css">
+    <style>
+        /* Navbar */
+        .navbar {
+            background-color: var(--primary-bg);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        .nav-brand { display: flex; flex-direction: column; }
+        .nav-brand h1 { font-size: 1.5rem; margin: 0; color: #fff; letter-spacing: 1px; text-transform: none; }
+        .nav-brand span { font-size: 0.7rem; color: var(--secondary-text); text-transform: uppercase; letter-spacing: 2px; }
+        .nav-links { display: flex; align-items: center; gap: 1.5rem; font-size: 0.9rem; }
+        .nav-links a { color: #ddd; }
+        .nav-links a:hover { color: var(--primary-gold); }
+        .btn-register { background-color: var(--primary-gold); color: #111; padding: 6px 16px; border-radius: 4px; font-weight: 600; }
+        .btn-register:hover { background-color: var(--secondary-gold); color: #111; }
+        
+        .cart-badge {
+            background-color: var(--primary-gold);
+            color: #111;
+            border-radius: 50%;
+            padding: 2px 6px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            margin-left: 4px;
+            display: none; /* hidden until items are added */
+        }
+
+        /* Hero */
+        .hero {
+            position: relative;
+            background-color: #6a4a35;
+            padding: 6rem 2rem;
+            text-align: center;
+            color: #fff;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 300px;
+        }
+        
+        .hero-slider {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 0;
+            background-color: #8C5E3C;
+        }
+
+        .hero-slide {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-size: cover;
+            background-position: center;
+            opacity: 0;
+            animation: slideAnimation 20s infinite;
+        }
+
+        .hero-slide:nth-child(1) { background-image: url('https://images.unsplash.com/photo-1547949003-9792a18a2601?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80'); animation-delay: 0s; }
+        .hero-slide:nth-child(2) { background-image: url('https://images.unsplash.com/photo-1553062407-98eeb64c6a62?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80'); animation-delay: 5s; }
+        .hero-slide:nth-child(3) { background-image: url('https://images.unsplash.com/photo-1590874103328-eac38a683ce7?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80'); animation-delay: 10s; }
+        .hero-slide:nth-child(4) { background-image: url('https://images.unsplash.com/photo-1614252235316-8c857d38b5f4?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80'); animation-delay: 15s; }
+
+        @keyframes slideAnimation {
+            0% { opacity: 0; transform: scale(1.05); }
+            5% { opacity: 1; transform: scale(1); }
+            25% { opacity: 1; transform: scale(1); }
+            30% { opacity: 0; transform: scale(1.05); }
+            100% { opacity: 0; }
+        }
+
+        .hero-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: linear-gradient(to right, rgba(43, 29, 23, 0.7), rgba(140, 94, 60, 0.7));
+            z-index: 1;
+        }
+
+        .hero h2 { font-size: 2.5rem; color: #fff; margin-bottom: 0.5rem; position: relative; z-index: 2; font-family: var(--font-heading); text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
+        .hero p { font-size: 1.1rem; color: #f0f0f0; font-family: var(--font-body); position: relative; z-index: 2; text-shadow: 0 1px 5px rgba(0,0,0,0.5); }
+
+        /* Featured Products */
+        .products-section {
+            background-color: var(--light-bg);
+            padding: 4rem 2rem;
+            text-align: center;
+        }
+
+        .products-section h3 {
+            font-size: 2rem;
+            color: var(--primary-bg);
+            margin-bottom: 0.5rem;
+        }
+
+        .products-section > p {
+            color: #666;
+            margin-bottom: 3rem;
+            font-size: 0.9rem;
+        }
+
+        .product-grid {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .product-card {
+            background: #fff;
+            border-radius: 8px;
+            overflow: hidden;
+            width: 300px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            text-align: left;
+            transition: transform 0.2s;
+        }
+
+        .product-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .product-img {
+            height: 250px;
+            background-color: #eee;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #999;
+            font-size: 0.9rem;
+        }
+
+        .product-info {
+            padding: 1.5rem;
+        }
+
+        .product-category {
+            font-size: 0.75rem;
+            color: var(--primary-gold);
+            text-transform: uppercase;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .product-title {
+            font-family: var(--font-heading);
+            font-size: 1.1rem;
+            color: var(--primary-bg);
+            margin-bottom: 1rem;
+            font-weight: 700;
+        }
+
+        .product-bottom {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .product-price {
+            font-weight: 600;
+            color: var(--primary-bg);
+            font-size: 1.1rem;
+        }
+
+        .btn-cart {
+            background-color: var(--primary-bg);
+            color: #fff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: var(--font-body);
+            font-size: 0.85rem;
+            transition: background-color 0.2s;
+        }
+
+        .btn-cart:hover {
+            background-color: var(--secondary-bg);
+        }
+
+        /* Footer */
+        .footer { background-color: var(--primary-bg); color: var(--primary-text); padding: 4rem 2rem 2rem; }
+        .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 2rem; max-width: 1200px; margin: 0 auto; margin-bottom: 3rem; }
+        .footer-col h5 { color: var(--primary-gold); font-family: var(--font-body); font-size: 1rem; margin-bottom: 1.5rem; font-weight: 600; }
+        .footer-col.brand h5 { font-family: var(--font-heading); font-size: 1.5rem; color: #fff; }
+        .footer-col p { font-size: 0.85rem; color: var(--secondary-text); line-height: 1.8; margin-bottom: 1rem; }
+        .footer-col ul { list-style: none; }
+        .footer-col ul li { margin-bottom: 0.8rem; }
+        .footer-col ul li a { color: var(--primary-text); font-size: 0.85rem; }
+        .footer-col ul li a:hover { color: var(--primary-gold); }
+        .footer-bottom { max-width: 1200px; margin: 0 auto; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 2rem; display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--secondary-text); }
+        .footer-bottom-links a { color: var(--secondary-text); margin-left: 1.5rem; }
+        
+    </style>
+</head>
+<body>
+        <!-- Navbar -->
+    <nav class="navbar">
+        <div class="nav-brand">
+            <h1>LeatherLane</h1>
+            <span>Atelier</span>
+        </div>
+        <div class="nav-links">
+            <a href="home.html">Home</a>
+            <a href="products.html">Shop</a>
+            <a href="about.html">About</a>
+            <a href="faq.html">FAQ</a>
+            <a href="contact.html">Contact</a>
+            <a href="cart.html">🛒</a>
+            <a href="login.html">Login</a>
+            <a href="signup.html" class="btn-register">Register</a>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-slider">
+            <div class="hero-slide"></div>
+            <div class="hero-slide"></div>
+            <div class="hero-slide"></div>
+            <div class="hero-slide"></div>
+        </div>
+        <div class="hero-overlay"></div>
+        <h2>The Collection</h2>
+        <p>Explore our full range of handcrafted luxury</p>
+    </section>    <!-- Products -->
+    <section class="products-section" style="padding: 3rem 1.5rem; background-color: var(--light-bg);">
+        <div style="display: grid; grid-template-columns: 280px 1fr; gap: 2rem; max-width: 1200px; margin: 0 auto; text-align: left;">
+            
+            <!-- Filters Sidebar -->
+            <div style="background: #fff; padding: 1.5rem; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); height: fit-content;">
+                <h3 style="font-size: 1.25rem; font-family: var(--font-heading); color: var(--primary-bg); margin-bottom: 1.5rem; border-bottom: 2px solid var(--primary-gold); padding-bottom: 8px; font-weight: bold;">Filters</h3>
+                
+                <!-- Search Input -->
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="font-weight: 600; color: var(--primary-bg); font-size: 0.9rem; display: block; margin-bottom: 6px;">Search Products</label>
+                    <input type="text" id="searchQuery" onkeyup="applyFilters()" placeholder="Search by name or desc..." style="width: 100%; padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; font-family: var(--font-body); font-size: 0.85rem; color:#333; background:#fff;">
+                </div>
+
+                <!-- Categories Checklist -->
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="font-weight: 600; color: var(--primary-bg); font-size: 0.9rem; display: block; margin-bottom: 8px;">Categories</label>
+                    <div id="categoryFilterContainer" style="display: flex; flex-direction: column; gap: 8px; max-height: 200px; overflow-y: auto; padding-right: 4px;">
+                        <div style="color: #666; font-size: 0.85rem;">Loading categories...</div>
+                    </div>
+                </div>
+
+                <!-- Price Range Inputs -->
+                <div style="margin-bottom: 1.5rem; border-top: 1px solid #eee; padding-top: 1rem;">
+                    <label style="font-weight: 600; color: var(--primary-bg); font-size: 0.9rem; display: block; margin-bottom: 8px;">Price Range (Rs.)</label>
+                    <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 12px;">
+                        <input type="number" id="priceMin" oninput="applyFilters()" placeholder="Min" style="width: 50%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-family: var(--font-body); font-size: 0.85rem; color:#333; background:#fff;">
+                        <span style="color: #666;">-</span>
+                        <input type="number" id="priceMax" oninput="applyFilters()" placeholder="Max" style="width: 50%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-family: var(--font-body); font-size: 0.85rem; color:#333; background:#fff;">
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div style="display: flex; gap: 10px; margin-top: 1.5rem; border-top: 1px solid #eee; padding-top: 1rem;">
+                    <button class="btn-cart" onclick="resetFilters()" style="width: 100%; background-color: #666; font-weight: 600; text-align: center;">Reset Filters</button>
+                </div>
+            </div>
+
+            <!-- Product Display Grid -->
+            <div>
+                <div class="product-grid" id="productGrid" style="justify-content: flex-start; gap: 1.5rem; width: 100%; max-width: 100%; margin: 0;">
+                    <div style="padding: 40px; text-align: center; color:#666; width: 100%;">Loading collection...</div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-grid">
+            <div class="footer-col brand">
+                <h5>LeatherLane</h5>
+                <p>Premium handcrafted men's footwear. Specializing in Chappals, Peshawari Chappals, Shoes, and Sandals.</p>
+                <div style="font-size: 1.2rem; display: flex; gap: 10px;">
+                    <a href="https://www.instagram.com/leatherlane_atelier?igsh=Znk1Y2ZsNDkyZHZy&utm_source=qr" target="_blank" style="text-decoration: none;">📷</a>
+                </div>
+            </div>
+            <div class="footer-col">
+                <h5>Shop Men's</h5>
+                <ul id="footerCategoriesList">
+                    <li><a href="products.html?category=Chappal">Chappal</a></li>
+                    <li><a href="products.html?category=Peshawari Chappal">Peshawari Chappal</a></li>
+                    <li><a href="products.html?category=Shoes">Shoes</a></li>
+                    <li><a href="products.html?category=Sandals">Sandals</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h5>Customer Service</h5>
+                <ul>
+                    <li><a href="shipping-policy.html">Shipping Policy</a></li>
+                    <li><a href="return-refund-policy.html">Return & Refund Policy</a></li>
+                    <li><a href="faq.html">FAQ</a></li>
+                    <li><a href="contact.html">Contact Us</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h5>Contact Info</h5>
+                <ul>
+                    <li>📍 Ward no 7, street 14, house 143, Mohallah Ansarian Jhang City, Punjab, 35200</li>
+                    <li>✉️ leatherlaneatelier@gmail.com</li>
+                    <li>📞 03376306162</li>
+                    <li>🕒 Mon-Sat: 10 AM - 7 PM</li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <div>&copy; 2026 LeatherLane. All rights reserved.</div>
+            <div class="footer-bottom-links">
+                <a href="privacy-policy.html">Privacy Policy</a>
+                <a href="terms-and-conditions.html">Terms & Conditions</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Removed fallback products as per request
+
+        function getCart() {
+            const cartStr = localStorage.getItem('leatherlane_cart');
+            return cartStr ? JSON.parse(cartStr) : [];
+        }
+
+        function updateCartBadge() {
+            const cart = getCart();
+            const badge = document.getElementById('cartBadge');
+            if (cart.length > 0) {
+                badge.style.display = 'inline-block';
+                badge.innerText = cart.length;
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        window.addToCart = async function(id, name, price) {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/cart', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ productId: id, quantity: 1 })
+                });
+                if (res.ok) {
+                    alert(`Added ${name} to cart!`);
+                    window.location.reload();
+                } else {
+                    alert('Failed to add to cart');
+                }
+            } catch (err) {
+                alert('Error adding to cart');
+            }
+        }
+
+        let allProducts = [];
+        let activeCategories = [];
+        let selectedCategories = [];
+
+        async function loadShopData() {
+            await fetchCategories();
+            await fetchProducts();
+            
+            // Check query parameters (e.g. products.html?category=Chappal)
+            const urlParams = new URLSearchParams(window.location.search);
+            const categoryParam = urlParams.get('category');
+            if (categoryParam) {
+                const checkboxes = document.querySelectorAll('.category-filter-checkbox');
+                checkboxes.forEach(cb => {
+                    if (cb.value.toLowerCase() === categoryParam.toLowerCase()) {
+                        cb.checked = true;
+                    }
+                });
+                applyFilters();
+            }
+        }
+
+        async function fetchCategories() {
+            try {
+                const res = await fetch('/api/products/categories');
+                if (res.ok) {
+                    activeCategories = await res.json() || [];
+                    renderCategoryFilters();
+                }
+            } catch (err) {
+                console.error("Failed to load categories:", err);
+            }
+        }
+
+        function renderCategoryFilters() {
+            const container = document.getElementById('categoryFilterContainer');
+            if (!container) return;
+            
+            if (activeCategories.length === 0) {
+                container.innerHTML = '<div style="color: #888; font-size: 0.85rem;">No categories available.</div>';
+                return;
+            }
+
+            let html = '';
+            activeCategories.forEach(cat => {
+                html += `
+                    <label style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: #555; cursor: pointer; user-select: none;">
+                        <input type="checkbox" class="category-filter-checkbox" value="${cat.name}" onchange="applyFilters()" style="transform: scale(1.15);">
+                        <span>${cat.name}</span>
+                    </label>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        async function fetchProducts() {
+            try {
+                const response = await fetch('/api/products');
+                if (response.ok) {
+                    allProducts = await response.json() || [];
+                    renderProducts(allProducts);
+                }
+            } catch (err) {
+                console.log("Failed to fetch products from API:", err);
+            }
+        }
+
+        function renderProducts(products) {
+            const grid = document.getElementById('productGrid');
+            if (!grid) return;
+
+            grid.innerHTML = '';
+            
+            if (products.length === 0) {
+                grid.innerHTML = '<div style="padding: 40px; text-align: center; color: #666; font-size: 1.1rem; width: 100%;">No products found matching the criteria.</div>';
+                return;
+            }
+            
+            products.forEach(product => {
+                const card = document.createElement('div');
+                card.className = 'product-card';
+                
+                // Set badge status based on AvailabilityStatus if not "Available"
+                let statusBadge = '';
+                if (product.availabilityStatus === "Temporarily Unavailable") {
+                    statusBadge = `<div style="position: absolute; top: 10px; right: 10px; background-color: #e0a800; color: #fff; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; z-index: 10;">Temporarily Unavailable</div>`;
+                } else if (product.availabilityStatus === "Discontinued") {
+                    statusBadge = `<div style="position: absolute; top: 10px; right: 10px; background-color: #c82333; color: #fff; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; z-index: 10;">Discontinued</div>`;
+                }
+
+                card.innerHTML = `
+                    <div style="position: relative;">
+                        ${statusBadge}
+                        <a href="product-detail.html?id=${product.id}" style="text-decoration: none; color: inherit;">
+                            <img src="${product.thumbnail || 'https://via.placeholder.com/300x250'}" class="product-img" style="width: 100%; object-fit: cover;">
+                        </a>
+                    </div>
+                    <div class="product-info">
+                        <div class="product-category">${product.category || 'Leather Goods'}</div>
+                        <a href="product-detail.html?id=${product.id}" style="text-decoration: none; color: inherit;">
+                            <div class="product-title" style="cursor: pointer;">${product.name}</div>
+                        </a>
+                        <div class="product-bottom">
+                            <div class="product-price">Rs. ${product.price}</div>
+                            <button class="btn-cart" onclick="window.location.href='product-detail.html?id=${product.id}'">View Details</button>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function applyFilters() {
+            const searchQuery = document.getElementById('searchQuery').value.toLowerCase().trim();
+            
+            const checkboxes = document.querySelectorAll('.category-filter-checkbox:checked');
+            selectedCategories = Array.from(checkboxes).map(cb => cb.value);
+            
+            const minPrice = parseFloat(document.getElementById('priceMin').value) || 0;
+            const maxPrice = parseFloat(document.getElementById('priceMax').value) || Infinity;
+            
+            let filtered = allProducts;
+            
+            // 1. Text Search query filter
+            if (searchQuery) {
+                filtered = filtered.filter(p => 
+                    p.name.toLowerCase().includes(searchQuery) || 
+                    (p.description && p.description.toLowerCase().includes(searchQuery))
+                );
+            }
+            
+            // 2. Category Checkboxes filter
+            if (selectedCategories.length > 0) {
+                filtered = filtered.filter(p => selectedCategories.includes(p.category));
+            }
+            
+            // 3. Price Range filter
+            filtered = filtered.filter(p => p.price >= minPrice && p.price <= maxPrice);
+            
+            renderProducts(filtered);
+        }
+
+        function resetFilters() {
+            document.getElementById('searchQuery').value = '';
+            document.querySelectorAll('.category-filter-checkbox').forEach(cb => cb.checked = false);
+            document.getElementById('priceMin').value = '';
+            document.getElementById('priceMax').value = '';
+            renderProducts(allProducts);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadShopData();
+            updateCartBadge();
+        });
+    </script>
+    <script src="js/auth.js?v=5"></script>
+</body>
+</html>
+
+
+

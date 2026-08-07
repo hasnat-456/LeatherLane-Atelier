@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Product Details | LeatherLane Atelier</title>
+    <link rel="stylesheet" href="css/global.css">
+    <style>
+        .main-section { background-color: #fff; color: #333; min-height: 100vh; padding: 2rem 0; }
+        .detail-container { max-width: 1200px; margin: 0 auto; padding: 0 2rem; display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; }
+        
+        /* Image Gallery */
+        .gallery-container { display: flex; flex-direction: column; gap: 1rem; }
+        
+        /* Main Image Zoom */
+        .main-image-wrapper {
+            position: relative;
+            width: 100%;
+            height: 500px;
+            border-radius: 8px;
+            overflow: hidden;
+            background-color: #f9f9f9;
+            cursor: crosshair;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        .main-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: opacity 0.3s;
+        }
+        
+        .zoom-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-repeat: no-repeat;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+            background-color: #fff; /* covers the main image when zooming */
+        }
+        .main-image-wrapper:hover .zoom-overlay { opacity: 1; }
+        .main-image-wrapper:hover .main-image { opacity: 0; }
+
+        /* Thumbnails */
+        .thumbnails { display: flex; gap: 1rem; overflow-x: auto; padding-bottom: 0.5rem; }
+        .thumbnail { width: 80px; height: 80px; border-radius: 4px; object-fit: cover; cursor: pointer; opacity: 0.6; transition: all 0.2s; border: 2px solid transparent; }
+        .thumbnail:hover, .thumbnail.active { opacity: 1; border-color: var(--primary-gold); }
+
+        /* Product Info */
+        .info-container { display: flex; flex-direction: column; background: var(--light-bg); padding: 2.5rem; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
+        .product-category { color: var(--primary-gold); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 2px; font-weight: 600; margin-bottom: 0.5rem; }
+        .product-title { font-size: 2.5rem; color: var(--primary-bg); margin-bottom: 1rem; font-family: var(--font-heading); }
+        .product-price { font-size: 1.8rem; font-weight: 700; color: var(--primary-bg); margin-bottom: 1.5rem; }
+        .product-desc { color: #555; font-size: 1.1rem; line-height: 1.6; margin-bottom: 2rem; }
+
+        /* Size Selector */
+        .size-section { margin-bottom: 2rem; }
+        .size-label { font-weight: 600; color: var(--primary-bg); margin-bottom: 0.8rem; display: block; }
+        .size-options { display: flex; gap: 1rem; }
+        .size-chip {
+            padding: 10px 20px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            color: #555;
+            transition: all 0.2s;
+            user-select: none;
+            background: #f9f9f9;
+        }
+        .size-chip:hover { border-color: var(--primary-gold); }
+        .size-chip.selected { background-color: var(--primary-gold); color: #111; border-color: var(--primary-gold); }
+
+        /* Add to Cart */
+        .btn-add {
+            background-color: var(--primary-gold);
+            color: #111;
+            padding: 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            width: 100%;
+            margin-bottom: 3rem;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .btn-add:hover { background-color: var(--secondary-gold); }
+
+        /* Details Accordion */
+        .details-section { border-top: 1px solid #eee; }
+        .detail-item { border-bottom: 1px solid #eee; padding: 1.5rem 0; }
+        .detail-item h4 { color: var(--primary-gold); font-size: 1.1rem; margin-bottom: 0.5rem; }
+        .detail-item p { color: #555; font-size: 0.95rem; line-height: 1.5; }
+        
+        .error-msg { color: #dc3545; margin-bottom: 1rem; display: none; font-weight: bold; }
+
+        /* Reviews Section */
+        .reviews-container { grid-column: 1 / -1; margin-top: 4rem; padding-top: 2rem; border-top: 1px solid #eee; }
+        .reviews-title { font-family: var(--font-heading); color: var(--primary-bg); font-size: 2rem; margin-bottom: 2rem; text-align: center; }
+        .review-card { background-color: var(--light-bg); padding: 1.5rem; border-radius: 8px; margin-bottom: 1rem; box-shadow: 0 2px 10px rgba(0,0,0,0.03); }
+        .review-header { display: flex; justify-content: space-between; margin-bottom: 0.5rem; }
+        .reviewer-name { font-weight: bold; color: var(--primary-bg); }
+        .review-date { color: #888; font-size: 0.85rem; }
+        .review-stars { color: var(--primary-gold); margin-bottom: 1rem; font-size: 1.2rem; }
+        .review-body { color: #555; line-height: 1.5; }
+        
+        .product-rating { display: flex; align-items: center; gap: 10px; margin-bottom: 1.5rem; }
+        .stars-display { color: var(--primary-gold); font-size: 1.2rem; }
+        .rating-count { color: #888; font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+    <nav class="navbar" style="background-color: var(--primary-bg); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100;">
+        <div class="nav-brand" style="display: flex; flex-direction: column;">
+            <h1 style="color: #fff; margin: 0; font-size: 1.5rem;">LeatherLane</h1>
+            <span style="color: var(--secondary-text); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 2px;">Atelier</span>
+        </div>
+        <div class="nav-links" style="display: flex; gap: 1.5rem; align-items: center;">
+            <a href="home.html" style="color: #ddd;">Home</a>
+            <a href="products.html" style="color: #ddd;">Shop</a>
+            <a href="cart.html" style="color: #ddd;">Cart <span id="cartBadge" class="cart-badge" style="background: var(--primary-gold); color: #111; padding: 2px 6px; border-radius: 50%; font-size: 0.7rem; font-weight: bold; margin-left: 4px; display: none;"></span></a>
+        </div>
+    </nav>
+
+    <div class="main-section">
+        <div class="detail-container" id="productContainer">
+            <div style="grid-column: 1 / -1; text-align: center; padding: 100px;">Loading product details...</div>
+        </div>
+    </div>
+
+    <script>
+        // Removed fallback products array
+
+        let currentProduct = null;
+        let selectedSize = null;
+
+        function updateCartBadge() {
+            const cartStr = localStorage.getItem('leatherlane_cart');
+            const cart = cartStr ? JSON.parse(cartStr) : [];
+            const badge = document.getElementById('cartBadge');
+            if (cart.length > 0) {
+                badge.style.display = 'inline-block';
+                let totalItems = 0;
+                cart.forEach(item => totalItems += (item.quantity || 1));
+                badge.innerText = totalItems;
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        async function loadProduct() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const productId = parseInt(urlParams.get('id'));
+
+            if (!productId) {
+                window.location.href = 'products.html';
+                return;
+            }
+
+            try {
+                const res = await fetch(`/api/products/${productId}`);
+                if (res.ok) {
+                    currentProduct = await res.json();
+                } else {
+                    currentProduct = null;
+                }
+            } catch (err) {
+                currentProduct = null;
+            }
+            
+            if (!currentProduct) {
+                document.getElementById('productContainer').innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 100px;">Product not found.</div>';
+                return;
+            }
+
+            renderProduct();
+            loadReviews(productId);
+        }
+
+        async function loadReviews(productId) {
+            try {
+                const res = await fetch(`/api/products/${productId}/reviews`);
+                if (res.ok) {
+                    const reviews = await res.json();
+                    renderReviews(reviews);
+                }
+            } catch (err) {
+                console.error("Failed to load reviews");
+            }
+        }
+
+        function renderReviews(reviews) {
+            const container = document.getElementById('reviewsList');
+            if (!container) return;
+
+            if (reviews.length === 0) {
+                container.innerHTML = '<p style="text-align:center; color:#888;">No reviews yet. Be the first to review!</p>';
+                return;
+            }
+
+            let html = '';
+            reviews.forEach(r => {
+                let stars = '?'.repeat(r.rating) + '?'.repeat(5 - r.rating);
+                html += `
+                    <div class="review-card">
+                        <div class="review-header">
+                            <span class="reviewer-name">${r.userName || 'Anonymous'}</span>
+                            <span class="review-date">${new Date(r.createdAt).toLocaleDateString()}</span>
+                        </div>
+                        <div class="review-stars">${stars}</div>
+                        <div class="review-body">${r.comment}</div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function selectSize(size, element) {
+            selectedSize = size;
+            document.querySelectorAll('.size-chip').forEach(el => el.classList.remove('selected'));
+            element.classList.add('selected');
+            document.getElementById('sizeError').style.display = 'none';
+        }
+
+        async function addToCart() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            if (currentProduct.sizes && currentProduct.sizes.length > 0 && !selectedSize) {
+                document.getElementById('sizeError').style.display = 'block';
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/cart', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ productId: currentProduct.id, quantity: 1 })
+                });
+                if (res.ok) {
+                    alert(`Added ${currentProduct.name}${selectedSize ? ' (' + selectedSize + ')' : ''} to cart!`);
+                    window.location.reload();
+                } else {
+                    alert('Failed to add to cart');
+                }
+            } catch (err) {
+                alert('Error adding to cart');
+            }
+        }
+
+        function changeImage(src, element) {
+            const mainImg = document.getElementById('mainImage');
+            mainImg.src = src;
+            
+            // Setup Zoom Overlay
+            const zoomOverlay = document.getElementById('zoomOverlay');
+            zoomOverlay.style.backgroundImage = `url('${src}')`;
+            zoomOverlay.style.backgroundSize = '200%';
+
+            document.querySelectorAll('.thumbnail').forEach(el => el.classList.remove('active'));
+            if(element) element.classList.add('active');
+        }
+
+        function handleZoom(e) {
+            const wrapper = document.getElementById('imageWrapper');
+            const overlay = document.getElementById('zoomOverlay');
+            
+            const { left, top, width, height } = wrapper.getBoundingClientRect();
+            const x = (e.clientX - left) / width * 100;
+            const y = (e.clientY - top) / height * 100;
+            
+            overlay.style.backgroundPosition = `${x}% ${y}%`;
+        }
+
+        function renderProduct() {
+            const p = currentProduct;
+            const images = p.images || [];
+            
+            // Handle new JSON description format vs old plaintext fallback
+            let descObj = {};
+            let isJsonDesc = false;
+            try {
+                if (p.description && p.description.startsWith('{')) {
+                    descObj = JSON.parse(p.description);
+                    isJsonDesc = true;
+                }
+            } catch (e) {
+                isJsonDesc = false;
+            }
+
+            const mainDesc = isJsonDesc ? descObj.description : p.description;
+
+            const thumbnailsHtml = images.map((img, idx) => `
+                <img src="${img}" class="thumbnail ${idx === 0 ? 'active' : ''}" onclick="changeImage('${img}', this)">
+            `).join('');
+
+            const sizesHtml = (p.sizes || []).map(size => `
+                <div class="size-chip" onclick="selectSize('${size}', this)">${size}</div>
+            `).join('');
+
+            let detailedSectionsHtml = '';
+            
+            if (isJsonDesc) {
+                const addSection = (title, val) => {
+                    if (val && val.trim() !== '') {
+                        detailedSectionsHtml += `
+                        <div class="detail-item">
+                            <h4>${title}</h4>
+                            <p>${val}</p>
+                        </div>`;
+                    }
+                };
+                
+                addSection('Key Features', descObj.features);
+                addSection('Material', descObj.material);
+                addSection('Comfort & Fit', descObj.fit);
+                addSection('Sole Type', descObj.sole);
+                addSection('Craftsmanship', descObj.craftsmanship);
+                addSection('Care Instructions', descObj.care);
+                addSection('Warranty & Returns', descObj.warranty);
+                addSection('Shipping Information', descObj.shipping);
+            } else {
+                // Fallback for mock data or old data
+                detailedSectionsHtml = `
+                        <div class="detail-item">
+                            <h4>Material</h4>
+                            <p>${p.material || 'Premium leather'}</p>
+                        </div>
+                        <div class="detail-item">
+                            <h4>Design</h4>
+                            <p>${p.design || 'Handcrafted precision.'}</p>
+                        </div>
+                        <div class="detail-item">
+                            <h4>Quality & Craftsmanship</h4>
+                            <p>${p.quality || 'Built to last a lifetime.'}</p>
+                        </div>
+                `;
+            }
+
+            let displayStars = '';
+            let ratingText = '';
+            if (p.numReviews && p.numReviews > 0) {
+                const roundedRating = Math.round(p.rating);
+                displayStars = '?'.repeat(roundedRating) + '?'.repeat(5 - roundedRating);
+                ratingText = `${p.rating.toFixed(1)} (${p.numReviews} review${p.numReviews > 1 ? 's' : ''})`;
+            } else {
+                displayStars = '⭐⭐⭐⭐⭐';
+                ratingText = 'No reviews yet';
+            }
+
+            document.getElementById('productContainer').innerHTML = `
+                <div class="gallery-container">
+                    <div class="main-image-wrapper" id="imageWrapper" onmousemove="handleZoom(event)">
+                        <img src="${images[0] || 'https://via.placeholder.com/800'}" id="mainImage" class="main-image">
+                        <div class="zoom-overlay" id="zoomOverlay" style="background-image: url('${images[0]}'); background-size: 200%;"></div>
+                    </div>
+                    <div class="thumbnails">
+                        ${thumbnailsHtml}
+                    </div>
+                </div>
+
+                <div class="info-container">
+                    <div class="product-category">${p.category}</div>
+                    <h1 class="product-title">${p.name}</h1>
+                    
+                    <div class="product-rating">
+                        <span class="stars-display">${displayStars}</span>
+                        <span class="rating-count">${ratingText}</span>
+                    </div>
+
+                    <div class="product-price">Rs. ${p.price.toFixed(2)}</div>
+                    <p class="product-desc">${mainDesc}</p>
+
+                    ${sizesHtml ? `
+                        <div class="size-section">
+                            <span class="size-label">Select Size</span>
+                            <div class="size-options">
+                                ${sizesHtml}
+                            </div>
+                        </div>
+                    ` : ''}
+
+                    <div id="sizeError" class="error-msg">Please select a size before adding to cart.</div>
+                    
+                    <button class="btn-add" onclick="addToCart()">Add to Cart</button>
+
+                    <div class="details-section">
+                        ${detailedSectionsHtml}
+                    </div>
+                </div>
+                
+                <div class="reviews-container">
+                    <h2 class="reviews-title">Customer Reviews</h2>
+                    <div id="reviewsList">
+                        <div style="text-align:center; color:#888;">Loading reviews...</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadProduct();
+            updateCartBadge();
+        });
+    </script>
+    <script src="js/auth.js?v=5"></script>
+</body>
+</html>
+
+
+

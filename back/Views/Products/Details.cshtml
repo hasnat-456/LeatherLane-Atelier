@@ -1,0 +1,20 @@
+@model LeatherLane_Atelier.Models.Product
+@{
+    ViewData["Title"] = Model.Name;
+}
+
+<div class="container" style="margin-top: 50px;">
+    <div style="display: flex; gap: 40px; align-items: flex-start; flex-wrap: wrap;">
+        <img src="@Model.Thumbnail" style="max-width: 400px; border-radius: var(--radius); border: 1px solid var(--borders);" alt="@Model.Name" />
+        
+        <div style="flex: 1; min-width: 300px;">
+            <h1 style="margin-bottom: 10px;">@Model.Name</h1>
+            <h3 style="color: var(--secondary-gold); margin-bottom: 20px;">$@Model.Price.ToString("0.00")</h3>
+            <p style="color: var(--secondary-text); margin-bottom: 20px;">@Model.Description</p>
+            <p><strong>Stock:</strong> @Model.Stock</p>
+            <p><strong>Category:</strong> @Model.Category</p>
+            
+            <button class="btn-primary" style="margin-top: 30px; max-width: 200px;">Add to Cart</button>
+        </div>
+    </div>
+</div>

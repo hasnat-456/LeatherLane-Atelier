@@ -1,0 +1,254 @@
+@{
+    ViewData["Title"] = "Contact Us - LeatherLane Atelier";
+}
+
+<style>
+    .contact-hero {
+        background: linear-gradient(135deg, #5c3d2e 0%, #8b5a2b 100%);
+        padding: 4rem 2rem;
+        text-align: center;
+        color: #f5f0eb;
+    }
+    .contact-hero-content {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    .contact-hero-title {
+        font-size: 2.8rem;
+        margin-bottom: 0.75rem;
+        font-weight: 700;
+    }
+    .contact-hero-subtitle {
+        font-size: 1.2rem;
+        opacity: 0.9;
+    }
+    .contact-section {
+        padding: 5rem 2rem;
+        background-color: #ffffff;
+    }
+    .contact-grid {
+        max-width: 1100px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: 1fr 1.5fr;
+        gap: 3rem;
+    }
+    @@media (max-width: 768px) {
+        .contact-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+    .contact-info {
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+    }
+    .contact-info-title {
+        font-size: 2rem;
+        color: #3d2914;
+        margin-bottom: 1rem;
+    }
+    .contact-info-card {
+        background-color: #f5f0eb;
+        padding: 2.5rem;
+        border-radius: 16px;
+        box-shadow: 0 4px 16px rgba(92,61,46,0.08);
+    }
+    .contact-info-item {
+        display: flex;
+        gap: 1.25rem;
+        margin-bottom: 2rem;
+    }
+    .contact-info-item:last-child {
+        margin-bottom: 0;
+    }
+    .contact-info-icon {
+        font-size: 2rem;
+        flex-shrink: 0;
+    }
+    .contact-item-title {
+        font-size: 1.15rem;
+        color: #3d2914;
+        margin-bottom: 0.25rem;
+        margin-top: 0;
+    }
+    .contact-item-text {
+        color: #5c4a3a;
+        line-height: 1.7;
+        margin-top: 0;
+    }
+    .contact-form-container {
+        padding: 2.5rem;
+        background-color: #f5f0eb;
+        border-radius: 16px;
+        box-shadow: 0 4px 16px rgba(92,61,46,0.08);
+    }
+    .contact-form-title {
+        font-size: 1.8rem;
+        color: #3d2914;
+        margin-bottom: 2rem;
+    }
+    .contact-form-group {
+        margin-bottom: 1.5rem;
+    }
+    .contact-label {
+        display: block;
+        color: #5c3d2e;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        font-size: 1rem;
+    }
+    .contact-input, .contact-textarea {
+        width: 100%;
+        padding: 0.9rem 1.25rem;
+        border-radius: 8px;
+        border: 2px solid #e0d9d3;
+        font-size: 1rem;
+        font-family: inherit;
+        background-color: #ffffff;
+        transition: all 0.3s ease;
+        box-sizing: border-box;
+    }
+    .contact-input:focus, .contact-textarea:focus {
+        outline: none;
+        border-color: #d4af37;
+        box-shadow: 0 0 0 3px rgba(212,175,55,0.1);
+    }
+    .contact-textarea {
+        resize: vertical;
+    }
+    .contact-button {
+        width: 100%;
+        background-color: #5c3d2e;
+        color: #f5f0eb;
+        padding: 1rem 2rem;
+        border-radius: 8px;
+        border: none;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-top: 0.5rem;
+    }
+    .contact-button:hover {
+        background-color: #8b5a2b;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(92,61,46,0.2);
+    }
+    .contact-success-message {
+        text-align: center;
+        padding: 3rem 2rem;
+        background-color: rgba(39,174,96,0.1);
+        border-radius: 12px;
+        display: none;
+    }
+    .contact-success-title {
+        font-size: 1.8rem;
+        color: #27ae60;
+        margin-bottom: 0.75rem;
+    }
+    .contact-success-text {
+        color: #5c4a3a;
+        font-size: 1.05rem;
+    }
+</style>
+
+<div>
+    <!-- Hero Section -->
+    <section class="contact-hero">
+        <div class="contact-hero-content">
+            <h1 class="contact-hero-title">Get in Touch</h1>
+            <p class="contact-hero-subtitle">We'd love to hear from you</p>
+        </div>
+    </section>
+
+    <section class="contact-section">
+        <div class="contact-grid">
+            <!-- Contact Info -->
+            <div class="contact-info">
+                <h2 class="contact-info-title">Contact Information</h2>
+                <div class="contact-info-card">
+                    <div class="contact-info-item">
+                        <span class="contact-info-icon">📍</span>
+                        <div>
+                            <h4 class="contact-item-title">Address</h4>
+                            <p class="contact-item-text">123 Leather Lane, Artisan District<br />New York, NY 10001</p>
+                        </div>
+                    </div>
+                    <div class="contact-info-item">
+                        <span class="contact-info-icon">📧</span>
+                        <div>
+                            <h4 class="contact-item-title">Email</h4>
+                            <p class="contact-item-text">hello@leatherlane.com<br />support@leatherlane.com</p>
+                        </div>
+                    </div>
+                    <div class="contact-info-item">
+                        <span class="contact-info-icon">📞</span>
+                        <div>
+                            <h4 class="contact-item-title">Phone</h4>
+                            <p class="contact-item-text">+1 (555) 123-4567<br />Mon-Fri, 9AM-6PM EST</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contact Form -->
+            <div class="contact-form-container">
+                <div id="successMessage" class="contact-success-message">
+                    <h3 class="contact-success-title">Thank You!</h3>
+                    <p class="contact-success-text">Your message has been sent successfully. We'll get back to you soon.</p>
+                </div>
+                
+                <form id="contactForm">
+                    <h2 class="contact-form-title">Send us a Message</h2>
+                    <div class="contact-form-group">
+                        <label class="contact-label">Your Name</label>
+                        <input type="text" id="name" required class="contact-input" />
+                    </div>
+                    <div class="contact-form-group">
+                        <label class="contact-label">Email Address</label>
+                        <input type="email" id="email" required class="contact-input" />
+                    </div>
+                    <div class="contact-form-group">
+                        <label class="contact-label">Subject</label>
+                        <input type="text" id="subject" required class="contact-input" />
+                    </div>
+                    <div class="contact-form-group">
+                        <label class="contact-label">Message</label>
+                        <textarea id="message" required rows="6" class="contact-textarea"></textarea>
+                    </div>
+                    <button type="submit" id="submitBtn" class="contact-button">
+                        Send Message
+                    </button>
+                </form>
+            </div>
+        </div>
+    </section>
+</div>
+
+<script>
+    document.getElementById('contactForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const btn = document.getElementById('submitBtn');
+        btn.textContent = 'Sending...';
+        btn.style.opacity = '0.8';
+        btn.disabled = true;
+
+        // Simulate API delay
+        setTimeout(() => {
+            document.getElementById('contactForm').style.display = 'none';
+            document.getElementById('successMessage').style.display = 'block';
+            
+            // Reset form after 3 seconds like original React app
+            setTimeout(() => {
+                document.getElementById('contactForm').reset();
+                document.getElementById('successMessage').style.display = 'none';
+                document.getElementById('contactForm').style.display = 'block';
+                btn.textContent = 'Send Message';
+                btn.style.opacity = '1';
+                btn.disabled = false;
+            }, 3000);
+        }, 1500);
+    });
+</script>

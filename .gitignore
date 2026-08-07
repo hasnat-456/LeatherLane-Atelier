@@ -1,0 +1,8 @@
+back/bin/
+back/obj/
+*.db
+*.sqlite
+front/uploads/
+front/temp_backup/
+*.zip
+

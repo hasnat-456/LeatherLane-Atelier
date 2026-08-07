@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Order Tracking | LeatherLane Atelier</title>
+    <link rel="stylesheet" href="css/global.css">
+    <link rel="stylesheet" href="css/timeline.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .container { max-width: 1000px; margin: 2rem auto; padding: 2rem; background: #fff; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); color: #333; }
+        h2 { color: var(--primary-bg); font-family: var(--font-heading); margin-bottom: 1.5rem; text-align: center; }
+        .details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 2rem; background: #f9f9f9; padding: 1.5rem; border-radius: 8px; }
+        .details-col div { margin-bottom: 0.5rem; }
+        .details-label { font-weight: bold; color: #666; font-size: 0.9rem; }
+        .btn-back { display: inline-block; margin-top: 1rem; padding: 8px 16px; background: #eee; color: #333; text-decoration: none; border-radius: 4px; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Order Tracking</h2>
+        
+        <div id="trackingInfoCard"></div>
+
+        <div class="details-grid" id="orderDetails">
+            <div style="text-align: center; grid-column: 1 / -1;">Loading details...</div>
+        </div>
+
+        <div id="paymentStatusCard" style="margin-bottom: 2rem;"></div>
+
+        <h3 style="color: var(--primary-bg); font-family: var(--font-heading); margin-top: 2rem;">Order Timeline</h3>
+        
+        <div class="timeline-container">
+            <ul class="timeline-horizontal" id="timeline">
+                <!-- Timeline items injected here -->
+            </ul>
+        </div>
+
+        <a href="transactions.html" class="btn-back"><i class="fas fa-arrow-left"></i> Back to Orders</a>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const orderId = urlParams.get('id');
+
+        function getIconForStatus(status) {
+            const s = status.toLowerCase();
+            if (s.includes('placed')) return 'fa-shopping-bag';
+            if (s.includes('payment')) return 'fa-credit-card';
+            if (s.includes('confirm')) return 'fa-check';
+            if (s.includes('prepar')) return 'fa-box-open';
+            if (s.includes('pack')) return 'fa-box';
+            if (s.includes('courier')) return 'fa-truck-loading';
+            if (s.includes('transit')) return 'fa-shipping-fast';
+            if (s.includes('out for delivery')) return 'fa-truck';
+            if (s.includes('delivered')) return 'fa-check-circle';
+            if (s.includes('cancel') || s.includes('reject')) return 'fa-times-circle';
+            return 'fa-circle';
+        }
+
+        async function loadTracking() {
+            const token = localStorage.getItem('token');
+            if (!token) { window.location.href = 'login.html'; return; }
+
+            if (!orderId) {
+                document.getElementById('orderDetails').innerHTML = '<div style="color:red; grid-column:1/-1; text-align:center;">Invalid Request ID</div>';
+                return;
+            }
+
+            try {
+                const res = await fetch(`/api/tracking/order/${orderId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    
+                    const detailsHtml = `
+                        <div class="details-col">
+                            <div><span class="details-label">Order ID:</span> #${data.orderId}</div>
+                            <div><span class="details-label">Order Date:</span> ${new Date(data.orderDate).toLocaleDateString()}</div>
+                        </div>
+                        <div class="details-col">
+                            <div><span class="details-label">Payment Method:</span> ${data.paymentMethod.toUpperCase()}</div>
+                            <div><span class="details-label">Status:</span> <strong style="color: var(--primary-gold);">${data.paymentStatus}</strong></div>
+                        </div>
+                    `;
+                    document.getElementById('orderDetails').innerHTML = detailsHtml;
+
+                    // Payment Status Card Logic
+                    const payCard = document.getElementById('paymentStatusCard');
+                    const timelineHeader = document.querySelector('h3');
+                    const timelineContainer = document.querySelector('.timeline-container');
+                    
+                    let payCardContent = '';
+                    const isPending = data.paymentStatus === 'Payment Verification Pending';
+                    const isRejected = data.paymentStatus === 'Payment Rejected' || data.paymentStatus === 'Rejected';
+                    
+                    if (isPending) {
+                        payCardContent = `
+                            <div class="card" style="border-left: 5px solid var(--primary-gold); background-color: #faf6f0; color: #333; padding: 1.5rem; border-radius: var(--radius); box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+                                <h3 style="color: var(--primary-bg); font-family: var(--font-body); font-size: 1.1rem; margin-bottom: 8px;">Payment Status: <span style="font-size:0.9rem; padding:4px 10px; background:#fff3cd; color:#856404; border:1px solid #ffeeba; border-radius:4px; font-weight:bold;">Pending Verification</span></h3>
+                                <p style="font-size: 0.95rem; color: #555; line-height:1.6;">
+                                    Your payment proof has been submitted successfully.<br>
+                                    Our team will verify your payment.<br>
+                                    Once verified, your order will automatically move to Order Confirmed.
+                                </p>
+                            </div>
+                        `;
+                        if (timelineHeader) timelineHeader.style.display = 'none';
+                        if (timelineContainer) timelineContainer.style.display = 'none';
+                    } else if (isRejected) {
+                        payCardContent = `
+                            <div class="card" style="border-left: 5px solid var(--error); background-color: #fdf2f2; color: #333; padding: 1.5rem; border-radius: var(--radius); box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+                                <h3 style="color: var(--primary-bg); font-family: var(--font-body); font-size: 1.1rem; margin-bottom: 8px;">Payment Status: <span style="font-size:0.9rem; padding:4px 10px; background:#f8d7da; color:#721c24; border:1px solid #f5c6cb; border-radius:4px; font-weight:bold;">Payment Rejected</span></h3>
+                                <p style="font-size: 0.95rem; color: #555; margin-bottom: 12px; line-height:1.6;">
+                                    <b>Reason for rejection:</b> <span style="color: var(--error); font-weight: 600;">${data.rejectionReason || 'Invalid details'}</span>
+                                </p>
+                                <p style="font-size: 0.95rem; color: #555; margin-bottom: 15px;">
+                                    Please review the reason above and upload a new payment proof.
+                                </p>
+                                <button class="btn-shopping" onclick="toggleResubmitForm()" style="width: auto; padding: 10px 24px; margin-top: 0; background-color: var(--primary-bg); color:#fff; border-radius:6px; font-weight:600; cursor:pointer; border:none;">Upload New Payment Proof</button>
+                                
+                                <div id="resubmitFormContainer" style="display: none; margin-top: 1.5rem; border-top: 1px solid #ddd; padding-top: 1.5rem;">
+                                    <h4 style="color: var(--primary-bg); margin-bottom: 1rem; font-family: var(--font-body);">Resubmit Payment Details</h4>
+                                    
+                                    <div class="form-group">
+                                        <label style="color:#555;">Transaction / Reference ID *</label>
+                                        <input type="text" id="newPaymentRefId" class="form-control" value="${data.paymentRefId || ''}" placeholder="Enter new Reference ID" required style="color:#333; background-color:#fff; border:1px solid #ccc;">
+                                    </div>
+                                    <div class="form-group">
+                                        <label style="color:#555;">Sender Name *</label>
+                                        <input type="text" id="newSenderName" class="form-control" value="${data.senderName || ''}" placeholder="Enter Sender Name" required style="color:#333; background-color:#fff; border:1px solid #ccc;">
+                                    </div>
+                                    <div class="form-group">
+                                        <label style="color:#555;">Sender Mobile Number *</label>
+                                        <input type="tel" id="newSenderMobile" class="form-control" value="${data.senderMobile || ''}" placeholder="03XXXXXXXXX" required style="color:#333; background-color:#fff; border:1px solid #ccc;">
+                                    </div>
+                                    <div class="form-group">
+                                        <label style="color:#555;">Upload Payment Screenshot *</label>
+                                        <input type="file" id="newPaymentScreenshot" class="form-control" accept=".jpg,.jpeg,.png,.pdf" required style="padding: 9px; color:#333; background-color:#fff; border:1px solid #ccc;">
+                                        <span style="font-size: 0.8rem; color: #666; margin-top: 4px; display: block;">Accepted types: JPG, JPEG, PNG, PDF</span>
+                                    </div>
+                                    <button class="btn-shopping" id="btnResubmit" onclick="resubmitPaymentDetails()" style="width: 100%; margin-top: 10px;">Submit Updated Details</button>
+                                </div>
+                            </div>
+                        `;
+                        if (timelineHeader) timelineHeader.style.display = 'none';
+                        if (timelineContainer) timelineContainer.style.display = 'none';
+                    } else {
+                        payCardContent = `
+                            <div class="card" style="border-left: 5px solid #2e6b4d; background-color: #f0fdf4; color: #333; padding: 1.5rem; border-radius: var(--radius); box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+                                <h3 style="color: var(--primary-bg); font-family: var(--font-body); font-size: 1.1rem; margin-bottom: 8px;">Payment Status: <span style="font-size:0.9rem; padding:4px 10px; background:#d4edda; color:#155724; border:1px solid #c3e6cb; border-radius:4px; font-weight:bold;">Payment Verified</span></h3>
+                                <p style="font-size: 0.95rem; color: #555;">
+                                    Your payment has been verified. Your order is confirmed and will begin processing.
+                                </p>
+                            </div>
+                        `;
+                        if (timelineHeader) timelineHeader.style.display = 'block';
+                        if (timelineContainer) timelineContainer.style.display = 'block';
+                    }
+                    payCard.innerHTML = payCardContent;
+
+                    let timelineHtml = '';
+                    let latestTracking = null;
+
+                    if (data.timeline && data.timeline.length > 0) {
+                        data.timeline.forEach((event) => {
+                            let typeClass = 'step-pending';
+                            if (event.isCompleted) typeClass = 'step-completed';
+                            if (event.isCurrent) typeClass = 'step-current';
+                            if (event.status.toLowerCase().includes('reject') || event.status.toLowerCase().includes('cancel')) {
+                                typeClass = 'step-rejected';
+                            }
+
+                            if (event.trackingNumber) {
+                                latestTracking = event;
+                            }
+
+                            timelineHtml += `
+                                <li class="timeline-step ${typeClass}">
+                                    <div class="step-circle"><i class="fas ${getIconForStatus(event.status)}"></i></div>
+                                    <div class="step-content">
+                                        <div class="step-title">${event.status}</div>
+                                        <div class="step-date">${new Date(event.eventDateTime).toLocaleString()}</div>
+                                        <div class="step-desc">${event.description}</div>
+                                        ${event.courierName ? `<div style="margin-top:5px; font-size:0.8rem;"><b>Courier:</b> ${event.courierName}</div>` : ''}
+                                        ${event.trackingNumber ? `<div style="font-size:0.8rem;"><b>Tracking ID:</b> ${event.trackingNumber}</div>` : ''}
+                                    </div>
+                                </li>
+                            `;
+                        });
+                    } else {
+                        timelineHtml = '<li>No tracking history available yet.</li>';
+                    }
+                    document.getElementById('timeline').innerHTML = timelineHtml;
+
+                    if (latestTracking && latestTracking.trackingNumber) {
+                        const trackUrl = latestTracking.courierName.toLowerCase().includes('tcs') ? `https://www.tcsexpress.com/tracking?trackNo=${latestTracking.trackingNumber}` : '#';
+                        document.getElementById('trackingInfoCard').innerHTML = `
+                            <div class="tracking-card">
+                                <div class="tracking-info">
+                                    <div><strong>Courier Name:</strong> ${latestTracking.courierName}</div>
+                                    <div><strong>Tracking Number:</strong> ${latestTracking.trackingNumber}</div>
+                                    <div style="font-size: 0.85rem; color: #666; margin-top: 5px;">Enter this Tracking ID on the courier website.</div>
+                                </div>
+                                <div>
+                                    <button class="track-btn" onclick="window.open('${trackUrl}', '_blank')"><i class="fas fa-search-location"></i> Track Shipment</button>
+                                </div>
+                            </div>
+                        `;
+                    }
+
+                } else {
+                    document.getElementById('orderDetails').innerHTML = '<div style="color:red; grid-column:1/-1; text-align:center;">Failed to load tracking data.</div>';
+                }
+            } catch (err) {
+                console.error(err);
+                document.getElementById('orderDetails').innerHTML = '<div style="color:red; grid-column:1/-1; text-align:center;">Connection error.</div>';
+            }
+        }
+
+        function toggleResubmitForm() {
+            const form = document.getElementById('resubmitFormContainer');
+            if (form) {
+                form.style.display = form.style.display === 'none' ? 'block' : 'none';
+            }
+        }
+
+        async function resubmitPaymentDetails() {
+            const refId = document.getElementById('newPaymentRefId').value.trim();
+            const name = document.getElementById('newSenderName').value.trim();
+            const mobile = document.getElementById('newSenderMobile').value.trim();
+            const fileInput = document.getElementById('newPaymentScreenshot');
+            
+            if (!refId || !name || !mobile) {
+                alert("Please fill out all fields.");
+                return;
+            }
+            
+            if (!fileInput.files || fileInput.files.length === 0) {
+                alert("Please select a screenshot file.");
+                return;
+            }
+            
+            const btn = document.getElementById('btnResubmit');
+            btn.disabled = true;
+            btn.innerText = 'Uploading screenshot...';
+            
+            const token = localStorage.getItem('token');
+            try {
+                const formData = new FormData();
+                formData.append('imageFile', fileInput.files[0]);
+
+                const uploadRes = await fetch('/api/transactions/upload-screenshot', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    body: formData
+                });
+
+                if (!uploadRes.ok) {
+                    const errData = await uploadRes.json();
+                    alert(errData.message || 'Failed to upload screenshot.');
+                    btn.disabled = false;
+                    btn.innerText = 'Submit Updated Details';
+                    return;
+                }
+
+                const uploadData = await uploadRes.json();
+                const screenshotUrl = uploadData.url;
+                
+                btn.innerText = 'Submitting updated details...';
+                
+                const res = await fetch(`/api/transactions/${orderId}/resubmit-payment`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        paymentRefId: refId,
+                        senderName: name,
+                        senderMobile: mobile,
+                        paymentScreenshot: screenshotUrl
+                    })
+                });
+                
+                if (res.ok) {
+                    alert("Your updated payment proof has been submitted successfully.\nOur team will verify your payment.");
+                    loadTracking();
+                } else {
+                    const errData = await res.json();
+                    alert(errData.message || 'Resubmission failed.');
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Error connecting to server.");
+            } finally {
+                btn.disabled = false;
+                btn.innerText = 'Submit Updated Details';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', loadTracking);
+    </script>
+</body>
+</html>

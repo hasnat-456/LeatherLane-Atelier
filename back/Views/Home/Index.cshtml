@@ -1,0 +1,337 @@
+@model IEnumerable<LeatherLane_Atelier.Models.Product>
+@{
+    ViewData["Title"] = "Premium Handcrafted Leather";
+}
+<style>
+    .splash-screen {
+        position: fixed;
+        inset: 0;
+        background-color: var(--primary-bg);
+        background-image: 
+            radial-gradient(var(--secondary-bg) 1px, transparent 1px),
+            radial-gradient(var(--secondary-bg) 1px, transparent 1px);
+        background-size: 20px 20px;
+        background-position: 0 0, 10px 10px;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        transition: opacity 0.5s ease;
+    }
+    .splash-content {
+        text-align: center;
+        opacity: 0;
+        animation: fadeIn 1s ease 0.3s forwards;
+    }
+    .logo-mark {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 24px;
+        border: 2px solid var(--primary-gold);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: var(--font-heading);
+        font-size: 2.5rem;
+        color: var(--primary-gold);
+        position: relative;
+    }
+    .logo-mark::after {
+        content: '';
+        position: absolute;
+        inset: -8px;
+        border: 1px solid var(--secondary-gold);
+        border-radius: 50%;
+        border-top-color: transparent;
+        animation: spin 2s linear infinite;
+    }
+    .brand-name {
+        font-size: 2.5rem;
+        letter-spacing: 2px;
+        margin-bottom: 12px;
+    }
+    .tagline {
+        font-family: var(--font-heading);
+        color: var(--secondary-gold);
+        font-size: 1.2rem;
+        margin-bottom: 16px;
+        font-style: italic;
+    }
+    .subtitle {
+        color: var(--secondary-text);
+        font-size: 0.9rem;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+    }
+    @@keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    /* Home Styles */
+    .home-hero {
+        background: linear-gradient(135deg, #5c3d2e 0%, #8b5a2b 100%);
+        padding: 6rem 2rem;
+        text-align: center;
+        color: #f5f0eb;
+        position: relative;
+        overflow: hidden;
+    }
+    .home-hero-content {
+        max-width: 800px;
+        margin: 0 auto;
+        position: relative;
+        z-index: 1;
+    }
+    .home-hero-title {
+        font-size: 3.5rem;
+        margin-bottom: 1rem;
+        font-weight: 700;
+        letter-spacing: 2px;
+    }
+    .home-hero-subtitle {
+        font-size: 1.3rem;
+        margin-bottom: 2rem;
+        opacity: 0.95;
+        lineHeight: 1.8;
+    }
+    .home-hero-button {
+        display: inline-block;
+        background-color: #d4af37;
+        color: #3d2914;
+        padding: 1rem 2.5rem;
+        border-radius: 8px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        box-shadow: 0 4px 16px rgba(212,175,55,0.3);
+        transition: all 0.3s ease;
+        text-decoration: none;
+    }
+    .home-hero-button:hover {
+        background-color: #b8962e;
+        transform: translateY(-3px);
+        box-shadow: 0 8px 24px rgba(212,175,55,0.4);
+        color: #3d2914;
+    }
+    .home-features {
+        padding: 4rem 2rem;
+        background-color: #ffffff;
+    }
+    .home-features-grid {
+        max-width: 1200px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 2.5rem;
+    }
+    .home-feature-card {
+        text-align: center;
+        padding: 2rem;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+    }
+    .home-feature-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 12px 40px rgba(92,61,46,0.12);
+    }
+    .home-feature-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+    .home-feature-title {
+        font-size: 1.4rem;
+        margin-bottom: 0.75rem;
+        color: #3d2914;
+    }
+    .home-feature-desc {
+        color: #7a6b5d;
+        font-size: 1rem;
+    }
+    .home-products {
+        padding: 5rem 2rem;
+        background-color: #f5f0eb;
+    }
+    .home-section-header {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+    .home-section-title {
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
+        color: #3d2914;
+    }
+    .home-section-subtitle {
+        font-size: 1.1rem;
+        color: #7a6b5d;
+    }
+    .home-product-grid {
+        max-width: 1280px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 2.5rem;
+    }
+    .home-product-card {
+        background-color: #ffffff;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 4px 16px rgba(92,61,46,0.08);
+        transition: all 0.4s ease;
+    }
+    .home-product-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 16px 48px rgba(92,61,46,0.15);
+    }
+    .home-product-image-container {
+        position: relative;
+        overflow: hidden;
+    }
+    .home-product-image {
+        width: 100%;
+        height: 320px;
+        object-fit: cover;
+        transition: transform 0.4s ease;
+        background-color: #e0d9d3;
+    }
+    .home-product-card:hover .home-product-image {
+        transform: scale(1.08);
+    }
+    .home-product-info {
+        padding: 1.5rem;
+    }
+    .home-product-category {
+        font-size: 0.85rem;
+        color: #d4af37;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    .home-product-name {
+        font-size: 1.3rem;
+        margin: 0.5rem 0;
+        color: #3d2914;
+    }
+    .home-product-bottom {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 1rem;
+    }
+    .home-product-price {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: #5c3d2e;
+    }
+    .home-add-button {
+        background-color: #5c3d2e;
+        color: #f5f0eb;
+        padding: 0.6rem 1.25rem;
+        border-radius: 6px;
+        border: none;
+        font-size: 0.95rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    .home-add-button:hover {
+        background-color: #8b5a2b;
+        transform: scale(1.05);
+    }
+</style>
+
+<!-- Splash Screen Overlay -->
+<div class="splash-screen" id="splash">
+    <div class="splash-content">
+        <div class="logo-mark">L</div>
+        <h1 class="brand-name">LeatherLane Atelier</h1>
+        <div class="tagline">"Crafted in Leather. Designed for Life."</div>
+        <div class="subtitle">Premium handcrafted leather goods</div>
+    </div>
+</div>
+
+<!-- Main Home Content -->
+<div id="home-content" style="opacity: 0; transition: opacity 0.5s ease;">
+    <!-- Hero Section -->
+    <section class="home-hero">
+        <div class="home-hero-content">
+            <h1 class="home-hero-title">Timeless Craftsmanship</h1>
+            <p class="home-hero-subtitle">
+                Handcrafted leather goods made with passion, precision, and the finest materials
+            </p>
+            <a href="#products" class="home-hero-button">
+                Explore Collection
+            </a>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="home-features">
+        <div class="home-features-grid">
+            <div class="home-feature-card">
+                <div class="home-feature-icon">👜</div>
+                <h3 class="home-feature-title">Premium Quality</h3>
+                <p class="home-feature-desc">Only the finest full-grain leather sourced sustainably</p>
+            </div>
+            <div class="home-feature-card">
+                <div class="home-feature-icon">✂️</div>
+                <h3 class="home-feature-title">Handcrafted</h3>
+                <p class="home-feature-desc">Each piece meticulously made by skilled artisans</p>
+            </div>
+            <div class="home-feature-card">
+                <div class="home-feature-icon">🔒</div>
+                <h3 class="home-feature-title">Lifetime Warranty</h3>
+                <p class="home-feature-desc">Quality that lasts generations</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Products Section -->
+    <section class="home-products" id="products">
+        <div class="home-section-header">
+            <h2 class="home-section-title">Featured Products</h2>
+            <p class="home-section-subtitle">Discover our handpicked collection</p>
+        </div>
+        <div class="home-product-grid">
+            @if(Model != null)
+            {
+                foreach (var product in Model)
+                {
+                    <div class="home-product-card fade-in">
+                        <div class="home-product-image-container">
+                            <img src="@product.Thumbnail" alt="@product.Name" class="home-product-image" onerror="this.src='https://via.placeholder.com/400x320?text=No+Image'"/>
+                        </div>
+                        <div class="home-product-info">
+                            <span class="home-product-category">@product.Category</span>
+                            <h3 class="home-product-name">@product.Name</h3>
+                            <div class="home-product-bottom">
+                                <span class="home-product-price">$@product.Price</span>
+                                
+                                <!-- Add to Cart Auth Logic: Posts to [Authorize] controller -->
+                                <form asp-controller="Cart" asp-action="Add" asp-route-id="@product.Id" method="post">
+                                    <button type="submit" class="home-add-button">
+                                        Add to Cart
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    </section>
+</div>
+
+<script>
+    // Show splash screen, then fade it out and fade in the home content
+    setTimeout(() => {
+        const splash = document.getElementById('splash');
+        if(splash) {
+            splash.style.opacity = '0';
+            setTimeout(() => {
+                splash.style.display = 'none';
+                document.getElementById('home-content').style.opacity = '1';
+            }, 500); // wait for fade out
+        }
+    }, 2500);
+</script>

@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Checkout | LeatherLane Atelier</title>
+    <link rel="stylesheet" href="css/global.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        /* Navbar */
+        .navbar {
+            background-color: var(--primary-bg);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        .nav-brand { display: flex; flex-direction: column; }
+        .nav-brand h1 { font-size: 1.5rem; margin: 0; color: #fff; letter-spacing: 1px; text-transform: none; }
+        .nav-brand span { font-size: 0.7rem; color: var(--secondary-text); text-transform: uppercase; letter-spacing: 2px; }
+        .nav-links { display: flex; align-items: center; gap: 1.5rem; font-size: 0.9rem; }
+        .nav-links a { color: #ddd; }
+        .nav-links a:hover { color: var(--primary-gold); }
+        .btn-register { background-color: var(--primary-gold); color: #111; padding: 6px 16px; border-radius: 4px; font-weight: 600; }
+        .btn-register:hover { background-color: var(--secondary-gold); color: #111; }
+
+        /* Main Body */
+        body {
+            background-color: var(--light-bg);
+            color: #333;
+        }
+
+        /* Checkout Section */
+        .checkout-section {
+            padding: 4rem 2rem 8rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .checkout-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+        }
+
+        .checkout-card {
+            background: #fff;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            margin-bottom: 2rem;
+        }
+
+        .checkout-card h2 {
+            color: var(--primary-bg);
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid var(--primary-gold);
+            padding-bottom: 10px;
+            font-family: var(--font-heading);
+            font-size: 1.4rem;
+        }
+
+        .form-group { margin-bottom: 1.2rem; }
+        .form-group label { display: block; margin-bottom: 0.5rem; color: var(--primary-bg); font-weight: 600; font-size: 0.9rem; }
+        .form-control { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 4px; font-family: var(--font-body); font-size: 0.95rem; box-sizing: border-box; }
+        select.form-control { appearance: auto; }
+
+        /* Summary */
+        .summary-row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 0.95rem; color: #555; }
+        .summary-row.total { font-size: 1.2rem; font-weight: bold; color: var(--primary-bg); margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee; }
+
+        .btn-shopping {
+            background-color: var(--primary-bg);
+            color: #fff;
+            border: none;
+            padding: 14px 30px;
+            border-radius: 6px;
+            font-family: var(--font-body);
+            font-weight: 600;
+            font-size: 1.05rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            width: 100%;
+            margin-top: 20px;
+        }
+        .btn-shopping:hover { background-color: var(--secondary-bg); }
+        .btn-shopping:disabled { opacity: 0.7; cursor: not-allowed; }
+
+        /* Footer */
+        .footer { background-color: var(--primary-bg); color: var(--primary-text); padding: 4rem 2rem 2rem; }
+        .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 2rem; max-width: 1200px; margin: 0 auto; margin-bottom: 3rem; }
+        .footer-col h5 { color: var(--primary-gold); font-family: var(--font-body); font-size: 1rem; margin-bottom: 1.5rem; font-weight: 600; }
+        .footer-col.brand h5 { font-family: var(--font-heading); font-size: 1.5rem; color: #fff; }
+        .footer-col p { font-size: 0.85rem; color: var(--secondary-text); line-height: 1.8; margin-bottom: 1rem; }
+        .footer-col ul { list-style: none; }
+        .footer-col ul li { margin-bottom: 0.8rem; }
+        .footer-col ul li a { color: var(--primary-text); font-size: 0.85rem; }
+        .footer-col ul li a:hover { color: var(--primary-gold); }
+        .footer-bottom { max-width: 1200px; margin: 0 auto; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 2rem; display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--secondary-text); }
+        .footer-bottom-links a { color: var(--secondary-text); margin-left: 1.5rem; }
+        
+        /* Modal */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 1000; }
+        .modal-content { background: #fff; padding: 3rem; border-radius: 8px; width: 100%; max-width: 450px; text-align: center; }
+        .otp-input { text-align: center; font-size: 2rem; letter-spacing: 0.5rem; font-weight: bold; margin-bottom: 1.5rem; }
+        
+        @media (max-width: 900px) {
+            .checkout-grid { grid-template-columns: 1fr; }
+            .footer-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+        <!-- Navbar -->
+    <nav class="navbar">
+        <div class="nav-brand">
+            <h1>LeatherLane</h1>
+            <span>Atelier</span>
+        </div>
+        <div class="nav-links">
+            <a href="home.html">Home</a>
+            <a href="products.html">Shop</a>
+            <a href="about.html">About</a>
+            <a href="faq.html">FAQ</a>
+            <a href="contact.html">Contact</a>
+            <a href="cart.html">🛒</a>
+            <a href="login.html">Login</a>
+            <a href="signup.html" class="btn-register">Register</a>
+        </div>
+    </nav>
+
+    <!-- Checkout Section -->
+    <section class="checkout-section">
+        <div class="checkout-grid">
+            
+            <!-- Left Column: Forms -->
+            <div>
+                <div class="checkout-card">
+                    <h2>Shipping Address</h2>
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" id="shippingName" class="form-control" placeholder="Enter your full name">
+                    </div>
+                    <div class="form-group">
+                        <label>Phone Number</label>
+                        <input type="tel" id="shippingPhone" class="form-control" placeholder="03XXXXXXXXX">
+                    </div>
+                    <div class="form-group">
+                        <label style="display: flex; justify-content: space-between; align-items: center;">
+                            Full Address
+                            <button type="button" onclick="openMapModal()" style="font-size: 0.8rem; background: none; border: 1px solid var(--primary-gold); color: var(--primary-gold); padding: 2px 8px; border-radius: 4px; cursor: pointer;">Choose on Map</button>
+                        </label>
+                        <textarea id="shippingAddress" class="form-control" rows="3" placeholder="Street, Colony, City, Province"></textarea>
+                    </div>
+                </div>
+
+                <div class="checkout-card">
+                    <h2>Payment Method</h2>
+                    <div class="form-group">
+                        <label>Select Payment Provider</label>
+                        <select id="paymentMethod" class="form-control" onchange="togglePaymentFields()">
+                            <option value="jazzcash">JazzCash</option>
+                            <option value="easypaisa">EasyPaisa</option>
+                            <option value="card">Credit/Debit Card</option>
+                        </select>
+                    </div>
+                    
+                    <div id="mobileFields">
+                        <div class="form-group">
+                            <label>Mobile Account Number</label>
+                            <input type="tel" id="paymentPhone" class="form-control" placeholder="03XXXXXXXXX">
+                        </div>
+                    </div>
+                    <!-- Payment Methods Section -->
+                    <div style="margin-bottom: 2rem;">
+                        <h3 style="font-family: var(--font-heading); color: var(--primary-bg); border-bottom: 1px solid #eaeaea; padding-bottom: 5px; margin-bottom: 1rem;">Payment Method</h3>
+                        
+                        <div class="form-group" style="display: flex; gap: 15px; margin-bottom: 1rem;">
+                            <label style="display: flex; align-items: center; gap: 5px; cursor: pointer; font-weight: normal; margin-bottom: 0;">
+                                <input type="radio" name="paymentMethod" value="Card" checked onchange="togglePaymentFields()"> Card (PayFast)
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 5px; cursor: pointer; font-weight: normal; margin-bottom: 0;">
+                                <input type="radio" name="paymentMethod" value="Bank Transfer" onchange="togglePaymentFields()"> Bank Transfer
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 5px; cursor: pointer; font-weight: normal; margin-bottom: 0;">
+                                <input type="radio" name="paymentMethod" value="JazzCash" onchange="togglePaymentFields()"> JazzCash
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 5px; cursor: pointer; font-weight: normal; margin-bottom: 0;">
+                                <input type="radio" name="paymentMethod" value="Easypaisa" onchange="togglePaymentFields()"> Easypaisa
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Card Fields (PayFast) -->
+                    <div id="cardFields">
+                        <div class="form-group">
+                            <label>Cardholder Name</label>
+                            <input type="text" id="cardName" class="form-control" placeholder="Name on card">
+                        </div>
+                        <div class="form-group">
+                            <label>Card Number</label>
+                            <input type="text" id="cardNumber" class="form-control" placeholder="XXXX XXXX XXXX XXXX" maxlength="19">
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <div class="form-group">
+                                <label>Expiry Date</label>
+                                <input type="text" class="form-control" placeholder="MM/YY" maxlength="5">
+                            </div>
+                            <div class="form-group">
+                                <label>CVC</label>
+                                <input type="text" class="form-control" placeholder="XXX" maxlength="3">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Manual Payment Fields -->
+                    <div id="manualFields" style="display: none; background: var(--light-bg); padding: 1.5rem; border-radius: 8px; border: 1px dashed #ccc; margin-bottom: 1.5rem;">
+                        <div style="margin-bottom: 1rem;">
+                            <h4 style="margin-top:0; color: var(--primary-bg);">Transfer Instructions</h4>
+                            <p style="font-size: 0.9rem; color: #555; margin-bottom: 5px;">Please transfer the total amount to the following account:</p>
+                            <div id="manualAccountDetails" style="font-size: 0.9rem; font-weight: bold; background: #fff; padding: 10px; border: 1px solid #ddd; border-radius: 4px; line-height: 1.5;">
+                                Loading account details...
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Sender Name / Account Title <span style="color:red;">*</span></label>
+                            <input type="text" id="manualSenderName" class="form-control" placeholder="Name from which you sent the money">
+                        </div>
+                        <div class="form-group">
+                            <label>Transaction Reference ID <span style="color:red;">*</span></label>
+                            <input type="text" id="manualRefId" class="form-control" placeholder="E.g., 1234567890">
+                        </div>
+                        <div class="form-group">
+                            <label>Payment Screenshot (Optional)</label>
+                            <input type="file" id="manualScreenshot" class="form-control" accept="image/*">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Summary -->
+            <div>
+                <div class="checkout-card" style="height: fit-content;">
+                    <h2>Order Summary</h2>
+                    <div id="summaryItems" style="margin-bottom: 20px;"></div>
+                    
+                    <div class="summary-row">
+                        <span>Subtotal</span>
+                        <span id="sumSubtotal">Rs. 0.00</span>
+                    </div>
+                    <div class="summary-row" style="color: #e91e63;">
+                        <span>Discount</span>
+                        <span>-Rs. 0.00</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>Shipping Fee</span>
+                        <span id="sumShipping">Rs. 5.00</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>Platform Fee</span>
+                        <span>Rs. 1.00</span>
+                    </div>
+                    <div class="summary-row total">
+                        <span>Total</span>
+                        <span id="sumTotal" style="color: var(--primary-gold);">Rs. 0.00</span>
+                    </div>
+                    
+                    <div style="margin-top: 15px; margin-bottom: 15px; font-size: 0.9rem; color: #555;">
+                        <label style="display: flex; align-items: flex-start; cursor: pointer;">
+                            <input type="checkbox" id="termsCheckbox" onchange="toggleCheckoutButton()" style="margin-top: 4px; margin-right: 10px;">
+                            <span>I have read and agree to the <a href="terms-and-conditions.html" target="_blank" style="color: var(--primary-gold);">Terms & Conditions</a>, <a href="privacy-policy.html" target="_blank" style="color: var(--primary-gold);">Privacy Policy</a>, and <a href="return-refund-policy.html" target="_blank" style="color: var(--primary-gold);">Return/Exchange Policy</a>.</span>
+                        </label>
+                    </div>
+
+                    <button class="btn-shopping" id="btnInitiate" onclick="initiatePayment()" disabled>Proceed to Payment</button>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- OTP Modal -->
+    <div class="modal-overlay" id="otpModal">
+        <div class="modal-content">
+            <h2 style="color: var(--primary-bg); margin-bottom: 1rem; font-family: var(--font-heading);">Verify Payment</h2>
+            <p style="color: #666; margin-bottom: 1.5rem; font-size: 0.9rem;">Please check your backend terminal for the 6-digit OTP to authorize this transaction.</p>
+            <div id="otpError" style="color: #dc3545; margin-bottom: 10px; font-weight: bold; display: none;">Invalid OTP</div>
+            <div class="form-group">
+                <input type="text" id="otpInput" class="form-control otp-input" placeholder="000000" maxlength="6">
+            </div>
+            <button class="btn-shopping" id="btnVerify" onclick="verifyPayment()" style="margin-top: 0;">Verify & Pay</button>
+            <button onclick="document.getElementById('otpModal').style.display='none'" style="background: none; border: none; color: #999; margin-top: 15px; cursor: pointer; text-decoration: underline;">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Map Modal -->
+    <div class="modal-overlay" id="mapModal">
+        <div class="modal-content" style="max-width: 600px; padding: 2rem;">
+            <h2 style="color: var(--primary-bg); margin-bottom: 1rem; font-family: var(--font-heading);">Select Address</h2>
+            <p style="color: #666; margin-bottom: 1rem; font-size: 0.9rem;">Search or click on the map to pinpoint your location.</p>
+            
+            <div style="display: flex; gap: 10px; margin-bottom: 1rem;">
+                <input type="text" id="mapSearchInput" class="form-control" placeholder="Search for city, street, landmark...">
+                <button type="button" onclick="searchMapLocation()" class="btn-shopping" style="margin-top: 0; padding: 12px 20px; width: auto; white-space: nowrap;">Search</button>
+            </div>
+
+            <div id="map" style="height: 300px; width: 100%; border-radius: 8px; margin-bottom: 1rem; background: #eee;"></div>
+            <div id="mapAddressPreview" style="font-size: 0.9rem; color: #333; margin-bottom: 1rem; min-height: 40px; text-align: left; padding: 10px; background: #f9f9f9; border: 1px solid #ddd; border-radius: 4px;">No location selected yet.</div>
+            <button class="btn-shopping" id="btnConfirmMap" onclick="confirmMapAddress()" style="margin-top: 0;">Confirm Address</button>
+            <button onclick="closeMapModal()" style="background: none; border: none; color: #999; margin-top: 15px; cursor: pointer; text-decoration: underline;">Cancel</button>
+        </div>
+    </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+        <div class="footer-grid">
+            <div class="footer-col brand">
+                <h5>LeatherLane</h5>
+                <p>Premium handcrafted men's footwear. Specializing in Chappals, Peshawari Chappals, Shoes, and Sandals.</p>
+                <div style="font-size: 1.2rem; display: flex; gap: 10px;">
+                    <a href="https://www.instagram.com/leatherlane_atelier?igsh=Znk1Y2ZsNDkyZHZy&utm_source=qr" target="_blank" style="text-decoration: none;">📷</a>
+                </div>
+            </div>
+            <div class="footer-col">
+                <h5>Shop Men's</h5>
+                <ul>
+                    <li><a href="products.html?category=Chappal">Chappal</a></li>
+                    <li><a href="products.html?category=Peshawari Chappal">Peshawari Chappal</a></li>
+                    <li><a href="products.html?category=Shoes">Shoes</a></li>
+                    <li><a href="products.html?category=Sandals">Sandals</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h5>Customer Service</h5>
+                <ul>
+                    <li><a href="shipping-policy.html">Shipping Policy</a></li>
+                    <li><a href="return-refund-policy.html">Return & Refund Policy</a></li>
+                    <li><a href="faq.html">FAQ</a></li>
+                    <li><a href="contact.html">Contact Us</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h5>Contact Info</h5>
+                <ul>
+                    <li>📍 Ward no 7, street 14, house 143, Mohallah Ansarian Jhang City, Punjab, 35200</li>
+                    <li>✉️ leatherlaneatelier@gmail.com</li>
+                    <li>📞 03376306162</li>
+                    <li>🕒 Mon-Sat: 10 AM - 7 PM</li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <div>&copy; 2026 LeatherLane. All rights reserved.</div>
+            <div class="footer-bottom-links">
+                <a href="privacy-policy.html">Privacy Policy</a>
+                <a href="terms-and-conditions.html">Terms & Conditions</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        let cartItems = [];
+        let merchandiseSubtotal = 0;
+        let shippingFee = 5.00;
+        let platformFee = 1.00;
+        let finalTotal = 0;
+        let manualSettings = [];
+
+        let map = null;
+        let mapMarker = null;
+        let selectedAddress = "";
+
+        function togglePaymentFields() {
+            const method = document.querySelector('input[name="paymentMethod"]:checked').value;
+            const cardFields = document.getElementById('cardFields');
+            const manualFields = document.getElementById('manualFields');
+            const detailsDiv = document.getElementById('manualAccountDetails');
+
+            if (method === 'Card') {
+                cardFields.style.display = 'block';
+                manualFields.style.display = 'none';
+            } else {
+                cardFields.style.display = 'none';
+                manualFields.style.display = 'block';
+                
+                const setting = manualSettings.find(s => s.methodName === method);
+                if (setting) {
+                    let text = `Bank/Service: ${setting.bankName || method}<br>`;
+                    text += `Account Title: ${setting.accountTitle || 'LeatherLane'}<br>`;
+                    if (setting.accountNumber) text += `Account Number: ${setting.accountNumber}<br>`;
+                    if (setting.iban) text += `IBAN: ${setting.iban}<br>`;
+                    if (setting.mobileNumber) text += `Mobile: ${setting.mobileNumber}<br>`;
+                    detailsDiv.innerHTML = text;
+                } else {
+                    detailsDiv.innerHTML = 'Account details unavailable at this moment.';
+                }
+            }
+        }
+
+        async function fetchManualSettings() {
+            try {
+                const res = await fetch('/api/admin/manual-payment-settings', {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+                if (res.ok) manualSettings = await res.json();
+            } catch (err) { console.error("Failed to load manual settings"); }
+        }
+
+        function openMapModal() {
+            document.getElementById('mapModal').style.display = 'flex';
+            if (!map) {
+                map = L.map('map').setView([31.5204, 74.3587], 13);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors' }).addTo(map);
+                map.on('click', async function(e) {
+                    const lat = e.latlng.lat;
+                    const lng = e.latlng.lng;
+                    if (mapMarker) mapMarker.setLatLng(e.latlng);
+                    else mapMarker = L.marker(e.latlng).addTo(map);
+                    document.getElementById('mapAddressPreview').innerText = "Fetching address...";
+                    try {
+                        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`);
+                        const data = await res.json();
+                        if (data && data.display_name) {
+                            selectedAddress = data.display_name;
+                            document.getElementById('mapAddressPreview').innerText = selectedAddress;
+                        }
+                    } catch (err) { document.getElementById('mapAddressPreview').innerText = "Error fetching address."; }
+                });
+            }
+            setTimeout(() => { map.invalidateSize(); }, 100);
+        }
+
+        async function searchMapLocation() {
+            const query = document.getElementById('mapSearchInput').value.trim();
+            if (!query) return;
+            document.getElementById('mapAddressPreview').innerText = "Searching...";
+            try {
+                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`);
+                const data = await res.json();
+                if (data && data.length > 0) {
+                    const latlng = [data[0].lat, data[0].lon];
+                    map.setView(latlng, 15);
+                    if (mapMarker) mapMarker.setLatLng(latlng);
+                    else mapMarker = L.marker(latlng).addTo(map);
+                    selectedAddress = data[0].display_name;
+                    document.getElementById('mapAddressPreview').innerText = selectedAddress;
+                }
+            } catch (err) { document.getElementById('mapAddressPreview').innerText = "Error searching location."; }
+        }
+
+        function closeMapModal() { document.getElementById('mapModal').style.display = 'none'; }
+        function confirmMapAddress() {
+            if (selectedAddress) document.getElementById('shippingAddress').value = selectedAddress;
+            closeMapModal();
+        }
+
+        async function loadCart() {
+            const token = localStorage.getItem('token');
+            if (!token) { localStorage.setItem('returnUrl', 'checkout.html'); window.location.href = 'login.html'; return; }
+            try {
+                const response = await fetch('/api/cart', { headers: { 'Authorization': `Bearer ${token}` } });
+                const cart = await response.json();
+                if (!cart || cart.length === 0) { window.location.href = 'cart.html'; return; }
+                cartItems = []; merchandiseSubtotal = 0; let html = '';
+                cart.forEach(item => {
+                    const qty = item.quantity || 1;
+                    const price = item.product.price || 0;
+                    merchandiseSubtotal += (price * qty);
+                    cartItems.push({ productId: item.productId, name: item.product.name, price: price, quantity: qty });
+                    html += `<div style="display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.95rem; color: #444;"><span style="font-weight: 500;">${item.product.name} x ${qty}</span><span>Rs. ${(price * qty).toFixed(2)}</span></div>`;
+                });
+                finalTotal = merchandiseSubtotal + shippingFee + platformFee;
+                document.getElementById('summaryItems').innerHTML = html;
+                document.getElementById('sumSubtotal').innerText = `Rs. ${merchandiseSubtotal.toFixed(2)}`;
+                document.getElementById('sumTotal').innerText = `Rs. ${finalTotal.toFixed(2)}`;
+            } catch (err) { window.location.href = 'cart.html'; }
+        }
+
+        async function initiatePayment() {
+            const token = localStorage.getItem('token');
+            if (!document.getElementById('termsCheckbox').checked) { alert("Please accept the Terms & Conditions."); return; }
+            const shippingName = document.getElementById('shippingName').value.trim();
+            const shippingPhone = document.getElementById('shippingPhone').value.trim();
+            const shippingAddress = document.getElementById('shippingAddress').value.trim();
+            if(!shippingName || !shippingPhone || !shippingAddress) { alert("Please fill out shipping fields."); return; }
+            
+            const selectedMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
+            const btn = document.getElementById('btnInitiate');
+            btn.disabled = true; btn.innerText = 'Processing...';
+
+            if (selectedMethod !== 'Card') {
+                const senderName = document.getElementById('manualSenderName').value.trim();
+                const refId = document.getElementById('manualRefId').value.trim();
+                if (!senderName || !refId) { alert('Please fill in Sender Name and Reference ID.'); btn.disabled = false; btn.innerText = 'Proceed to Payment'; return; }
+                try {
+                    const res = await fetch('/api/transactions/manual', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                        body: JSON.stringify({ totalAmount: finalTotal, paymentMethod: selectedMethod, shippingAddress, contactPhone: shippingPhone, senderName, referenceId: refId, items: cartItems })
+                    });
+                    if (res.ok) { alert('Order submitted successfully!'); window.location.href = 'transactions.html'; }
+                    else alert('Submission failed');
+                } catch (err) { alert('Error'); } finally { btn.disabled = false; btn.innerText = 'Proceed to Payment'; }
+            } else {
+                try {
+                    const res = await fetch('/api/transactions/initiate-payment', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                        body: JSON.stringify({ items: cartItems, totalAmount: finalTotal, shippingName, shippingPhone, shippingAddress, paymentMethod: selectedMethod })
+                    });
+                    if (res.ok) document.getElementById('otpModal').style.display = 'flex';
+                    else alert('Initiation failed');
+                } catch (err) { alert('Error'); } finally { btn.disabled = false; btn.innerText = 'Proceed to Payment'; }
+            }
+        }
+
+        async function verifyPayment() {
+            const otp = document.getElementById('otpInput').value;
+            const res = await fetch('/api/transactions/verify-payment', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+                body: JSON.stringify({ otp })
+            });
+            if (res.ok) window.location.href = 'transactions.html';
+            else document.getElementById('otpError').style.display = 'block';
+        }
+
+        function toggleCheckoutButton() { document.getElementById('btnInitiate').disabled = !document.getElementById('termsCheckbox').checked; }
+
+        document.addEventListener('DOMContentLoaded', () => { fetchManualSettings(); loadCart(); });
+    </script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="js/auth.js?v=5"></script>
+</body>
+</html>

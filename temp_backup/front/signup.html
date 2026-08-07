@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Create Account | LeatherLane Atelier</title>
+    <link rel="stylesheet" href="css/global.css">
+    <style>
+        .split-layout {
+            display: flex;
+            min-height: 100vh;
+            width: 100%;
+        }
+        
+        .left-pane {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: var(--primary-bg);
+            padding: 2rem;
+            position: relative;
+        }
+
+        .right-pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 4rem;
+            text-align: center;
+            background-color: var(--secondary-bg); /* Use a bag image if available, otherwise secondary bg */
+            border-left: 1px solid rgba(199, 154, 82, 0.1);
+            position: relative;
+            background-image: linear-gradient(rgba(43, 29, 23, 0.7), rgba(43, 29, 23, 0.7)), url('https://images.unsplash.com/photo-1547949007-535814e71520?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80');
+            background-size: cover;
+            background-position: center;
+        }
+
+        .hero-title {
+            font-size: 3.5rem;
+            line-height: 1.2;
+            margin-bottom: 1.5rem;
+            letter-spacing: 2px;
+            color: var(--primary-gold);
+            text-transform: uppercase;
+        }
+
+        .hero-subtitle {
+            font-size: 1.1rem;
+            max-width: 400px;
+            color: var(--primary-text);
+            font-family: var(--font-body);
+        }
+
+        .auth-card {
+            background-color: transparent; /* Merge with background */
+            padding: 2rem;
+            width: 100%;
+            max-width: 500px;
+        }
+
+        .auth-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .auth-header h2 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .auth-header p {
+            color: var(--secondary-text);
+            font-size: 1.1rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .form-row .form-group {
+            flex: 1;
+        }
+
+        .form-group {
+            position: relative;
+        }
+        
+        .password-toggle {
+            position: absolute;
+            right: 15px;
+            top: 42px;
+            background: none;
+            border: none;
+            color: var(--primary-gold);
+            cursor: pointer;
+            font-family: var(--font-body);
+            font-size: 0.9rem;
+        }
+        
+        .terms {
+            font-size: 0.8rem;
+            color: var(--secondary-text);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: flex-start;
+        }
+        
+        .terms input {
+            margin-right: 8px;
+            margin-top: 3px;
+            accent-color: var(--primary-gold);
+        }
+
+        @media (max-width: 900px) {
+            .split-layout {
+                flex-direction: column-reverse;
+            }
+            .right-pane {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="split-layout">
+        <!-- Left Auth Pane -->
+        <div class="left-pane fade-in">
+            <div class="auth-card">
+                <div class="auth-header">
+                    <h2>LeatherLane Atelier</h2>
+                    <p>Create Account</p>
+                    <div style="margin-top: 10px; font-size: 0.85rem; color: var(--secondary-text);">Join us to experience exceptional craftsmanship.</div>
+                </div>
+                
+                <form id="signupForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>First Name</label>
+                            <input type="text" id="fname" class="form-control" placeholder="John" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Last Name</label>
+                            <input type="text" id="lname" class="form-control" placeholder="Doe" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Email Address</label>
+                        <input type="email" id="email" class="form-control" placeholder="john.doe@example.com" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Phone Number (Optional)</label>
+                        <input type="tel" id="phone" class="form-control" placeholder="+1 (555) 000-0000">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" class="form-control" id="password" placeholder="Create a strong password" required>
+                        <button type="button" class="password-toggle" onclick="togglePassword('password', this)">Show</button>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Confirm Password</label>
+                        <input type="password" class="form-control" id="confirm-password" placeholder="Confirm your password" required>
+                        <button type="button" class="password-toggle" onclick="togglePassword('confirm-password', this)">Show</button>
+                    </div>
+                    
+                    <label class="terms">
+                        <input type="checkbox" id="termsCheck" required>
+                        <span>I agree to the <a href="#">Terms & Conditions</a> and <a href="#">Privacy Policy</a> of LeatherLane Atelier.</span>
+                    </label>
+                    
+                    <button type="button" class="btn-primary" onclick="doSignup()">Create Account</button>
+                    
+                    <div style="text-align: center; margin-top: 1.5rem; font-size: 0.9rem;">
+                        Already have an account? <a href="login.html">Sign In</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Right Hero Pane -->
+        <div class="right-pane slide-up">
+            <h1 class="hero-title">The Art of<br>Craft</h1>
+            <p class="hero-subtitle">Every piece is a testament to our dedication to traditional leatherworking techniques, crafted to last a lifetime.</p>
+        </div>
+    </div>
+
+    <!-- OTP Modal -->
+    <div id="otpModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center;">
+        <div style="background:#fff; padding:2rem; border-radius:8px; text-align:center; max-width:400px; width:100%;">
+            <h3 style="margin-bottom:1rem; color:var(--primary-bg);">Verify Your Email</h3>
+            <p style="font-size:0.9rem; color:#666; margin-bottom:1.5rem;">Check your terminal/email for the 6-digit OTP code to complete registration.</p>
+            <input type="text" id="otpInput" class="form-control" placeholder="000000" maxlength="6" style="text-align:center; letter-spacing:5px; font-size:1.5rem; margin-bottom:1rem;">
+            <div id="otpError" style="color:var(--error); font-size:0.8rem; margin-bottom:1rem; display:none;">Invalid OTP</div>
+            <button class="btn-primary" onclick="verifyOtp()">Verify & Complete</button>
+        </div>
+    </div>
+
+    <script>
+        let pendingEmail = '';
+
+        async function doSignup() {
+            const btn = document.querySelector('.btn-primary');
+            btn.textContent = 'Creating...';
+            btn.disabled = true;
+
+            const name = document.getElementById('fname').value + ' ' + document.getElementById('lname').value;
+            const email = document.getElementById('email').value;
+            const phone = document.getElementById('phone').value;
+            const password = document.getElementById('password').value;
+            const terms = document.getElementById('termsCheck').checked;
+            
+            if (!terms) {
+                alert("You must agree to the Terms & Conditions to create an account.");
+                btn.textContent = 'Create Account';
+                btn.disabled = false;
+                return;
+            }
+            
+            try {
+                const res = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, email, phone, password })
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    localStorage.setItem('token', data.token);
+                    if (data.name) localStorage.setItem('profile_fname', data.name);
+                    window.location.href = 'home.html';
+                } else {
+                    alert(data.message || 'Registration failed');
+                }
+            } catch (err) {
+                alert('Connection error. Is the backend running?');
+            } finally {
+                btn.textContent = 'Create Account';
+                btn.disabled = false;
+            }
+        }
+
+        async function verifyOtp() {
+            const otp = document.getElementById('otpInput').value;
+            const err = document.getElementById('otpError');
+            err.style.display = 'none';
+
+            try {
+                const res = await fetch('/api/auth/verify-otp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: pendingEmail, otp })
+                });
+                const data = await res.json();
+                
+                if (res.ok) {
+                    localStorage.setItem('token', data.token);
+                    if(data.name) localStorage.setItem('profile_fname', data.name);
+                    window.location.href = 'home.html';
+                } else {
+                    err.innerText = data.message || 'Invalid OTP';
+                    err.style.display = 'block';
+                }
+            } catch (error) {
+                err.innerText = 'Connection error';
+                err.style.display = 'block';
+            }
+        }
+
+        function togglePassword(inputId, btn) {
+            const pwd = document.getElementById(inputId);
+            if (pwd.type === 'password') {
+                pwd.type = 'text';
+                btn.textContent = 'Hide';
+            } else {
+                pwd.type = 'password';
+                btn.textContent = 'Show';
+            }
+        }
+
+        // Block Ctrl +/- and Ctrl+Scroll zooming
+        document.addEventListener('keydown', function(event) {
+            if (event.ctrlKey === true && (event.key === '+' || event.key === '-' || event.key === '=' || event.keyCode === 187 || event.keyCode === 189)) {
+                event.preventDefault();
+            }
+        });
+        document.addEventListener('wheel', function(event) {
+            if (event.ctrlKey === true) {
+                event.preventDefault();
+            }
+        }, { passive: false });
+
+        // Block pinch-to-zoom on mobile
+        document.addEventListener('touchstart', function(event) {
+            if (event.touches.length > 1) {
+                event.preventDefault();
+            }
+        }, { passive: false });
+    </script>
+</body>
+</html>
+
+
+
