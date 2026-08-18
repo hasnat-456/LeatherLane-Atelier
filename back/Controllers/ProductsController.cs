@@ -30,8 +30,17 @@ namespace LeatherLane_Atelier.Controllers
             if (isFeatured.HasValue && isFeatured.Value)
                 query = query.Where(p => p.IsFeatured);
 
-            var products = await query.OrderByDescending(p => p.CreatedAt)
-                .Select(p => new {
+            var productsEntities = await query.OrderByDescending(p => p.CreatedAt).ToListAsync();
+            
+            var now = DateTime.Now;
+            var activeDeals = await _context.Deals.Where(d => d.StartTime <= now && d.EndTime >= now).ToListAsync();
+            
+            foreach(var p in productsEntities)
+            {
+                Deal.ApplyActiveDeals(p, activeDeals);
+            }
+            
+            var products = productsEntities.Select(p => new {
                     p.Id,
                     p.Name,
                     p.Slug,
@@ -49,9 +58,9 @@ namespace LeatherLane_Atelier.Controllers
                     p.IsFeatured,
                     p.Discount,
                     p.Available,
+                    p.Sizes,
                     p.CreatedAt
-                })
-                .ToListAsync();
+            }).ToList();
             return Ok(products);
         }
 
@@ -75,6 +84,10 @@ namespace LeatherLane_Atelier.Controllers
                 
             if (product == null)
                 return NotFound(new { message = "Product not found" });
+
+            var now = DateTime.Now;
+            var activeDeals = await _context.Deals.Where(d => d.StartTime <= now && d.EndTime >= now).ToListAsync();
+            Deal.ApplyActiveDeals(product, activeDeals);
 
             return Ok(product);
         }
@@ -259,7 +272,25 @@ namespace LeatherLane_Atelier.Controllers
             var emailService = HttpContext.RequestServices.GetService(typeof(LeatherLane_Atelier.Services.IEmailService)) as LeatherLane_Atelier.Services.IEmailService;
             if (emailService != null)
             {
-                _ = emailService.SendEmailAsync("muhammadbilalarifsheukh@gmail.com", "New Product Review", $"A customer left a {dto.Rating}-star review for {product.Name}:\n\n{dto.Comment}");
+                _ = emailService.SendEmailAsync("muhammadbilalarifsheikh@gmail.com", "New Product Review", $"A customer left a {dto.Rating}-star review for {product.Name}:\n\n{dto.Comment}");
+            }
+
+            if (userId > 0)
+            {
+                // Notification for Customer
+                _context.Notifications.Add(new Notification
+                {
+                    Title = "Review Submitted",
+                    Message = $"Thank you for reviewing {product.Name}! Your {dto.Rating}-star review is now visible.",
+                    ActionUrl = $"product-detail.html?id={id}",
+                    UserId = userId
+                });
+                
+                var userObj = await _context.Users.FindAsync(userId);
+                if (userObj != null && emailService != null)
+                {
+                    _ = emailService.SendEmailAsync(userObj.Email, "Thank You For Your Review!", $"We appreciate your {dto.Rating}-star review on {product.Name}. Your feedback helps us maintain our timeless craftsmanship!");
+                }
             }
 
             await _context.SaveChangesAsync();

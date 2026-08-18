@@ -3,32 +3,73 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Discover premium handcrafted leather bags, wallets, and accessories at LeatherLane Atelier. Experience timeless elegance and superior craftsmanship.">
+    <meta name="keywords" content="handmade leather bags, premium leather wallets, handcrafted leather accessories, LeatherLane Atelier, luxury leather goods">
+    <meta name="author" content="LeatherLane Atelier">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.leatherlaneatelier.com/">
+    <meta property="og:title" content="LeatherLane Atelier | Premium Handcrafted Leather">
+    <meta property="og:description" content="Discover premium handcrafted leather bags, wallets, and accessories at LeatherLane Atelier. Experience timeless elegance and superior craftsmanship.">
+    <meta property="og:image" content="https://www.leatherlaneatelier.com/images/logo.png">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://www.leatherlaneatelier.com/">
+    <meta property="twitter:title" content="LeatherLane Atelier | Premium Handcrafted Leather">
+    <meta property="twitter:description" content="Discover premium handcrafted leather bags, wallets, and accessories at LeatherLane Atelier. Experience timeless elegance and superior craftsmanship.">
+    <meta property="twitter:image" content="https://www.leatherlaneatelier.com/images/logo.png">
+
+    <!-- Canonical Link -->
+    <link rel="canonical" href="https://www.leatherlaneatelier.com/">
+
     <title>All Notifications | LeatherLane Atelier</title>
     <link rel="stylesheet" href="css/global.css">
     <style>
         .notifications-container { max-width: 800px; margin: 2rem auto; padding: 2rem; background: #fff; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); color: #333; }
-        .full-notif-item { padding: 1.5rem; border-bottom: 1px solid #eee; display: flex; flex-direction: column; text-decoration: none; color: #333; transition: background 0.2s; border-radius: 4px; margin-bottom: 1rem; }
-        .full-notif-item:hover { background: #f9f9f9; }
-        .full-notif-item.unread { background: #f0f7f4; border-left: 4px solid var(--primary-gold); }
+        .full-notif-item { padding: 1.5rem; background: #fff; border: 1px solid #eee; border-left: 4px solid var(--primary-gold); display: flex; flex-direction: column; text-decoration: none; color: #333; transition: background 0.2s, transform 0.2s; border-radius: 6px; margin-bottom: 1rem; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
+        .full-notif-item:hover { background: #fdfaf6; transform: translateY(-2px); }
+        .full-notif-item.unread { background: #f0f7f4; }
+        .btn-dashboard { display: inline-block; margin-bottom: 1.5rem; padding: 10px 20px; background: #111; color: #fff; text-decoration: none; border-radius: 6px; font-weight: 600; font-family: 'Poppins', sans-serif; transition: background 0.3s; border: none; cursor: pointer; }
+        .btn-dashboard:hover { background: #333; }
         .notif-title { font-weight: bold; font-size: 1.1rem; color: var(--primary-bg); margin-bottom: 5px; }
         .notif-msg { font-size: 0.95rem; color: #555; }
         .notif-time { font-size: 0.8rem; color: #888; margin-top: 10px; }
     </style>
+
+    <!-- Structured Data (JSON-LD) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "LeatherLane Atelier",
+      "url": "https://www.leatherlaneatelier.com",
+      "logo": "https://www.leatherlaneatelier.com/images/logo.png",
+      "description": "Premium handcrafted leather bags, wallets, and accessories."
+    }
+    </script>
 </head>
 <body>
     <nav class="navbar" style="background-color: var(--primary-bg); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100;">
-        <div class="nav-brand" style="display: flex; flex-direction: column;">
-            <h1 style="color: #fff; margin: 0; font-size: 1.5rem;">LeatherLane</h1>
-            <span style="color: var(--secondary-text); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 2px;">Atelier</span>
+        <div class="nav-brand">
+            <a href="home.html" style="display: flex; align-items: center; text-decoration: none;">
+                <img src="upload/logo.svg" alt="LeatherLane Atelier Logo" style="height: 65px; object-fit: contain; transition: transform 0.3s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+            </a>
         </div>
         <div class="nav-links" style="display: flex; gap: 1.5rem; align-items: center;">
             <!-- Links loaded by auth.js -->
         </div>
     </nav>
 
-    <div class="main-section" style="background: var(--primary-bg);">
+    <div class="main-section" style="background: #F5EFE7; padding: 2rem 0; flex: 1;">
+        <div style="max-width: 800px; margin: 0 auto; text-align: left;">
+            <a href="home.html" class="btn-dashboard" style="margin-bottom: 0;">&larr; BACK TO HOME</a>
+        </div>
         <div class="container">
-            <div class="notifications-container">
+            <div class="notifications-container" style="margin-top: 1rem;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
                     <h2 style="color: var(--primary-bg); font-size: 2rem; margin: 0;">All Notifications</h2>
                     <button onclick="markAllReadPage()" style="background:none;border:none;color:var(--primary-gold);cursor:pointer;font-weight:bold;font-size:1rem;">Mark All as Read</button>
@@ -40,7 +81,7 @@
         </div>
     </div>
 
-    <script src="js/auth.js?v=6"></script>
+    <script src="js/auth.js?v=5"></script>
     <script>
         document.addEventListener('DOMContentLoaded', loadAllNotifications);
 

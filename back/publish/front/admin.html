@@ -2,7 +2,30 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Discover premium handcrafted leather bags, wallets, and accessories at LeatherLane Atelier. Experience timeless elegance and superior craftsmanship.">
+    <meta name="keywords" content="handmade leather bags, premium leather wallets, handcrafted leather accessories, LeatherLane Atelier, luxury leather goods">
+    <meta name="author" content="LeatherLane Atelier">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.leatherlaneatelier.com/">
+    <meta property="og:title" content="LeatherLane Atelier | Premium Handcrafted Leather">
+    <meta property="og:description" content="Discover premium handcrafted leather bags, wallets, and accessories at LeatherLane Atelier. Experience timeless elegance and superior craftsmanship.">
+    <meta property="og:image" content="https://www.leatherlaneatelier.com/images/logo.png">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://www.leatherlaneatelier.com/">
+    <meta property="twitter:title" content="LeatherLane Atelier | Premium Handcrafted Leather">
+    <meta property="twitter:description" content="Discover premium handcrafted leather bags, wallets, and accessories at LeatherLane Atelier. Experience timeless elegance and superior craftsmanship.">
+    <meta property="twitter:image" content="https://www.leatherlaneatelier.com/images/logo.png">
+
+    <!-- Canonical Link -->
+    <link rel="canonical" href="https://www.leatherlaneatelier.com/">
+
     <title>Admin Dashboard | LeatherLane Atelier</title>
     <link rel="stylesheet" href="css/global.css">
     <style>
@@ -35,16 +58,6 @@
         .admin-nav .nav-item.active { color: var(--primary-gold); font-weight: bold; border-bottom: 2px solid var(--primary-gold); padding-bottom: 4px; }
         
         .container { max-width: 1100px; margin: 3rem auto; padding: 0 2rem; }
-        
-        /* Hide HTML5 Up/Down Spinners */
-        input[type=number]::-webkit-inner-spin-button, 
-        input[type=number]::-webkit-outer-spin-button { 
-            -webkit-appearance: none; 
-            margin: 0; 
-        }
-        input[type=number] {
-            -moz-appearance: textfield;
-        }
         
         /* Sections */
         .section { display: none; animation: fadeIn 0.4s ease-out; }
@@ -113,22 +126,30 @@
         
         .section-title { font-family: var(--font-heading); color: var(--primary-bg); font-size: 1.3rem; margin: 2rem 0 1rem; border-bottom: 1px solid #eee; padding-bottom: 8px; }
     </style>
+
+    <!-- Quill.js for Rich Text Editing -->
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
 </head>
 <body>
 
     <!-- Top Navbar Matching User Side -->
     <nav class="navbar">
         <div class="nav-brand">
-            <h1>LeatherLane</h1>
-            <span>Admin Portal</span>
+            <a href="home.html" style="display: flex; align-items: center; text-decoration: none;">
+                <img src="upload/logo.svg" alt="LeatherLane Atelier Logo" style="height: 65px; object-fit: contain; transition: transform 0.3s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+            </a>
         </div>
         <div class="admin-nav">
             <a class="nav-item active" onclick="switchTab('dashboard')">Dashboard</a>
             <a class="nav-item" onclick="switchTab('orders')">Orders</a>
             <a class="nav-item" onclick="switchTab('products')">Products</a>
+            <a class="nav-item" onclick="switchTab('deals')">Deals</a>
             <a class="nav-item" href="admin-exchanges.html?v=5">Exchanges</a>
             <a class="nav-item" onclick="switchTab('payment-verification')">Payment Verification</a>
             <a class="nav-item" onclick="switchTab('categories')">Categories</a>
+            <a class="nav-item" onclick="switchTab('stories')">Stories</a>
+            <a class="nav-item" onclick="switchTab('newsletter')">Newsletter</a>
             <a class="nav-item" onclick="switchTab('settings')">Settings</a>
             <div class="notification-wrapper" style="margin-left: 10px;">
                 <button onclick="toggleNotificationDropdown()" style="background:none; border:none; font-size:1.2rem; cursor:pointer;">&#x1F514;<span id="notifBadge" class="notification-badge"></span></button>
@@ -201,7 +222,7 @@
                             <th>Name</th>
                             <th>Category</th>
                             <th>Price</th>
-                            <th>Availability</th>
+                            <th>Stock</th>
                             <th>Action</th>
                         </tr>
                     </thead>
@@ -228,7 +249,10 @@
                         <div class="form-group">
                             <label>Category</label>
                             <select id="pCategory" class="form-control" required>
-                                <option value="">Loading categories...</option>
+                                <option value="Chappal">Chappal</option>
+                                <option value="Peshawari Chappal">Peshawari Chappal</option>
+                                <option value="Shoes">Shoes</option>
+                                <option value="Sandals">Sandals</option>
                             </select>
                         </div>
                     </div>
@@ -244,15 +268,12 @@
                         </div>
                     </div>
 
-                    <div class="grid-2">
-                        <div class="form-group">
-                            <label>Availability Status</label>
-                            <select id="pAvailabilityStatus" class="form-control" required>
-                                <option value="Available">Available</option>
-                                <option value="Temporarily Unavailable">Temporarily Unavailable</option>
-                                <option value="Discontinued">Discontinued</option>
-                            </select>
-                        </div>
+                    <div class="form-group">
+                        <label>Availability Status</label>
+                        <select id="pAvailabilityStatus" class="form-control" required>
+                            <option value="Available">Available</option>
+                            <option value="Out of Stock">Out of Stock</option>
+                        </select>
                     </div>
 
                     <h3 class="section-title">Comprehensive Details</h3>
@@ -313,6 +334,83 @@
                         <button type="submit" class="btn-primary" style="width: auto; padding: 12px 30px;">Publish Product</button>
                     </div>
                 </form>
+            </div>
+        </div>
+
+        <!-- DEALS SECTION -->
+        <div id="deals" class="section">
+            <div class="topbar">
+                <h1>Deals Management</h1>
+            </div>
+            
+            <div class="card admin-form">
+                <h3 style="margin-top:0; font-family:var(--font-heading);">Create New Deal</h3>
+                <form id="create-deal-form" onsubmit="createDeal(event)">
+                    <div class="form-group">
+                        <label>Scope (What gets the discount?)</label>
+                        <select id="deal-scope" class="form-control" onchange="toggleDealScope()" required>
+                            <option value="Product">Specific Product</option>
+                            <option value="Category">Specific Category</option>
+                            <option value="All">All Products</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group" id="deal-product-group">
+                        <label>Select Product</label>
+                        <select id="deal-product" class="form-control"></select>
+                    </div>
+                    
+                    <div class="form-group" id="deal-category-group" style="display: none;">
+                        <label>Select Category</label>
+                        <select id="deal-category" class="form-control"></select>
+                    </div>
+                    
+                    <div style="display: flex; gap: 1rem;">
+                        <div class="form-group" style="flex: 1;">
+                            <label>Discount Type</label>
+                            <select id="deal-discount-type" class="form-control" required>
+                                <option value="Percentage">Percentage (%)</option>
+                                <option value="FixedAmount">Fixed Amount (PKR)</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label>Discount Value</label>
+                            <input type="number" id="deal-discount-value" class="form-control" placeholder="e.g., 20" required min="1">
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 1rem;">
+                        <div class="form-group" style="flex: 1;">
+                            <label>Start Time</label>
+                            <input type="datetime-local" id="deal-start" class="form-control" required>
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label>End Time</label>
+                            <input type="datetime-local" id="deal-end" class="form-control" required>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn" style="background-color: var(--primary-bg); color: #fff; padding: 12px 24px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">Create Deal</button>
+                </form>
+            </div>
+            
+            <div class="card">
+                <h3 style="margin-top:0; font-family:var(--font-heading);">Active & Upcoming Deals</h3>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Scope</th>
+                            <th>Target</th>
+                            <th>Discount</th>
+                            <th>Start</th>
+                            <th>End</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-deals-table-body">
+                        <tr><td colspan="6" style="text-align: center;">Loading deals...</td></tr>
+                    </tbody>
+                </table>
             </div>
         </div>
 
@@ -378,56 +476,281 @@
         </div>
 
         <!-- Settings Section -->
+        <div id="newsletter" class="section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                <h1 style="color: var(--primary-bg); margin: 0; font-family: var(--font-heading); font-size: 2.2rem;">Newsletter Subscribers</h1>
+            </div>
+            
+            <div class="dashboard-cards" style="grid-template-columns: 1fr 1fr; margin-bottom: 2rem;">
+                <div class="card" style="padding: 1.5rem;">
+                    <h3 style="color: var(--primary-gold); font-size: 1.1rem; margin-top: 0;">Subscribers List</h3>
+                    <div style="max-height: 400px; overflow-y: auto;">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 100px;">
+                                        <label style="cursor: pointer; display: flex; align-items: center; gap: 5px; margin: 0;">
+                                            <input type="checkbox" id="selectAllSubs" onclick="toggleAllSubs(this)">
+                                            Select All
+                                        </label>
+                                    </th>
+                                    <th>Email</th>
+                                    <th>Subscribed At</th>
+                                </tr>
+                            </thead>
+                            <tbody id="subscribersTableBody">
+                                <!-- Loaded via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div class="card admin-form" style="padding: 1.5rem;">
+                    <h3 style="color: var(--primary-gold); font-size: 1.1rem; margin-top: 0;">Send Bulk Email</h3>
+                    <div id="bulkEmailMsg" style="margin-bottom: 1rem; font-size: 0.9rem; display: none; padding: 10px; border-radius: 6px;"></div>
+                    <form onsubmit="sendBulkEmail(event)" style="display: flex; flex-direction: column; gap: 1rem;">
+                        
+                        <div style="display: flex; gap: 1rem; margin-bottom: 0.5rem; color: var(--primary-bg); font-weight: bold;">
+                            <label style="cursor: pointer;"><input type="radio" name="emailTarget" value="all" checked onchange="updateBulkBtnText()"> All Subscribers</label>
+                            <label style="cursor: pointer;"><input type="radio" name="emailTarget" value="selected" onchange="updateBulkBtnText()"> Selected Only</label>
+                        </div>
+                        
+                        <input type="text" id="bulkSubject" class="form-control" placeholder="Email Subject" required>
+                        <textarea id="bulkBody" class="form-control" rows="8" placeholder="Email HTML Body" required></textarea>
+                        <button type="submit" class="btn btn-primary" id="bulkSendBtn">Send to All Subscribers</button>
+                    </form>
+                </div>
+            </div>
+        </div>
         <div id="settings" class="section">
             <div class="topbar">
-                <h1>Security Settings</h1>
+                <h1>Settings</h1>
             </div>
-            <div class="card admin-form" style="max-width: 500px;">
-                <h3 style="margin-bottom: 1.5rem; color: var(--primary-bg); font-family: var(--font-heading);">Change Credentials</h3>
-                <form onsubmit="event.preventDefault(); changePassword();">
-                    <div id="pwdMsg" style="margin-bottom: 1.5rem; font-size: 0.9rem; display: none; padding: 10px; border-radius: 6px;"></div>
-                    
-                    <div class="form-group">
-                        <label>New Email Address (Optional)</label>
-                        <input type="email" id="newEmail" class="form-control" placeholder="Leave blank to keep current">
+            
+            <div class="grid-2">
+                <!-- Left Column -->
+                <div>
+                    <!-- Change Credentials Card -->
+                    <div class="card admin-form" style="height: 100%; box-sizing: border-box; display: flex; flex-direction: column;">
+                        <h3 style="margin-bottom: 1.5rem; color: var(--primary-bg); font-family: var(--font-heading);">Change Credentials</h3>
+                        <form onsubmit="event.preventDefault(); changePassword();" style="display: flex; flex-direction: column; flex: 1;">
+                            <div id="pwdMsg" style="margin-bottom: 1.5rem; font-size: 0.9rem; display: none; padding: 10px; border-radius: 6px;"></div>
+                            
+                            <div class="form-group">
+                                <label>New Email Address (Optional)</label>
+                                <input type="email" id="newEmail" class="form-control" placeholder="Leave blank to keep current">
+                            </div>
+                            <div class="form-group">
+                                <label>New Password (Optional)</label>
+                                <input type="password" id="newPwd" class="form-control" placeholder="Leave blank to keep current">
+                            </div>
+                            <div style="margin-top: auto; padding-top: 1rem;">
+                                <button type="submit" class="btn-primary" style="width: 100%;">Update Credentials</button>
+                            </div>
+                        </form>
                     </div>
-                    <div class="form-group">
-                        <label>New Password (Optional)</label>
-                        <input type="password" id="newPwd" class="form-control" placeholder="Leave blank to keep current">
+                </div>
+
+                <!-- Right Column -->
+                <div>
+                    <!-- Site Content Card -->
+                    <div class="card admin-form" style="height: 100%; box-sizing: border-box; display: flex; flex-direction: column;">
+                        <h3 style="margin-bottom: 1.5rem; color: var(--primary-bg); font-family: var(--font-heading);">Site Content</h3>
+                        <form onsubmit="event.preventDefault(); uploadAboutImage();" id="aboutImgForm" style="display: flex; flex-direction: column; flex: 1;">
+                            <div id="imgMsg" style="margin-bottom: 1.5rem; font-size: 0.9rem; display: none; padding: 10px; border-radius: 6px;"></div>
+                            
+                            <div class="form-group">
+                                <label>About Page Hero Image</label>
+                                <input type="file" id="aboutImageFile" class="form-control" accept="image/*" required style="padding: 9px;">
+                                <div style="font-size: 0.8rem; color: #666; margin-top: 5px;">This will replace the placeholder image on the About Us page.</div>
+                            </div>
+                            
+                            <div style="margin-top: auto; padding-top: 1rem;">
+                                <button type="submit" class="btn-primary" style="width: 100%;">Upload Image</button>
+                            </div>
+                        </form>
                     </div>
-                    <button type="submit" class="btn-primary" style="margin-top: 1rem;">Update Credentials</button>
+                </div>
+            </div>
+
+            <!-- Store Settings Form -->
+            <div class="card admin-form" style="margin-top: 2rem;">
+                <h3 style="margin-bottom: 1.5rem; color: var(--primary-bg); font-family: var(--font-heading);">Store Contact & Social Links</h3>
+                <form id="storeSettingsForm" onsubmit="event.preventDefault(); saveStoreSettings();">
+                    <div class="grid-2">
+                        <div>
+                            <div class="form-group">
+                                <label>Address</label>
+                                <textarea id="siteAddress" class="form-control" rows="2" required></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Email Address</label>
+                                <input type="email" id="siteEmail" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Phone Number</label>
+                                <input type="text" id="sitePhone" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Business Hours</label>
+                                <input type="text" id="siteHours" class="form-control" required>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="form-group">
+                                <label>Facebook URL</label>
+                                <input type="url" id="siteFb" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label>Instagram URL</label>
+                                <input type="url" id="siteIg" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label>WhatsApp URL</label>
+                                <input type="url" id="siteWa" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label>TikTok URL</label>
+                                <input type="url" id="siteTk" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group" style="grid-column: span 2;">
+                        <label style="display:flex; justify-content:space-between; align-items:center;">
+                            Size Guide Table
+                            <button type="button" class="btn-secondary" style="padding: 4px 10px; font-size: 0.8rem;" onclick="addSizeGuideRow()">+ Add Row</button>
+                        </label>
+                        <div style="overflow-x:auto;">
+                            <table class="table" id="sizeGuideTable">
+                                <thead>
+                                    <tr>
+                                        <th>PK Size</th>
+                                        <th>UK Size</th>
+                                        <th>US Size</th>
+                                        <th>EU Size</th>
+                                        <th>Foot Length (CM)</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Rows will be loaded dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="form-group" style="grid-column: span 2; margin-top:1.5rem;">
+                        <label>About Us Page Text</label>
+                        <div style="background:#fff; color:#333; min-height:150px;">
+                            <div id="aboutUsEditor"></div>
+                        </div>
+                    </div>
+                    <div style="margin-top: 1rem; grid-column: span 2;">
+                        <button type="submit" class="btn-primary" id="saveStoreBtn">Save Settings</button>
+                    </div>
                 </form>
             </div>
 
-            <div class="card admin-form" style="max-width: 700px; margin-top: 2rem;">
+            
+            <!-- Slider Management -->
+            <div class="card admin-form" style="margin-top: 2rem;">
+                <h3 style="margin-bottom: 1.5rem; color: var(--primary-bg); font-family: var(--font-heading);">Slider Management</h3>
+                <div class="grid-2">
+                    <div>
+                        <h4>Hero Slider ('Timeless Craftsmanship')</h4>
+                        <div id="heroSliderContainer" style="display:flex; flex-direction:column; gap:10px; margin-bottom:10px;"></div>
+                        <input type="file" id="heroSliderFile" accept="image/*,video/*" class="form-control" multiple>
+                        <button type="button" class="btn-secondary" style="margin-top:5px;" onclick="uploadSliderImage('Hero')">Upload Hero Image</button>
+                    </div>
+                    <div>
+                        <h4>Craftsmanship Slider ('Handmade in Pakistan')</h4>
+                        <div id="craftSliderContainer" style="display:flex; flex-direction:column; gap:10px; margin-bottom:10px;"></div>
+                        <input type="file" id="craftSliderFile" accept="image/*,video/*" class="form-control" multiple>
+                        <button type="button" class="btn-secondary" style="margin-top:5px;" onclick="uploadSliderImage('Craft')">Upload Craft Image</button>
+                    </div>
+                </div>
+                <div style="text-align: center; margin-top: 1.5rem;">
+                    <button type="button" class="btn-primary" onclick="saveSliderSettings()" style="padding: 12px 40px;" id="saveSlidersBtn">Save Sliders</button>
+                </div>
+            </div>
+
+            <!-- Full Width Row for Payment Methods -->
+            <div class="card admin-form" style="margin-top: 2rem;">
                 <h3 style="margin-bottom: 1.5rem; color: var(--primary-bg); font-family: var(--font-heading);">Manual Payment Methods</h3>
                 <div id="paymentSettingsMsg" style="margin-bottom: 1.5rem; font-size: 0.9rem; display: none; padding: 10px; border-radius: 6px;"></div>
-                <div id="paymentSettingsContainer">
+                <div id="paymentSettingsContainer" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
                     <!-- Loaded dynamically via JS -->
-                    <div style="color: #666;">Loading payment settings...</div>
+                    <div style="color: #666; grid-column: span 2;">Loading payment settings...</div>
                 </div>
-                <button class="btn-primary" onclick="savePaymentSettings()" style="margin-top: 1.5rem; width: auto; padding: 12px 30px;">Save Payment Settings</button>
-            </div>
-
-            <div class="card admin-form" style="max-width: 500px; margin-top: 2rem;">
-                <h3 style="margin-bottom: 1.5rem; color: var(--primary-bg); font-family: var(--font-heading);">Site Content</h3>
-                <form onsubmit="event.preventDefault(); uploadAboutImage();" id="aboutImgForm">
-                    <div id="imgMsg" style="margin-bottom: 1.5rem; font-size: 0.9rem; display: none; padding: 10px; border-radius: 6px;"></div>
-                    
-                    <div class="form-group">
-                        <label>About Page Hero Image</label>
-                        <input type="file" id="aboutImageFile" class="form-control" accept="image/*" required style="padding: 9px;">
-                        <div style="font-size: 0.8rem; color: #666; margin-top: 5px;">This will replace the placeholder image on the About Us page.</div>
-                    </div>
-                    
-                    <button type="submit" class="btn-primary" style="margin-top: 1rem;">Upload Image</button>
-                </form>
+                <div style="text-align: center;">
+                    <button class="btn-primary" onclick="savePaymentSettings()" style="margin-top: 1.5rem; width: auto; padding: 12px 40px;">Save Payment Settings</button>
+                </div>
             </div>
         </div>
 
+        <!-- Stories Section -->
+        <div id="stories" class="section">
+            <div class="topbar">
+                <h1>Stories / Journal</h1>
+                <button class="btn-primary" onclick="openStoryModal()">Add New Story</button>
+            </div>
+            <div style="overflow-x:auto;">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Title</th>
+                            <th>Category</th>
+                            <th>Created At</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="storiesTableBody">
+                        <!-- Populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 
     <!-- Rejection Reason Modal -->
+
+    <!-- Story Modal -->
+    <div id="storyModal" class="modal" style="display: none; align-items: center; justify-content: center; position: fixed; z-index: 1100; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5);">
+        <div class="modal-content" style="max-width: 800px; width: 90%; max-height: 90vh; overflow-y: auto; background:#fff; padding:2rem; border-radius:8px; text-align:left;">
+            <h2 id="storyModalTitle" style="margin-bottom: 1rem;">Add Story</h2>
+            <input type="hidden" id="storyId">
+            <div class="form-group" style="margin-bottom: 1rem;">
+                <label style="color: #333;">Title</label>
+                <input type="text" id="storyTitle" class="form-control" required style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; background:#fff; color:#333;">
+            </div>
+            <div class="form-group" style="margin-bottom: 1rem;">
+                <label style="color: #333;">Category (e.g., THE JOURNAL)</label>
+                <input type="text" id="storyCategory" class="form-control" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; background:#fff; color:#333;">
+            </div>
+            <div class="form-group" style="margin-bottom: 1rem;">
+                <label style="color: #333;">Cover Image</label>
+                <div style="display:flex; gap:10px; align-items:center;">
+                    <input type="file" id="storyCoverImageFile" accept="image/*" style="flex:1;">
+                    <input type="hidden" id="storyCoverImage">
+                    <img id="storyCoverPreview" style="max-height: 40px; display:none; border-radius:4px;" />
+                </div>
+            </div>
+            <div class="form-group" style="margin-top: 10px;">
+                <label>Excerpt (Short description for home page)</label>
+                <textarea id="storyExcerpt" class="form-control" rows="3" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; background:#fff; color:#333;"></textarea>
+            </div>
+            <div class="form-group" style="margin-top: 10px;">
+                <label>Content</label>
+                <!-- Quill editor container -->
+                <div id="storyContentEditor" style="height: 300px; background: #fff;"></div>
+            </div>
+            <div style="margin-top: 20px; text-align: right;">
+                <button class="btn-close" onclick="closeStoryModal()" style="padding: 8px 16px; border-radius: 4px; border:none; background:#ccc; cursor:pointer; margin-right:10px;">Cancel</button>
+                <button class="btn" onclick="saveStory()" style="padding: 8px 16px; border-radius: 4px; border:none; background:var(--primary-gold); color:#111; font-weight:bold; cursor:pointer;">Save</button>
+            </div>
+        </div>
+    </div>
+
     <div id="rejectModal" class="modal" style="display: none; align-items: center; justify-content: center; position: fixed; z-index: 1100; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5);">
         <div class="modal-content" style="max-width: 450px; background:#fff; padding:2rem; border-radius:8px; text-align:center;">
             <h2 style="color: var(--primary-bg); font-family: var(--font-heading); margin-bottom: 1.5rem; font-size:1.5rem;">Reject Payment</h2>
@@ -482,15 +805,78 @@
         </div>
     </div>
 
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-grid">
+            <div class="footer-col brand">
+                <h5>LeatherLane</h5>
+                <p>Premium handcrafted men's footwear. Specializing in Chappals, Peshawari Chappals, Shoes, and Sandals.</p>
+                                                                      <div class="social-links" style="margin-top: 1.5rem;">
+                      <h6 style="color: var(--primary-gold); margin-bottom: 0.8rem; font-size: 0.85rem; letter-spacing: 1px;">FOLLOW US</h6>
+                      <div style="display: flex; gap: 15px;">
+                          <a href="#" style="color: #fff; text-decoration: none; transition: opacity 0.2s;" onmouseover="this.style.opacity=0.7" onmouseout="this.style.opacity=1" title="Facebook">
+                              <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z"/></svg>
+                          </a>
+                          <a href="https://www.instagram.com/leatherlane_atelier" target="_blank" style="color: #fff; text-decoration: none; transition: opacity 0.2s;" onmouseover="this.style.opacity=0.7" onmouseout="this.style.opacity=1" title="Instagram">
+                              <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+                          </a>
+                          <a href="#" style="color: #fff; text-decoration: none; transition: opacity 0.2s;" onmouseover="this.style.opacity=0.7" onmouseout="this.style.opacity=1" title="WhatsApp">
+                              <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                          </a>
+                          <a href="#" style="color: #fff; text-decoration: none; transition: opacity 0.2s;" onmouseover="this.style.opacity=0.7" onmouseout="this.style.opacity=1" title="TikTok">
+                              <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-5.2 1.74 2.89 2.89 0 012.31-4.64 2.93 2.93 0 01.88.13V9.4a6.84 6.84 0 00-1-.05A6.33 6.33 0 005 15.68a6.34 6.34 0 0012.67-1.38V7.47a8.27 8.27 0 003.92 1V5.12a5.45 5.45 0 01-2-1.43z"/></svg>
+                          </a>
+                      </div>
+                  </div>
+            </div>
+            <div class="footer-col">
+                <h5>Shop Men's</h5>
+                <ul id="footerCategoriesList">
+                    <li><a href="products.html?category=Chappal">Chappal</a></li>
+                    <li><a href="products.html?category=Peshawari Chappal">Peshawari Chappal</a></li>
+                    <li><a href="products.html?category=Shoes">Shoes</a></li>
+                    <li><a href="products.html?category=Sandals">Sandals</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h5>Customer Service</h5>
+                <ul>
+                    <li><a href="shipping-policy.html">Shipping Policy</a></li>
+                    <li><a href="return-refund-policy.html">Return & Refund Policy</a></li>
+                    <li><a href="faq.html">FAQ</a></li>
+                    <li><a href="contact.html">Contact Us</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h5>Contact Info</h5>
+                <ul>
+                    <li>📍 Ward no 7, street 14, house 143, Mohallah Ansarian Jhang City, Punjab, 35200</li>
+                    <li>✉️ leatherlaneatelier@gmail.com</li>
+                    <li>📞 03376306162</li>
+                    <li>🕒 Mon-Sat: 10 AM - 7 PM</li>
+                </ul>
+            </div>
+                    </div>
+        <div class="footer-bottom">
+            <div>&copy; 2026 LeatherLane. All rights reserved.</div>
+            <div class="footer-bottom-links">
+                <a href="privacy-policy.html">Privacy Policy</a>
+                <a href="terms-and-conditions.html">Terms & Conditions</a>
+            </div>
+        </div>
+    </footer>
+
     <!-- Script must run immediately to prevent flash of unauthenticated content -->
     <script>
         if (!localStorage.getItem('token')) {
             window.location.href = 'login.html';
         }
     </script>
-    <script src="js/admin.js?v=3"></script>
+    <script src="js/admin.js?v=999"></script>
 </body>
 </html>
+
+
 
 
 

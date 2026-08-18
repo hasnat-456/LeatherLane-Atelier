@@ -2,7 +2,30 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Discover premium handcrafted leather bags, wallets, and accessories at LeatherLane Atelier. Experience timeless elegance and superior craftsmanship.">
+    <meta name="keywords" content="handmade leather bags, premium leather wallets, handcrafted leather accessories, LeatherLane Atelier, luxury leather goods">
+    <meta name="author" content="LeatherLane Atelier">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.leatherlaneatelier.com/">
+    <meta property="og:title" content="LeatherLane Atelier | Premium Handcrafted Leather">
+    <meta property="og:description" content="Discover premium handcrafted leather bags, wallets, and accessories at LeatherLane Atelier. Experience timeless elegance and superior craftsmanship.">
+    <meta property="og:image" content="https://www.leatherlaneatelier.com/images/logo.png">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://www.leatherlaneatelier.com/">
+    <meta property="twitter:title" content="LeatherLane Atelier | Premium Handcrafted Leather">
+    <meta property="twitter:description" content="Discover premium handcrafted leather bags, wallets, and accessories at LeatherLane Atelier. Experience timeless elegance and superior craftsmanship.">
+    <meta property="twitter:image" content="https://www.leatherlaneatelier.com/images/logo.png">
+
+    <!-- Canonical Link -->
+    <link rel="canonical" href="https://www.leatherlaneatelier.com/">
+
     <title>Login | LeatherLane Atelier</title>
     <link rel="stylesheet" href="css/global.css">
     <style>
@@ -164,6 +187,18 @@
             }
         }
     </style>
+
+    <!-- Structured Data (JSON-LD) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "LeatherLane Atelier",
+      "url": "https://www.leatherlaneatelier.com",
+      "logo": "https://www.leatherlaneatelier.com/images/logo.png",
+      "description": "Premium handcrafted leather bags, wallets, and accessories."
+    }
+    </script>
 </head>
 <body>
     <div class="split-layout">
@@ -195,7 +230,7 @@
                                 <label style="margin-bottom: 0;">Password</label>
                                 <a href="forgot-password.html" style="font-size: 0.8rem; color: var(--primary-gold); text-decoration: underline;">Forgot Password?</a>
                             </div>
-                            <input type="password" class="form-control" id="password" placeholder="••••••••" required>
+                            <input type="password" class="form-control" id="password" placeholder="Enter your password" required>
                             <button type="button" class="password-toggle" onclick="togglePassword()">Show</button>
                         </div>
                         
@@ -295,7 +330,7 @@
                     err.style.display = 'block';
                 }
             } catch (error) {
-                err.innerText = 'Connection error. Is the backend running?';
+                err.innerText = 'Unable to connect. Please try again in a moment.';
                 err.style.display = 'block';
             } finally {
                 btn.textContent = 'Sign In';
@@ -325,7 +360,7 @@
                     err.style.display = 'block';
                 }
             } catch (error) {
-                err.innerText = 'Connection error';
+                err.innerText = 'Unable to connect. Please try again.';
                 err.style.display = 'block';
             }
         }
@@ -374,16 +409,7 @@
         }
 
         // Block Ctrl +/- and Ctrl+Scroll zooming
-        document.addEventListener('keydown', function(event) {
-            if (event.ctrlKey === true && (event.key === '+' || event.key === '-' || event.key === '=' || event.keyCode === 187 || event.keyCode === 189)) {
-                event.preventDefault();
-            }
-        });
-        document.addEventListener('wheel', function(event) {
-            if (event.ctrlKey === true) {
-                event.preventDefault();
-            }
-        }, { passive: false });
+        
 
         // Block pinch-to-zoom on mobile
         document.addEventListener('touchstart', function(event) {

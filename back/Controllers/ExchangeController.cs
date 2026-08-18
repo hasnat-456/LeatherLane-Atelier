@@ -242,7 +242,21 @@ namespace LeatherLane_Atelier.Controllers
                 ActionUrl = $"admin-exchange.html?id={exchangeRequest.ExchangeId}",
                 UserId = null // Admin
             });
-            _ = _emailService.SendEmailAsync("muhammadbilalarifsheukh@gmail.com", "New Exchange Request", $"A new exchange request was submitted for Order #{order.Id}.");
+            _ = _emailService.SendEmailAsync("muhammadbilalarifsheikh@gmail.com", "New Exchange Request", $"A new exchange request was submitted for Order #{order.Id}.");
+
+            // Notification for Customer
+            _context.Notifications.Add(new Notification
+            {
+                Title = "Exchange Request Submitted",
+                Message = $"Your exchange request for Order #{order.Id} has been successfully submitted.",
+                ActionUrl = "orders.html",
+                UserId = userId
+            });
+            var userObj = await _context.Users.FindAsync(userId);
+            if (userObj != null)
+            {
+                _ = _emailService.SendEmailAsync(userObj.Email, "Exchange Request Submitted", $"We have received your exchange request for Order #{order.Id}. Our team will review it shortly.");
+            }
 
             await _context.SaveChangesAsync();
 
@@ -298,7 +312,7 @@ namespace LeatherLane_Atelier.Controllers
                 ActionUrl = $"admin-exchange.html?id={id}",
                 UserId = null
             });
-            _ = _emailService.SendEmailAsync("muhammadbilalarifsheukh@gmail.com", "Exchange Tracking Submitted", $"Tracking for Exchange #{id} is: {dto.CourierName} {dto.TrackingNumber}");
+            _ = _emailService.SendEmailAsync("muhammadbilalarifsheikh@gmail.com", "Exchange Tracking Submitted", $"Tracking for Exchange #{id} is: {dto.CourierName} {dto.TrackingNumber}");
 
             var userObj = await _context.Users.FindAsync(userId);
             if (userObj != null)

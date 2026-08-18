@@ -5,6 +5,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>LeatherLane_Atelier</RootNamespace>
+    <AssemblyName>LeatherLaneAtelier</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
@@ -21,6 +22,11 @@
 
   <ItemGroup>
     <Content Include="..\front\**\*" Link="front\%(RecursiveDir)%(Filename)%(Extension)" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Preserve our custom web.config on every publish -->
+    <Content Include="web.config.production" Link="web.config" CopyToPublishDirectory="Always" />
   </ItemGroup>
 
 </Project>

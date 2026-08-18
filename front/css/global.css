@@ -2,7 +2,7 @@
 
 :root {
     /* Color Palette */
-    --primary-bg: #2B1D17;
+    --primary-bg: #470C0E;
     --secondary-bg: #4A2E24;
     --primary-gold: #C79A52;
     --secondary-gold: #A87834;
@@ -37,17 +37,23 @@
 
 @media (min-width: 1024px) {
     body {
+        display: flex;
+        flex-direction: column;
+        min-height: 125vh; /* 100vh / 0.8 to compensate for zoom */
         zoom: 0.8;
     }
-    body, .split-layout {
-        min-height: 125vh !important;
+    .split-layout {
+        min-height: 100vh !important;
     }
     .auth-container {
-        min-height: calc(125vh - 160px) !important;
+        min-height: calc(100vh - 160px) !important;
     }
 }
 
 body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
     font-family: var(--font-body);
     background-color: var(--primary-bg);
     color: var(--primary-text);
@@ -55,7 +61,7 @@ body {
     display: flex;
     flex-direction: column;
     line-height: 1.6;
-    touch-action: pan-x pan-y;
+    
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -177,7 +183,7 @@ a:hover {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1.5rem 4rem;
+    padding: 1rem 2rem;
     background-color: var(--primary-bg);
     color: var(--primary-text);
     position: sticky;
@@ -240,6 +246,7 @@ a:hover {
 
 /* Layout Utilities */
 .container {
+    flex: 1;
     max-width: 1200px;
     margin: 0 auto;
     padding: 0 20px;
@@ -387,6 +394,8 @@ a:hover {
     display: none;
 }
 .notification-dropdown {
+    text-transform: none !important;
+    color: #333 !important;
     display: none;
     position: absolute;
     right: 0;
@@ -509,7 +518,7 @@ a:hover {
 }
 .footer-grid {
     display: grid;
-    grid-template-columns: 2fr 1fr 1fr 1fr;
+    grid-template-columns: 2fr 1fr 1fr 1fr 1.5fr;
     gap: 2rem;
     max-width: 1200px;
     margin: 0 auto;
@@ -560,3 +569,230 @@ a:hover {
     color: var(--secondary-text);
     margin-left: 1.5rem;
 }
+
+.notification-dropdown a {
+    text-transform: none !important;
+    color: #333 !important;
+    font-size: 1rem !important;
+    font-weight: normal !important;
+    letter-spacing: normal !important;
+}
+.notification-dropdown a:hover {
+    color: #333 !important;
+}
+
+
+/* --- Filter Drawer Styles --- */
+.filter-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 999;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+.filter-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.filter-drawer {
+    position: fixed;
+    top: 0;
+    left: -500px;
+    width: 450px;
+    max-width: 90vw;
+    height: 100%;
+    background: #fff;
+    z-index: 1000;
+    box-shadow: 4px 0 15px rgba(0,0,0,0.1);
+    transition: left 0.3s ease;
+    overflow-y: auto;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+}
+.filter-drawer.active {
+    left: 0;
+}
+
+.drawer-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    background: #fff;
+    z-index: 10;
+}
+.drawer-header h2 {
+    font-family: var(--font-heading);
+    font-size: 1.25rem;
+    color: var(--primary-bg);
+}
+.close-drawer {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #666;
+}
+
+.drawer-content {
+    padding: 1.5rem;
+    flex: 1;
+}
+
+/* Accordion */
+.filter-accordion {
+    border-bottom: 1px solid #eee;
+    padding: 1rem 0;
+}
+.accordion-btn {
+    width: 100%;
+    background: none;
+    border: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 600;
+    font-family: var(--font-heading);
+    color: var(--primary-bg);
+    cursor: pointer;
+    font-size: 1rem;
+    text-transform: uppercase;
+}
+.accordion-content {
+    display: none;
+    padding-top: 1rem;
+}
+.accordion-content.active {
+    display: block;
+}
+
+/* Custom Checkbox/Radio */
+.filter-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 0.8rem;
+    cursor: pointer;
+    color: #555;
+    font-size: 0.9rem;
+}
+.filter-label input {
+    accent-color: var(--primary-bg);
+    width: 16px;
+    height: 16px;
+}
+
+/* Toggle Switch */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
+}
+.switch input { 
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+    border-radius: 24px;
+}
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+input:checked + .slider {
+    background-color: var(--primary-bg);
+}
+input:checked + .slider:before {
+    transform: translateX(20px);
+}
+.toggle-wrapper {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 0;
+    border-bottom: 1px solid #eee;
+}
+.toggle-wrapper span {
+    font-weight: 600;
+    font-family: var(--font-heading);
+    color: var(--primary-bg);
+    text-transform: uppercase;
+}
+
+/* Range Slider */
+.range-inputs {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+}
+.range-inputs input {
+    flex: 1;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-family: var(--font-body);
+}
+
+/* Toolbar */
+.products-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    background: #f8f8f8;
+    margin-bottom: 2rem;
+    border-radius: 8px;
+}
+.btn-filter {
+    background: none;
+    border: none;
+    font-family: var(--font-heading);
+    font-weight: 600;
+    color: var(--primary-bg);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1rem;
+}
+.btn-filter svg {
+    width: 20px;
+    height: 20px;
+}
+.sort-select {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    color: #333;
+    background: #fff;
+    cursor: pointer;
+}
+
+.layout { flex: 1; }

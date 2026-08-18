@@ -26,6 +26,10 @@ namespace LeatherLane_Atelier.Models
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<ManualPaymentSetting> ManualPaymentSettings { get; set; }
         public DbSet<ProductCategory> ProductCategories { get; set; }
+        public DbSet<Deal> Deals { get; set; }
+        public DbSet<Favorite> Favorites { get; set; }
+        public DbSet<SiteSettings> SiteSettings { get; set; }
+        public DbSet<NewsletterSubscriber> NewsletterSubscribers { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -85,6 +89,7 @@ namespace LeatherLane_Atelier.Models
             modelBuilder.Entity<Product>().Property(p => p.Price).HasColumnType("decimal(18,2)");
             modelBuilder.Entity<Product>().Property(p => p.OriginalPrice).HasColumnType("decimal(18,2)");
             modelBuilder.Entity<Product>().Property(p => p.Discount).HasColumnType("decimal(18,2)");
+            modelBuilder.Entity<Deal>().Property(d => d.DiscountValue).HasColumnType("decimal(18,2)");
             modelBuilder.Entity<Transaction>().Property(t => t.TotalAmount).HasColumnType("decimal(18,2)");
             modelBuilder.Entity<TransactionItem>().Property(t => t.Price).HasColumnType("decimal(18,2)");
 

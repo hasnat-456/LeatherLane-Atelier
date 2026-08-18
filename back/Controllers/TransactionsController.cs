@@ -188,7 +188,7 @@ namespace LeatherLane_Atelier.Controllers
                 });
 
                 // Emails
-                _ = _emailService.SendEmailAsync("muhammadbilalarifsheukh@gmail.com", "New Order Received", $"Order #{transaction.Id} was placed.");
+                _ = _emailService.SendEmailAsync("muhammadbilalarifsheikh@gmail.com", "New Order Received", $"Order #{transaction.Id} was placed.");
                 _ = _emailService.SendEmailAsync(userObj.Email, "Order Confirmation", $"Your order #{transaction.Id} is confirmed.");
             }
 
@@ -275,7 +275,7 @@ namespace LeatherLane_Atelier.Controllers
                 ActionUrl = "admin.html#orders",
                 UserId = null // Admin
             });
-            _ = _emailService.SendEmailAsync("muhammadbilalarifsheukh@gmail.com", "Order Cancelled", $"Order #{transaction.Id} was cancelled by the customer.");
+            _ = _emailService.SendEmailAsync("muhammadbilalarifsheikh@gmail.com", "Order Cancelled", $"Order #{transaction.Id} was cancelled by the customer.");
 
             // Notify Customer
             var userObj = await _context.Users.FindAsync(userId);
@@ -519,7 +519,7 @@ namespace LeatherLane_Atelier.Controllers
             });
 
             // Send Emails
-            _ = _emailService.SendEmailAsync("muhammadbilalarifsheukh@gmail.com", 
+            _ = _emailService.SendEmailAsync("muhammadbilalarifsheikh@gmail.com", 
                 "New Payment Verification Pending", 
                 $"Order #{transaction.Id} requires payment verification. Transaction ID: {transaction.PaymentRefId}. Amount: Rs. {transaction.TotalAmount}.");
 
@@ -587,7 +587,7 @@ namespace LeatherLane_Atelier.Controllers
             });
 
             // Emails
-            _ = _emailService.SendEmailAsync("muhammadbilalarifsheukh@gmail.com", 
+            _ = _emailService.SendEmailAsync("muhammadbilalarifsheikh@gmail.com", 
                 "Resubmitted Payment Proof", 
                 $"Order #{transaction.Id} payment proof was resubmitted. Reference ID: {transaction.PaymentRefId}.");
 

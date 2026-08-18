@@ -66,6 +66,29 @@ namespace LeatherLane_Atelier.Controllers
             return Ok(new { message = "Image uploaded successfully", url = $"/images/site/{target}?t={DateTime.UtcNow.Ticks}" });
         }
 
+        [HttpPost("slider-image")]
+        public async Task<IActionResult> UploadSliderImage(IFormFile imageFile)
+        {
+            if (imageFile == null || imageFile.Length == 0) return BadRequest("No image provided");
+
+            var currentDir = Directory.GetCurrentDirectory();
+            var frontPath = currentDir.EndsWith("back", StringComparison.OrdinalIgnoreCase) 
+                ? Path.Combine(currentDir, "..", "front", "upload", "sliders") 
+                : Path.Combine(currentDir, "front", "upload", "sliders");
+
+            Directory.CreateDirectory(frontPath);
+            
+            var uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(imageFile.FileName);
+            var filePath = Path.Combine(frontPath, uniqueFileName);
+            
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await imageFile.CopyToAsync(stream);
+            }
+
+            return Ok(new { message = "Image uploaded successfully", url = "upload/sliders/" + uniqueFileName });
+        }
+
         [HttpGet("stats")]
         public async Task<IActionResult> GetStats()
         {

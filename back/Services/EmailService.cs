@@ -13,7 +13,7 @@ namespace LeatherLane_Atelier.Services
 
     public class EmailService : IEmailService
     {
-        private readonly string _adminEmail = "muhammadbilalarifsheukh@gmail.com";
+        private readonly string _adminEmail = "muhammadbilalarifsheikh@gmail.com";
         private readonly string _smtpHost;
         private readonly int _smtpPort;
         private readonly string _smtpUser;
@@ -22,10 +22,10 @@ namespace LeatherLane_Atelier.Services
         public EmailService(IConfiguration configuration)
         {
             // You can configure these in appsettings.json, but defaulting to Gmail for now
-            _smtpHost = configuration["Email:SmtpHost"] ?? "smtp.gmail.com";
-            _smtpPort = int.TryParse(configuration["Email:SmtpPort"], out int port) ? port : 587;
-            _smtpUser = configuration["Email:SmtpUser"] ?? _adminEmail;
-            _smtpPass = configuration["Email:SmtpPass"] ?? "PLACEHOLDER_APP_PASSWORD"; // The user MUST fill this out
+            _smtpHost = configuration["Smtp:Host"] ?? "smtp.gmail.com";
+            _smtpPort = int.TryParse(configuration["Smtp:Port"], out int port) ? port : 587;
+            _smtpUser = configuration["Smtp:Email"] ?? _adminEmail;
+            _smtpPass = configuration["Smtp:Password"] ?? "PLACEHOLDER_APP_PASSWORD"; // The user MUST fill this out
         }
 
         public async Task SendEmailAsync(string toEmail, string subject, string body)

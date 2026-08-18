@@ -34,6 +34,17 @@ namespace LeatherLane_Atelier.Controllers
                 .Where(c => c.UserId == userId)
                 .ToListAsync();
 
+            var now = System.DateTime.Now;
+            var activeDeals = await _context.Deals.Where(d => d.StartTime <= now && d.EndTime >= now).ToListAsync();
+            
+            foreach(var item in cartItems)
+            {
+                if (item.Product != null)
+                {
+                    Deal.ApplyActiveDeals(item.Product, activeDeals);
+                }
+            }
+
             return Ok(cartItems);
         }
 

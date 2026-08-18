@@ -104,7 +104,21 @@ namespace LeatherLane_Atelier.Controllers
                 ActionUrl = $"admin-return.html",
                 UserId = null // Admin
             });
-            _ = _emailService.SendEmailAsync("muhammadbilalarifsheukh@gmail.com", "New Return Request", $"A new return request was submitted for Order #{dto.OrderId}.");
+            _ = _emailService.SendEmailAsync("muhammadbilalarifsheikh@gmail.com", "New Return Request", $"A new return request was submitted for Order #{dto.OrderId}.");
+
+            // Notification for Customer
+            _context.Notifications.Add(new Notification
+            {
+                Title = "Return Request Submitted",
+                Message = $"Your return request for Order #{dto.OrderId} has been successfully submitted.",
+                ActionUrl = "orders.html",
+                UserId = userId
+            });
+            var userObj = await _context.Users.FindAsync(userId);
+            if (userObj != null)
+            {
+                _ = _emailService.SendEmailAsync(userObj.Email, "Return Request Submitted", $"We have received your return request for Order #{dto.OrderId}. Our team will review it shortly.");
+            }
 
             await _context.SaveChangesAsync();
 

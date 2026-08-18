@@ -132,7 +132,13 @@ namespace LeatherLane_Atelier.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest req)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == req.Email);
+            if (req == null || string.IsNullOrWhiteSpace(req.Email) || string.IsNullOrWhiteSpace(req.Password))
+            {
+                return Unauthorized(new { message = "Invalid email or password" });
+            }
+
+            var inputEmail = req.Email.Trim().ToLower();
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == inputEmail);
 
             bool isPasswordValid = false;
             if (user != null)
@@ -141,7 +147,7 @@ namespace LeatherLane_Atelier.Controllers
                 {
                     isPasswordValid = BCrypt.Net.BCrypt.Verify(req.Password, user.Password);
                 }
-                catch (BCrypt.Net.SaltParseException)
+                catch (Exception)
                 {
                     // Fallback for older accounts that might have plaintext passwords stored
                     isPasswordValid = (req.Password == user.Password);
@@ -158,6 +164,13 @@ namespace LeatherLane_Atelier.Controllers
             if (user == null || !isPasswordValid)
             {
                 return Unauthorized(new { message = "Invalid email or password" });
+            }
+
+            // Ensure Admin users are always verified
+            if (user.Role == "Admin" && !user.IsVerified)
+            {
+                user.IsVerified = true;
+                await _context.SaveChangesAsync();
             }
 
             if (!user.IsVerified)
@@ -261,6 +274,89 @@ namespace LeatherLane_Atelier.Controllers
 
             return Ok(new { message = "Password has been reset successfully." });
         }
+
+        [HttpGet("profile")]
+        [Microsoft.AspNetCore.Authorization.Authorize]
+        public async Task<IActionResult> GetProfile()
+        {
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId))
+                return Unauthorized(new { message = "Invalid token" });
+
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null)
+                return NotFound(new { message = "User not found" });
+
+            var nameParts = user.Name.Split(' ', 2);
+            var firstName = nameParts.Length > 0 ? nameParts[0] : "";
+            var lastName = nameParts.Length > 1 ? nameParts[1] : "";
+
+            return Ok(new
+            {
+                firstName = firstName,
+                lastName = lastName,
+                email = user.Email,
+                phone = user.Phone,
+                receivesMarketingEmails = user.ReceivesMarketingEmails
+            });
+        }
+
+        [HttpPut("profile")]
+        [Microsoft.AspNetCore.Authorization.Authorize]
+        public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileRequest req)
+        {
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId))
+                return Unauthorized(new { message = "Invalid token" });
+
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null)
+                return NotFound(new { message = "User not found" });
+
+            user.Name = $"{req.FirstName} {req.LastName}".Trim();
+            if (!string.IsNullOrEmpty(req.Email)) {
+                user.Email = req.Email;
+            }
+            user.Phone = req.Phone;
+            user.ReceivesMarketingEmails = req.ReceivesMarketingEmails;
+            user.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Profile updated successfully" });
+        }
+
+        [HttpPut("change-password")]
+        [Microsoft.AspNetCore.Authorization.Authorize]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest req)
+        {
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId))
+                return Unauthorized(new { message = "Invalid token" });
+
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null)
+                return NotFound(new { message = "User not found" });
+
+            bool isCurrentValid = false;
+            try
+            {
+                isCurrentValid = BCrypt.Net.BCrypt.Verify(req.CurrentPassword, user.Password);
+            }
+            catch (BCrypt.Net.SaltParseException)
+            {
+                isCurrentValid = (req.CurrentPassword == user.Password);
+            }
+
+            if (!isCurrentValid)
+                return BadRequest(new { message = "Incorrect current password" });
+
+            user.Password = BCrypt.Net.BCrypt.HashPassword(req.NewPassword);
+            user.UpdatedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Password changed successfully" });
+        }
     }
 
     public class RegisterRequest { public string Name { get; set; } = string.Empty; public string Email { get; set; } = string.Empty; public string Password { get; set; } = string.Empty; public string? Phone { get; set; } }
@@ -269,4 +365,6 @@ namespace LeatherLane_Atelier.Controllers
     public class ResendOtpRequest { public string Email { get; set; } = string.Empty; }
     public class ForgotPasswordRequest { public string Email { get; set; } = string.Empty; }
     public class ResetPasswordRequest { public string Token { get; set; } = string.Empty; public string NewPassword { get; set; } = string.Empty; }
+    public class UpdateProfileRequest { public string FirstName { get; set; } = string.Empty; public string LastName { get; set; } = string.Empty; public string Email { get; set; } = string.Empty; public string? Phone { get; set; } public bool ReceivesMarketingEmails { get; set; } }
+    public class ChangePasswordRequest { public string CurrentPassword { get; set; } = string.Empty; public string NewPassword { get; set; } = string.Empty; }
 }

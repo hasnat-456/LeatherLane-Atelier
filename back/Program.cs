@@ -49,14 +49,26 @@ builder.Services.AddScoped<LeatherLane_Atelier.Services.IEmailService, LeatherLa
 builder.Services.Configure<LeatherLane_Atelier.Models.PayfastSettings>(builder.Configuration.GetSection("PayfastSettings"));
 builder.Services.AddScoped<LeatherLane_Atelier.Services.IPayfastService, LeatherLane_Atelier.Services.PayfastService>();
 
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
+
 var app = builder.Build();
+
+app.UseDeveloperExceptionPage();
 
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
 
-app.UseHttpsRedirection();
+app.UseCors();
 
 // Dynamically locate the 'front' folder regardless of working directory
 var currentDir = Directory.GetCurrentDirectory();
@@ -81,9 +93,22 @@ if (Directory.Exists(frontPath))
         RequestPath = "",
         OnPrepareResponse = ctx =>
         {
-            ctx.Context.Response.Headers.Append("Cache-Control", "no-cache, no-store, must-revalidate");
-            ctx.Context.Response.Headers.Append("Pragma", "no-cache");
-            ctx.Context.Response.Headers.Append("Expires", "0");
+            var path = ctx.File.PhysicalPath;
+            if (path != null && (path.EndsWith(".jpeg", StringComparison.OrdinalIgnoreCase) || 
+                                 path.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase) ||
+                                 path.EndsWith(".png", StringComparison.OrdinalIgnoreCase) ||
+                                 path.EndsWith(".webp", StringComparison.OrdinalIgnoreCase) ||
+                                 path.EndsWith(".css", StringComparison.OrdinalIgnoreCase) ||
+                                 path.EndsWith(".js", StringComparison.OrdinalIgnoreCase)))
+            {
+                ctx.Context.Response.Headers.Append("Cache-Control", "public,max-age=604800"); // Cache for 7 days
+            }
+            else
+            {
+                ctx.Context.Response.Headers.Append("Cache-Control", "no-cache, no-store, must-revalidate");
+                ctx.Context.Response.Headers.Append("Pragma", "no-cache");
+                ctx.Context.Response.Headers.Append("Expires", "0");
+            }
         }
     });
 }
@@ -95,10 +120,15 @@ app.UseAuthorization();
 
 app.MapControllers();
 
+// Wrap ALL startup DB work in try-catch so app doesn't crash if SQL Server is slow/unreachable
+try
+{
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    context.Database.EnsureCreated();
+    
+    try { context.Database.EnsureCreated(); }
+    catch (Exception ex) { Console.WriteLine($"EnsureCreated failed (non-fatal): {ex.Message}"); }
     
     // SQLite Manual Migrations
     if (app.Environment.IsDevelopment())
@@ -116,6 +146,19 @@ using (var scope = app.Services.CreateScope())
                     AccountTitle TEXT NULL,
                     MobileNumber TEXT NULL,
                     RaastId TEXT NULL
+                );
+            ");
+            context.Database.ExecuteSqlRaw(@"
+                CREATE TABLE IF NOT EXISTS SiteSettings (
+                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    Address TEXT NOT NULL,
+                    Email TEXT NOT NULL,
+                    Phone TEXT NOT NULL,
+                    BusinessHours TEXT NOT NULL,
+                    FacebookUrl TEXT NOT NULL,
+                    InstagramUrl TEXT NOT NULL,
+                    WhatsAppUrl TEXT NOT NULL,
+                    TikTokUrl TEXT NOT NULL
                 );
             ");
         }
@@ -196,58 +239,58 @@ using (var scope = app.Services.CreateScope())
             context.Database.ExecuteSqlRaw("UPDATE Products SET AvailabilityStatus = 'Available' WHERE AvailabilityStatus IS NULL;");
         }
         catch (System.Exception) { }
+    }
 
-        // Seed default categories
-        try
+    // Seed default categories for both Dev and Production
+    try
+    {
+        if (!context.ProductCategories.Any())
         {
-            if (!context.ProductCategories.Any())
+            context.ProductCategories.AddRange(new System.Collections.Generic.List<ProductCategory>
             {
-                context.ProductCategories.AddRange(new System.Collections.Generic.List<ProductCategory>
-                {
-                    new ProductCategory { Name = "Chappal", IsActive = true, DisplayOrder = 1 },
-                    new ProductCategory { Name = "Peshawari Chappal", IsActive = true, DisplayOrder = 2 },
-                    new ProductCategory { Name = "Shoes", IsActive = true, DisplayOrder = 3 },
-                    new ProductCategory { Name = "Sandals", IsActive = true, DisplayOrder = 4 }
-                });
-                context.SaveChanges();
-            }
+                new ProductCategory { Name = "Chappal", IsActive = true, DisplayOrder = 1 },
+                new ProductCategory { Name = "Peshawari Chappal", IsActive = true, DisplayOrder = 2 },
+                new ProductCategory { Name = "Shoes", IsActive = true, DisplayOrder = 3 },
+                new ProductCategory { Name = "Sandals", IsActive = true, DisplayOrder = 4 }
+            });
+            context.SaveChanges();
         }
-        catch (System.Exception ex)
-        {
-            System.Console.WriteLine($"Seeding categories error: {ex.Message}");
-        }
+    }
+    catch (System.Exception ex)
+    {
+        System.Console.WriteLine($"Seeding categories error: {ex.Message}");
+    }
 
-        // Backfill CategoryId on existing Products
-        try
+    // Backfill CategoryId on existing Products
+    try
+    {
+        var unlinkedProducts = context.Products.Where(p => p.CategoryId == null).ToList();
+        if (unlinkedProducts.Any())
         {
-            var unlinkedProducts = context.Products.Where(p => p.CategoryId == null).ToList();
-            if (unlinkedProducts.Any())
+            var categories = context.ProductCategories.ToList();
+            foreach (var p in unlinkedProducts)
             {
-                var categories = context.ProductCategories.ToList();
-                foreach (var p in unlinkedProducts)
+                var cat = categories.FirstOrDefault(c => c.Name.Equals(p.Category, System.StringComparison.OrdinalIgnoreCase));
+                if (cat != null)
                 {
-                    var cat = categories.FirstOrDefault(c => c.Name.Equals(p.Category, System.StringComparison.OrdinalIgnoreCase));
-                    if (cat != null)
+                    p.CategoryId = cat.Id;
+                }
+                else
+                {
+                    var fallbackCat = categories.FirstOrDefault(c => c.Name.Equals("Shoes", System.StringComparison.OrdinalIgnoreCase)) ?? categories.FirstOrDefault();
+                    if (fallbackCat != null)
                     {
-                        p.CategoryId = cat.Id;
-                    }
-                    else
-                    {
-                        var fallbackCat = categories.FirstOrDefault(c => c.Name.Equals("Shoes", System.StringComparison.OrdinalIgnoreCase)) ?? categories.FirstOrDefault();
-                        if (fallbackCat != null)
-                        {
-                            p.CategoryId = fallbackCat.Id;
-                            p.Category = fallbackCat.Name;
-                        }
+                        p.CategoryId = fallbackCat.Id;
+                        p.Category = fallbackCat.Name;
                     }
                 }
-                context.SaveChanges();
             }
+            context.SaveChanges();
         }
-        catch (System.Exception ex)
-        {
-            System.Console.WriteLine($"Backfilling categories error: {ex.Message}");
-        }
+    }
+    catch (System.Exception ex)
+    {
+        System.Console.WriteLine($"Backfilling categories error: {ex.Message}");
     }
 
     // Seed Default Manual Payment Settings
@@ -289,24 +332,63 @@ using (var scope = app.Services.CreateScope())
     }
     catch (System.Exception ex)
     {
-        System.Console.WriteLine($"Seeding error: {ex.Message}");
+        System.Console.WriteLine($"Seeding payment settings error: {ex.Message}");
     }
     
-    var existingAdmin = context.Users.FirstOrDefault(u => u.Role == "Admin");
-
-    if (existingAdmin == null)
+    // Seed and Ensure Admin Accounts
+    try
     {
-        var admin = new User
+        var adminList = new[]
         {
-            Name = "Admin",
-            Email = "hasnatmuhammad718@gmail.com",
-            Password = BCrypt.Net.BCrypt.HashPassword("Hasnat123@@@@"),
-            Role = "Admin",
-            IsVerified = true
+            new { Email = "muhammadbilalarifsheikh@gmail.com", Name = "Muhammad Bilal" },
+            new { Email = "admin@leatherlaneatelier.store", Name = "Admin" }
         };
-        context.Users.Add(admin);
+
+        foreach (var adminInfo in adminList)
+        {
+            var adminUser = context.Users.FirstOrDefault(u => u.Email.ToLower() == adminInfo.Email.ToLower());
+            if (adminUser == null)
+            {
+                context.Users.Add(new User
+                {
+                    Name = adminInfo.Name,
+                    Email = adminInfo.Email,
+                    Password = BCrypt.Net.BCrypt.HashPassword("Bilal123@@@"),
+                    Role = "Admin",
+                    IsVerified = true
+                });
+            }
+            else
+            {
+                adminUser.Role = "Admin";
+                adminUser.IsVerified = true;
+                adminUser.Password = BCrypt.Net.BCrypt.HashPassword("Bilal123@@@");
+            }
+        }
         context.SaveChanges();
     }
+    catch (System.Exception ex)
+    {
+        System.Console.WriteLine($"Seeding admin error: {ex.Message}");
+    }
+
+    try
+    {
+        if (!context.SiteSettings.Any())
+        {
+            context.SiteSettings.Add(new SiteSettings());
+            context.SaveChanges();
+        }
+    }
+    catch (System.Exception ex)
+    {
+        System.Console.WriteLine($"Seeding site settings error: {ex.Message}");
+    }
+}
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"STARTUP DB ERROR (app will still run): {ex.Message}");
 }
 
 app.Run();
