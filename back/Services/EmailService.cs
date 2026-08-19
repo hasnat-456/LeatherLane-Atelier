@@ -13,7 +13,7 @@ namespace LeatherLane_Atelier.Services
 
     public class EmailService : IEmailService
     {
-        private readonly string _adminEmail = "muhammadbilalarifsheikh@gmail.com";
+        private readonly string _adminEmail = "leatherlaneatelier@gmail.com";
         private readonly string _smtpHost;
         private readonly int _smtpPort;
         private readonly string _smtpUser;

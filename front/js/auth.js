@@ -12,11 +12,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const email = localStorage.getItem('profile_email') || '';
         const phone = localStorage.getItem('profile_phone') || '';
         
-        let emailHtml = email ? `<p>📧 ${email}</p>` : '';
-        let phoneHtml = phone ? `<p>📞 ${phone}</p>` : '';
+        let emailHtml = email ? `<p><svg viewBox="0 0 24 24" width="1.2em" height="1.2em" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: text-bottom; margin-right: 6px;"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg> ${email}</p>` : '';
+        let phoneHtml = phone ? `<p><svg viewBox="0 0 24 24" width="1.2em" height="1.2em" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: text-bottom; margin-right: 6px;"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg> ${phone}</p>` : '';
         
         authHtml = `
-            <div class="notification-wrapper" style="margin-left: 15px; display: flex; align-items: center;">
+            <div class="notification-wrapper" style="display: flex; align-items: center;">
                 <button onclick="toggleNotificationDropdown()" style="background:none; border:none; color: var(--primary-gold); cursor:pointer; display: flex; align-items: center; padding: 4px; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
                     <span id="notifBadge" class="notification-badge"></span>
@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             </div>
             <div class="profile-dropdown" style="display: flex; align-items: center;">
-                <button onclick="toggleProfileCard()" style="background:none; border:none; color: var(--primary-gold); cursor:pointer; margin-left: 10px; display: flex; align-items: center; padding: 4px; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+                <button onclick="toggleProfileCard()" style="background:none; border:none; color: var(--primary-gold); cursor:pointer; display: flex; align-items: center; padding: 4px; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                 </button>
                 <div id="profileCard" class="profile-card">
@@ -52,7 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
     }
 
-    // Standard links for all pages
+    // Standard links for all pages (text links only, icons go in their own row)
     const standardLinks = `
         <a href="home.html" style="color: #ddd; text-decoration: none;">Home</a>
         <a href="products.html" style="color: #ddd; text-decoration: none;">Shop</a>
@@ -62,13 +62,19 @@ document.addEventListener('DOMContentLoaded', () => {
         <a href="contact.html" style="color: #ddd; text-decoration: none;">Contact</a>
         <a href="transactions.html" style="color: #ddd; text-decoration: none;">Orders</a>
         <a href="favorites.html" style="color: #ddd; text-decoration: none;">Favorites</a>
+    `;
+
+    // Cart icon + auth icons wrapped in a single flex row so they're always horizontal
+    const cartIconHtml = `
         <a href="cart.html" style="color: var(--primary-gold); text-decoration: none; display: flex; align-items: center; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg> 
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
             <span id="cartBadge" class="cart-badge" style="background: var(--primary-gold); color: #111; padding: 2px 6px; border-radius: 50%; font-size: 0.7rem; font-weight: bold; margin-left: 4px; display: none;"></span>
         </a>
     `;
 
-    navLinks.innerHTML = standardLinks + authHtml;
+    const iconsRowHtml = `<div class="nav-icons-row" style="display:flex; flex-direction:row; align-items:center; gap:20px; flex-shrink:0;">${cartIconHtml}${authHtml}</div>`;
+
+    navLinks.innerHTML = standardLinks + iconsRowHtml;
 
     // Update cart badge logic if not overridden by page
     const badge = document.getElementById('cartBadge');
@@ -296,7 +302,7 @@ document.addEventListener('DOMContentLoaded', function() {
             display: flex;
             align-items: center;
             gap: 15px;
-            z-index: 9999;
+            z-index: 90;
         }
         
         .wa-tooltip {

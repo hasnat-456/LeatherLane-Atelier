@@ -2,8 +2,9 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Request Defect Replacement | LeatherLane Atelier</title>
-    <link rel="stylesheet" href="css/global.css">
+    <link rel="stylesheet" href="css/global.css?v=1787137292682">
     <style>
         .container { max-width: 800px; margin: 2rem auto; padding: 2rem; background: #fff; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); color: #333; }
         h2 { color: var(--primary-bg); font-family: var(--font-heading); margin-bottom: 1.5rem; }
@@ -44,7 +45,11 @@
                 <img src="upload/logo.svg" alt="LeatherLane Atelier Logo" style="height: 65px; object-fit: contain; transition: transform 0.3s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
             </a>
         </div>
-        <div class="nav-links">
+        
+          <button class="mobile-menu-btn" onclick="document.querySelector('.nav-links').classList.toggle('active')" aria-label="Menu">
+              ☰
+          </button>
+          <div class="nav-links">
             <a href="home.html">Home</a>
             <a href="products.html">Shop</a>
             <a href="about.html">About</a>
@@ -52,7 +57,7 @@
             <a href="size-guide.html">Size Guide</a>
             <a href="faq.html">FAQ</a>
             <a href="contact.html">Contact</a>
-            <a href="cart.html">🛒</a>
+            <a href="cart.html"><svg viewBox="0 0 24 24" width="1.2em" height="1.2em" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: text-bottom;"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg></a>
             <a href="login.html">Login</a>
             <a href="signup.html" class="btn-register">Register</a>
         </div>
@@ -241,10 +246,10 @@
             <div class="footer-col">
                 <h5>Contact Info</h5>
                 <ul>
-                    <li>📍 Ward no 7, street 14, house 143, Mohallah Ansarian Jhang City, Punjab, 35200</li>
-                    <li>✉️ leatherlaneatelier@gmail.com</li>
-                    <li>📞 03376306162</li>
-                    <li>🕒 Mon-Sat: 10 AM - 7 PM</li>
+                    <li><svg viewBox="0 0 24 24" width="1.2em" height="1.2em" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: text-bottom; margin-right: 6px;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg> Ward no 7, street 14, house 143, Mohallah Ansarian Jhang City, Punjab, 35200</li>
+                    <li><svg viewBox="0 0 24 24" width="1.2em" height="1.2em" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: text-bottom; margin-right: 6px;"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg> leatherlaneatelier@gmail.com</li>
+                    <li><svg viewBox="0 0 24 24" width="1.2em" height="1.2em" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: text-bottom; margin-right: 6px;"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg> 03376306162</li>
+                    <li><svg viewBox="0 0 24 24" width="1.2em" height="1.2em" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: text-bottom; margin-right: 6px;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> Mon-Sat: 10 AM - 7 PM</li>
                 </ul>
             </div>
             <div class="footer-col newsletter-col">
@@ -264,7 +269,8 @@
             </div>
         </div>
     </footer>
-<script src="js/auth.js?v=5"></script>
+<script src="js/auth.js?v=1787140756626"></script>
+    <script src="js/security.js?v=1787135903802"></script>
 </body>
 </html>
 

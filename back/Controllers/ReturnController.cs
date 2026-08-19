@@ -104,7 +104,7 @@ namespace LeatherLane_Atelier.Controllers
                 ActionUrl = $"admin-return.html",
                 UserId = null // Admin
             });
-            _ = _emailService.SendEmailAsync("muhammadbilalarifsheikh@gmail.com", "New Return Request", $"A new return request was submitted for Order #{dto.OrderId}.");
+            _ = _emailService.SendEmailAsync("leatherlaneatelier@gmail.com", "New Return Request", $"A new return request was submitted for Order #{dto.OrderId}.");
 
             // Notification for Customer
             _context.Notifications.Add(new Notification

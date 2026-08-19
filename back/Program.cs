@@ -13,7 +13,10 @@ using System.Text.Json.Serialization;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddControllers().AddJsonOptions(options =>
+builder.Services.AddControllers(options => 
+{
+    options.Filters.Add<LeatherLaneAtelier.Filters.AntiXssFilter>();
+}).AddJsonOptions(options =>
 {
     options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
 });
@@ -340,7 +343,7 @@ using (var scope = app.Services.CreateScope())
     {
         var adminList = new[]
         {
-            new { Email = "muhammadbilalarifsheikh@gmail.com", Name = "Muhammad Bilal" },
+            new { Email = "leatherlaneatelier@gmail.com", Name = "Muhammad Bilal" },
             new { Email = "admin@leatherlaneatelier.store", Name = "Admin" }
         };
 

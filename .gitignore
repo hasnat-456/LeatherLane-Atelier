@@ -6,3 +6,6 @@ front/uploads/
 front/temp_backup/
 *.zip
 
+back/appsettings.json
+back/appsettings.Development.json
+publish_output/

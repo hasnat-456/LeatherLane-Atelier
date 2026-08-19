@@ -288,7 +288,9 @@ function renderOrders(orders) {
                 <td>Rs. ${o.amount.toFixed(2)}</td>
                 <td><span class="badge ${badgeClass}">${displayStatus}</span></td>
                 <td>
-                    <select class="status-select" onchange="updateOrderStatus('${o.id}', this.value)" ${o.status === 'Cancelled' ? 'disabled style="background-color: #eaeaea; cursor: not-allowed;"' : ''}>
+                    <select class="status-select" onchange="updateOrderStatus('${o.id}', this.value)" ${['Cancelled', 'Payment Verification Pending', 'Payment Rejected'].includes(o.status) ? 'disabled style="background-color: #eaeaea; cursor: not-allowed;" title="Please verify payment first"' : ''}>
+                        <option value="Payment Verification Pending" ${o.status === 'Payment Verification Pending' ? 'selected' : 'hidden'}>Payment Verification Pending</option>
+                        <option value="Payment Rejected" ${o.status === 'Payment Rejected' ? 'selected' : 'hidden'}>Payment Rejected</option>
                         <option value="Order Placed" ${o.status === 'Order Placed' ? 'selected' : ''}>Order Placed</option>
                         <option value="Order Confirmed" ${o.status === 'Order Confirmed' ? 'selected' : ''}>Order Confirmed</option>
                         <option value="Preparing Order" ${o.status === 'Preparing Order' ? 'selected' : ''}>Preparing Order</option>
@@ -317,7 +319,13 @@ async function updateOrderStatus(id, newStatus) {
             fetchOrders();
             fetchDashboardStats();
         } else {
-            alert('Failed to update status');
+            let errorMsg = 'Failed to update status';
+            try {
+                const data = await res.json();
+                if (data.message) errorMsg = data.message;
+            } catch(e) {}
+            alert(errorMsg);
+            fetchOrders(); // Refresh to revert the dropdown
         }
     } catch (err) {
         alert('Error updating status');
@@ -1604,7 +1612,7 @@ function renderSliders() {
     (heroSliderImages || []).forEach((img, i) => {
         heroContainer.innerHTML += `<div style="display:flex; justify-content:space-between; align-items:center; background:#f9f9f9; padding:5px; border:1px solid #ddd;">
                 <span style="font-size:0.85rem; word-break:break-all;">${img}</span>
-                <button type="button" onclick="removeSliderImage('Hero', ${i})" style="color:red; background:none; border:none; cursor:pointer;">✖</button>
+                <button type="button" onclick="removeSliderImage('Hero', ${i})" style="color:red; background:none; border:none; cursor:pointer;"><svg viewBox="0 0 24 24" width="1em" height="1em" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: text-bottom;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
             </div>`;
     });
     
@@ -1612,7 +1620,7 @@ function renderSliders() {
     (craftSliderImages || []).forEach((img, i) => {
         craftContainer.innerHTML += `<div style="display:flex; justify-content:space-between; align-items:center; background:#f9f9f9; padding:5px; border:1px solid #ddd;">
                 <span style="font-size:0.85rem; word-break:break-all;">${img}</span>
-                <button type="button" onclick="removeSliderImage('Craft', ${i})" style="color:red; background:none; border:none; cursor:pointer;">✖</button>
+                <button type="button" onclick="removeSliderImage('Craft', ${i})" style="color:red; background:none; border:none; cursor:pointer;"><svg viewBox="0 0 24 24" width="1em" height="1em" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: text-bottom;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
             </div>`;
     });
 }

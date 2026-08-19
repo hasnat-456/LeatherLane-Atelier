@@ -272,7 +272,7 @@ namespace LeatherLane_Atelier.Controllers
             var emailService = HttpContext.RequestServices.GetService(typeof(LeatherLane_Atelier.Services.IEmailService)) as LeatherLane_Atelier.Services.IEmailService;
             if (emailService != null)
             {
-                _ = emailService.SendEmailAsync("muhammadbilalarifsheikh@gmail.com", "New Product Review", $"A customer left a {dto.Rating}-star review for {product.Name}:\n\n{dto.Comment}");
+                _ = emailService.SendEmailAsync("leatherlaneatelier@gmail.com", "New Product Review", $"A customer left a {dto.Rating}-star review for {product.Name}:\n\n{dto.Comment}");
             }
 
             if (userId > 0)

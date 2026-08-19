@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
     <!-- SEO Meta Tags -->
     <meta name="description" content="Discover premium handcrafted leather bags, wallets, and accessories at LeatherLane Atelier. Experience timeless elegance and superior craftsmanship.">
@@ -27,7 +27,7 @@
     <link rel="canonical" href="https://www.leatherlaneatelier.com/">
 
     <title>LeatherLane Atelier | Premium Handcrafted Leather</title>
-    <link rel="stylesheet" href="css/global.css">
+    <link rel="stylesheet" href="css/global.css?v=1787141045360">
     <style>
         body {
             margin: 0;
@@ -95,6 +95,22 @@
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
+    
+        /* Responsive Fixes for Mobile */
+        @media (max-width: 768px) {
+            .splash-logo {
+                width: 90vw !important;
+                max-width: 400px;
+            }
+            .tagline {
+                font-size: 0.95rem;
+                padding: 0 1rem;
+            }
+            .sub-tagline {
+                font-size: 0.7rem;
+                padding: 0 1rem;
+            }
+        }
     </style>
 
     <!-- Structured Data (JSON-LD) -->
@@ -119,20 +135,13 @@
     
     <script>
         // Block Ctrl +/- and Ctrl+Scroll zooming
-        
-
-        // Block pinch-to-zoom on mobile
-        document.addEventListener('touchstart', function(event) {
-            if (event.touches.length > 1) {
-                event.preventDefault();
-            }
-        }, { passive: false });
 
         // Auto-redirect after 4 seconds
         setTimeout(() => {
             window.location.href = 'home.html';
         }, 4000);
     </script>
+    <script src="js/security.js?v=1787135903764"></script>
 </body>
 </html>
 

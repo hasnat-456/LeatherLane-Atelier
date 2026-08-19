@@ -188,7 +188,7 @@ namespace LeatherLane_Atelier.Controllers
                 });
 
                 // Emails
-                _ = _emailService.SendEmailAsync("muhammadbilalarifsheikh@gmail.com", "New Order Received", $"Order #{transaction.Id} was placed.");
+                _ = _emailService.SendEmailAsync("leatherlaneatelier@gmail.com", "New Order Received", $"Order #{transaction.Id} was placed.");
                 _ = _emailService.SendEmailAsync(userObj.Email, "Order Confirmation", $"Your order #{transaction.Id} is confirmed.");
             }
 
@@ -275,7 +275,7 @@ namespace LeatherLane_Atelier.Controllers
                 ActionUrl = "admin.html#orders",
                 UserId = null // Admin
             });
-            _ = _emailService.SendEmailAsync("muhammadbilalarifsheikh@gmail.com", "Order Cancelled", $"Order #{transaction.Id} was cancelled by the customer.");
+            _ = _emailService.SendEmailAsync("leatherlaneatelier@gmail.com", "Order Cancelled", $"Order #{transaction.Id} was cancelled by the customer.");
 
             // Notify Customer
             var userObj = await _context.Users.FindAsync(userId);
@@ -445,98 +445,132 @@ namespace LeatherLane_Atelier.Controllers
         [HttpPost("place-order")]
         public async Task<IActionResult> PlaceOrder([FromBody] PlaceOrderRequest req)
         {
-            var userId = GetUserId();
-            var user = await _context.Users.FindAsync(userId);
-            if (user == null)
+            try
             {
-                return BadRequest(new { message = "User not found." });
-            }
-
-            if (req.Items == null || !req.Items.Any())
-            {
-                return BadRequest(new { message = "Cart is empty." });
-            }
-
-            var transaction = new Transaction
-            {
-                UserId = userId,
-                TotalAmount = req.TotalAmount,
-                ShippingName = req.ShippingName,
-                ShippingPhone = req.ShippingPhone,
-                ShippingAddress = req.ShippingAddress,
-                PaymentMethod = req.PaymentMethod,
-                PaymentRefId = req.PaymentRefId,
-                SenderName = req.SenderName,
-                SenderMobile = req.SenderMobile,
-                PaymentScreenshot = req.PaymentScreenshot,
-                Status = "Payment Verification Pending",
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
-            };
-
-            foreach (var item in req.Items)
-            {
-                transaction.Items.Add(new TransactionItem
+                var userId = GetUserId();
+                var user = await _context.Users.FindAsync(userId);
+                if (user == null)
                 {
-                    ProductId = item.ProductId,
-                    Name = item.Name,
-                    Price = item.Price,
-                    Quantity = item.Quantity
+                    return BadRequest(new { message = "User not found." });
+                }
+
+                // Input Validation: Empty Checks
+                if (string.IsNullOrWhiteSpace(req.ShippingName) ||
+                    string.IsNullOrWhiteSpace(req.ShippingPhone) ||
+                    string.IsNullOrWhiteSpace(req.ShippingAddress))
+                {
+                    return BadRequest(new { message = "All shipping fields are required." });
+                }
+
+                if (req.Items == null || !req.Items.Any())
+                {
+                    return BadRequest(new { message = "Cart is empty." });
+                }
+
+                // Price Integrity Check
+                decimal calculatedSubtotal = 0;
+                var transactionItems = new List<TransactionItem>();
+
+                foreach (var item in req.Items)
+                {
+                    if (!item.ProductId.HasValue) 
+                        return BadRequest(new { message = "Invalid product in cart." });
+
+                    var product = await _context.Products.FindAsync(item.ProductId.Value);
+                    if (product == null)
+                    {
+                        return BadRequest(new { message = $"Product not found." });
+                    }
+                    if (product.AvailabilityStatus != "Available")
+                    {
+                        return BadRequest(new { message = $"Product {product.Name} is currently unavailable." });
+                    }
+
+                    // Use the database price, ignore the frontend price
+                    calculatedSubtotal += product.Price * item.Quantity;
+
+                    transactionItems.Add(new TransactionItem
+                    {
+                        ProductId = product.Id,
+                        Name = product.Name,
+                        Price = product.Price,
+                        Quantity = item.Quantity
+                    });
+                }
+
+                // Tax calculation (5% based on frontend logic)
+                decimal calculatedTax = calculatedSubtotal * 0.05m;
+                decimal trueTotal = calculatedSubtotal + calculatedTax;
+
+                var transaction = new Transaction
+                {
+                    UserId = userId,
+                    TotalAmount = trueTotal, // Use server-calculated total
+                    ShippingName = req.ShippingName,
+                    ShippingPhone = req.ShippingPhone,
+                    ShippingAddress = req.ShippingAddress,
+                    PaymentMethod = req.PaymentMethod,
+                    PaymentRefId = req.PaymentRefId,
+                    SenderName = req.SenderName,
+                    SenderMobile = req.SenderMobile,
+                    PaymentScreenshot = req.PaymentScreenshot,
+                    Status = "Payment Verification Pending",
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                };
+
+                foreach (var tItem in transactionItems)
+                {
+                    transaction.Items.Add(tItem);
+                }
+
+                _context.Transactions.Add(transaction);
+                await _context.SaveChangesAsync();
+
+                // Notify Admin
+                _context.Notifications.Add(new Notification
+                {
+                    Title = "New Payment Verification Pending",
+                    Message = $"Order #{transaction.Id} was placed for Rs. {transaction.TotalAmount} and is awaiting payment verification.",
+                    ActionUrl = "admin.html#payment-verification",
+                    UserId = null // Admin
                 });
 
-                if (item.ProductId.HasValue)
+                // Notify Customer
+                _context.Notifications.Add(new Notification
                 {
-                    var product = await _context.Products.FindAsync(item.ProductId.Value);
-                    if (product != null)
-                    {
-                        if (product.AvailabilityStatus != "Available")
-                        {
-                            return BadRequest(new { message = $"Product {product.Name} is currently unavailable." });
-                        }
-                    }
+                    Title = "Payment Verification Pending",
+                    Message = $"Your payment proof for Order #{transaction.Id} has been received and is awaiting verification.",
+                    ActionUrl = $"order-tracking.html?id={transaction.Id}",
+                    UserId = userId
+                });
+
+                // Send Emails
+                _ = _emailService.SendEmailAsync("leatherlaneatelier@gmail.com", 
+                    "New Payment Verification Pending", 
+                    $"Order #{transaction.Id} requires payment verification. Transaction ID: {transaction.PaymentRefId}. Amount: Rs. {transaction.TotalAmount}.");
+
+                _ = _emailService.SendEmailAsync(user.Email, 
+                    "Order Placed - Awaiting Verification", 
+                    $"Your payment proof has been received and is awaiting verification. Once verified, your order #{transaction.Id} will automatically move to Order Confirmed.");
+
+                // Clear Cart
+                var cartItems = await _context.CartItems.Where(c => c.UserId == userId).ToListAsync();
+                if (cartItems.Any())
+                {
+                    _context.CartItems.RemoveRange(cartItems);
                 }
+
+                await _context.SaveChangesAsync();
+
+                return Ok(new { message = "Order submitted successfully.", orderId = transaction.Id });
             }
-
-            _context.Transactions.Add(transaction);
-            await _context.SaveChangesAsync();
-
-            // Notify Admin
-            _context.Notifications.Add(new Notification
+            catch (Exception ex)
             {
-                Title = "New Payment Verification Pending",
-                Message = $"Order #{transaction.Id} was placed for Rs. {transaction.TotalAmount} and is awaiting payment verification.",
-                ActionUrl = "admin.html#payment-verification",
-                UserId = null // Admin
-            });
-
-            // Notify Customer
-            _context.Notifications.Add(new Notification
-            {
-                Title = "Payment Verification Pending",
-                Message = $"Your payment proof for Order #{transaction.Id} has been received and is awaiting verification.",
-                ActionUrl = $"order-tracking.html?id={transaction.Id}",
-                UserId = userId
-            });
-
-            // Send Emails
-            _ = _emailService.SendEmailAsync("muhammadbilalarifsheikh@gmail.com", 
-                "New Payment Verification Pending", 
-                $"Order #{transaction.Id} requires payment verification. Transaction ID: {transaction.PaymentRefId}. Amount: Rs. {transaction.TotalAmount}.");
-
-            _ = _emailService.SendEmailAsync(user.Email, 
-                "Order Placed - Awaiting Verification", 
-                $"Your payment proof has been received and is awaiting verification. Once verified, your order #{transaction.Id} will automatically move to Order Confirmed.");
-
-            // Clear Cart
-            var cartItems = await _context.CartItems.Where(c => c.UserId == userId).ToListAsync();
-            if (cartItems.Any())
-            {
-                _context.CartItems.RemoveRange(cartItems);
+                // Log exception here in a real scenario
+                Console.WriteLine($"[Error] PlaceOrder failed: {ex.Message}");
+                return StatusCode(500, new { message = "An internal server error occurred while processing your order. Please try again." });
             }
-
-            await _context.SaveChangesAsync();
-
-            return Ok(new { message = "Order submitted successfully.", orderId = transaction.Id });
         }
 
         [HttpPost("{id}/resubmit-payment")]
@@ -587,7 +621,7 @@ namespace LeatherLane_Atelier.Controllers
             });
 
             // Emails
-            _ = _emailService.SendEmailAsync("muhammadbilalarifsheikh@gmail.com", 
+            _ = _emailService.SendEmailAsync("leatherlaneatelier@gmail.com", 
                 "Resubmitted Payment Proof", 
                 $"Order #{transaction.Id} payment proof was resubmitted. Reference ID: {transaction.PaymentRefId}.");
 

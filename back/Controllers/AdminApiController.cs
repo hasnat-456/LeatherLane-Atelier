@@ -127,6 +127,11 @@ namespace LeatherLane_Atelier.Controllers
                 return BadRequest(new { message = "Cannot change the status of a cancelled order." });
             }
 
+            if (transaction.Status == "Payment Verification Pending")
+            {
+                return BadRequest(new { message = "Cannot manually change the status. Please verify or reject the payment in the Payment Verification tab first." });
+            }
+
             transaction.Status = req.Status;
 
             // Update timeline

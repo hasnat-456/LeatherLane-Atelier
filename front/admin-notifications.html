@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
     <!-- SEO Meta Tags -->
     <meta name="description" content="Discover premium handcrafted leather bags, wallets, and accessories at LeatherLane Atelier. Experience timeless elegance and superior craftsmanship.">
@@ -27,7 +27,7 @@
     <link rel="canonical" href="https://www.leatherlaneatelier.com/">
 
     <title>All Alerts | LeatherLane Atelier Admin</title>
-    <link rel="stylesheet" href="css/global.css">
+    <link rel="stylesheet" href="css/global.css?v=1787137292597">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         body { background-color: #F5EFE7; margin: 0; font-family: 'Poppins', sans-serif; color: #333; }
@@ -50,7 +50,65 @@
         
         .btn-back { display: inline-block; margin-bottom: 1.5rem; padding: 10px 20px; background: #111; color: #fff; text-decoration: none; border-radius: 6px; font-weight: 600; font-family: var(--font-heading); transition: background 0.3s; }
         .btn-back:hover { background: #333; }
-    </style>
+    
+        /* --- Admin Mobile Responsiveness --- */
+        @media (max-width: 768px) {
+            .mobile-menu-btn { display: block !important; margin-left: auto; }
+            .navbar {
+                flex-direction: column;
+                padding: 1rem;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+            .admin-nav {
+                display: none !important;
+                flex-direction: column !important;
+                position: absolute !important;
+                top: 100% !important;
+                left: 0 !important;
+                width: 100% !important;
+                background-color: var(--primary-bg) !important;
+                padding: 1rem 0 !important;
+                z-index: 1000 !important;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.3) !important;
+                overflow-x: hidden !important;
+            }
+            .grid-2, .grid-3 {
+                grid-template-columns: 1fr;
+            }
+            .container {
+                padding: 0 1rem;
+                margin: 1.5rem auto;
+            }
+            .topbar {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+            .stat-card {
+                padding: 1.5rem;
+            }
+            .card {
+                padding: 1rem;
+            }
+            table th, table td {
+                padding: 0.8rem;
+                font-size: 0.9rem;
+            }
+        }
+
+    
+            .admin-nav.active {
+                display: flex !important;
+            }
+            .admin-nav .nav-item, .admin-nav > a, .admin-nav .notification-wrapper {
+                width: 100% !important;
+                text-align: center !important;
+                justify-content: center !important;
+                padding: 12px 0 !important;
+                border-bottom: 1px solid rgba(255,255,255,0.05);
+            }
+        </style>
     <link rel="icon" type="image/svg+xml" href="upload/logo.svg">
 </head>
 <body>
@@ -132,6 +190,22 @@
             if (typeof loadNotifications === 'function') loadNotifications(); // update badge if present
         }
     </script>
+
+    
+    <footer style="margin-top: 4rem; padding: 2rem 1.5rem; text-align: center; color: #D8C7A6; font-size: 0.9rem; background-color: #4A1515; box-shadow: 0 -4px 15px rgba(0,0,0,0.1);">
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 10px;">
+            <div style="font-weight: 500; letter-spacing: 2px; color: #fff; text-transform: uppercase;">LeatherLane Atelier &mdash; Admin Portal</div>
+            <div style="display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 0.5rem; font-size: 0.85rem;">
+                <span>&copy; 2026 All Rights Reserved</span>
+                <span style="color: #C79A52;">&bull;</span>
+                <span>System Version 1.0</span>
+                <span style="color: #C79A52;">&bull;</span>
+                <a href="mailto:support@leatherlaneatelier.com" style="color: #D8C7A6; text-decoration: none; transition: color 0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#D8C7A6'">Technical Support</a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/security.js?v=1787135903725"></script>
 </body>
 </html>
 
