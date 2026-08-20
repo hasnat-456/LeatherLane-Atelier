@@ -209,7 +209,7 @@ namespace LeatherLane_Atelier.Controllers
         }
 
         [HttpPut("{id}/cancel")]
-        public async Task<IActionResult> CancelTransaction(int id)
+        public async Task<IActionResult> CancelTransaction(int id, [FromBody] CancelOrderRequest req)
         {
             var userId = GetUserId();
             var transaction = await _context.Transactions
@@ -275,7 +275,7 @@ namespace LeatherLane_Atelier.Controllers
                 ActionUrl = "admin.html#orders",
                 UserId = null // Admin
             });
-            _ = _emailService.SendEmailAsync("leatherlaneatelier@gmail.com", "Order Cancelled", $"Order #{transaction.Id} was cancelled by the customer.");
+            _ = _emailService.SendEmailAsync("leatherlaneatelier@gmail.com", "Order Cancelled", $"Order #{transaction.Id} was cancelled by the customer. Reason: {req.Reason}");
 
             // Notify Customer
             var userObj = await _context.Users.FindAsync(userId);
@@ -633,6 +633,11 @@ namespace LeatherLane_Atelier.Controllers
 
             return Ok(new { message = "Payment proof resubmitted successfully." });
         }
+    }
+
+    public class CancelOrderRequest
+    {
+        public string Reason { get; set; } = string.Empty;
     }
 
     public class InitiatePaymentRequest 

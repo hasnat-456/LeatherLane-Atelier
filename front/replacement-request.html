@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Request Defect Replacement | LeatherLane Atelier</title>
-    <link rel="stylesheet" href="css/global.css?v=1787137292682">
+    <link rel="stylesheet" href="css/global.css?v=1787222477335">
     <style>
         .container { max-width: 800px; margin: 2rem auto; padding: 2rem; background: #fff; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); color: #333; }
         h2 { color: var(--primary-bg); font-family: var(--font-heading); margin-bottom: 1.5rem; }
@@ -36,6 +36,145 @@
     }
     </script>
     <link rel="icon" type="image/svg+xml" href="upload/logo.svg">
+
+    
+
+    
+
+    
+
+
+    
+
+
+    <!-- ULTIMATE UI FIXES V3 -->
+    <style>
+        /* 1. Prevent Navbar from EVER overlapping content */
+        .navbar {
+            position: relative !important; 
+            top: auto !important;
+            z-index: 100 !important; /* Low enough so modals (z-index 1100) cover it! */
+        }
+        
+        /* 2. Remove the ugly 120px bottom gap */
+        html { padding-bottom: 0 !important; overflow-x: hidden !important; max-width: 100vw !important; }
+        body { padding-bottom: 0 !important; overflow-x: hidden !important; max-width: 100vw !important; }
+        
+        /* 3. Elegantly prevent WhatsApp from blocking footer text WITHOUT a bottom gap */
+        
+        
+        /* 4. Fix Password Toggle Overlap */
+        input[type="password"], 
+        input[id*="password"], 
+        input[id*="Password"],
+        .password-wrapper input,
+        .form-control[id="password"] {
+            padding-right: 85px !important;
+        }
+        
+        /* 5. Fix Table Empty States getting cut off */
+        td[colspan], 
+        th[colspan] {
+            white-space: normal !important;
+            word-wrap: break-word !important;
+            overflow-wrap: break-word !important;
+            min-width: 100% !important;
+            display: table-cell !important;
+        }
+        table { max-width: 100% !important; }
+
+        /* 6. FIX HORIZONTAL OVERFLOW SCROLLING */
+        .size-options { flex-wrap: wrap !important; }
+        .row { flex-wrap: wrap !important; }
+        .row > .form-group { min-width: 100% !important; }
+        .footer-bottom { flex-wrap: wrap !important; gap: 1rem !important; }
+        #newsletter-form { flex-wrap: wrap !important; }
+        #newsletter-form input { min-width: 60% !important; }
+        #newsletter-form button { flex-grow: 1 !important; }
+        
+        @media (min-width: 769px) {
+            .row > .form-group { min-width: 0 !important; }
+        }
+    </style>
+
+
+    <!-- V4 FIXES -->
+    <style>
+        @media (max-width: 768px) {
+            .footer-bottom {
+                flex-direction: column !important;
+                align-items: center !important;
+                text-align: center !important;
+                gap: 15px !important;
+                padding-right: 0 !important;
+                padding-bottom: 40px !important; 
+            }
+            .footer-bottom-links {
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 10px !important;
+                margin-left: 0 !important;
+            }
+            .footer-bottom-links a {
+                margin: 0 !important;
+            }
+        }
+    </style>
+
+
+    <!-- V5 OVERFLOW & BOX-SIZING FIXES -->
+    <style>
+        /* Force box-sizing on all inputs to prevent padding from expanding width */
+        *, *::before, *::after, input, textarea, select, button, .form-control, .form-group {
+            box-sizing: border-box !important;
+        }
+        
+        /* Ensure inputs never exceed their container */
+        input, textarea, select {
+            max-width: 100% !important;
+        }
+        
+        @media (max-width: 768px) {
+            /* Add explicit padding to right side of containers to guarantee gap */
+            .profile-container, .container, .detail-container, .checkout-grid {
+                padding-left: 20px !important;
+                padding-right: 20px !important;
+                width: 100% !important;
+                max-width: 100vw !important;
+            }
+            
+            /* Ensure rows don't overflow */
+            .row {
+                margin-left: 0 !important;
+                margin-right: 0 !important;
+                width: 100% !important;
+            }
+            
+            /* Profile Header specific fix */
+            .profile-header {
+                max-width: 100% !important;
+            }
+        }
+    </style>
+
+
+    <!-- V6 CARD MARGIN FIX -->
+    <style>
+        @media (max-width: 768px) {
+            /* Force the white cards to NOT touch the edges of the phone screen */
+            .profile-container, 
+            .auth-container, 
+            .checkout-grid, 
+            .detail-container, 
+            .card {
+                width: calc(100% - 32px) !important;
+                margin-left: 16px !important;
+                margin-right: 16px !important;
+                border-radius: 8px !important;
+            }
+        }
+    </style>
+
 </head>
 <body>
     <!-- Navbar -->
@@ -269,8 +408,8 @@
             </div>
         </div>
     </footer>
-<script src="js/auth.js?v=1787140756626"></script>
-    <script src="js/security.js?v=1787135903802"></script>
+<script src="js/auth.js?v=1787222477335"></script>
+    <script src="js/security.js?v=1787222477335"></script>
 </body>
 </html>
 

@@ -39,8 +39,7 @@
     body {
         display: flex;
         flex-direction: column;
-        min-height: 125vh; /* 100vh / 0.8 to compensate for zoom */
-        zoom: 0.8;
+        min-height: 100vh;
     }
     .split-layout {
         min-height: 100vh !important;
@@ -1088,3 +1087,23 @@ input:checked + .slider:before {
         padding: 6px 8px !important;
     }
 }
+
+
+/* --- MOBILE UI FIXES --- */
+@media (max-width: 768px) {
+    /* 1. Prevent WhatsApp button from covering content at the bottom */
+    body {
+        padding-bottom: 90px !important;
+    }
+    .footer-bottom {
+        padding-bottom: 90px !important;
+    }
+    
+    /* 2. Prevent Navbar from overlapping content when scrolling */
+    .navbar {
+        position: relative !important; /* Disables sticky on mobile so it scrolls naturally */
+    }
+}
+
+/* 3. Fix Password Toggle Overlap (Applies everywhere) */
+input[type="password"], input[id*="password"], input[id*="Password"] { padding-right: 65px !important; }

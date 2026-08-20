@@ -24,6 +24,10 @@ let editingProductId = null;
 
 // Tab Switching
 function switchTab(tabId) {
+    // Auto-close mobile menu if open
+    const nav = document.querySelector('.admin-nav');
+    if (nav) nav.classList.remove('active');
+
     // Update nav items
     document.querySelectorAll('.admin-nav .nav-item').forEach(item => {
         item.classList.remove('active');

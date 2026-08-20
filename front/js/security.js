@@ -1,7 +1,7 @@
 // security.js - Universal Input Validation & Anti-XSS
 document.addEventListener('DOMContentLoaded', () => {
     function applySecurityToElement(input) {
-        if (input.type === 'password' || input.type === 'hidden' || input.dataset.secured) return;
+        if (input.type === 'hidden' || input.dataset.secured) return;
         if (input.dataset.skipSecurity === 'true') return; // Allow field to opt out
         input.dataset.secured = 'true';
         
@@ -16,29 +16,37 @@ document.addEventListener('DOMContentLoaded', () => {
             const id = (this.id || '').toLowerCase();
             const isEmail = input.type === 'email' || name.includes('email') || id.includes('email');
             const isPassword = input.type === 'password' || name.includes('password') || id.includes('password');
-            const isAddress = name.includes('address') || id.includes('address');
 
-            if (!isEmail && !isPassword && !isAddress) {
-                // 2. Number fields (Phone, ZIP, Quantities, Prices)
-                const isPhoneOrMobile = name.includes('phone') || name.includes('mobile') || id.includes('phone') || id.includes('mobile');
-                const isZipOrPin = name.includes('zip') || name.includes('pin') || id.includes('zip') || id.includes('pin');
-                const isPriceOrQty = name.includes('price') || name.includes('qty') || name.includes('quantity') || id.includes('price') || id.includes('qty') || input.type === 'number';
-                
-                if (isPhoneOrMobile) {
-                    val = val.replace(/[^0-9+]/g, ''); // Digits and +
-                } 
-                else if (isZipOrPin) {
-                    val = val.replace(/[^0-9]/g, ''); // Digits only
-                }
-                else if (isPriceOrQty) {
-                    val = val.replace(/[^0-9.]/g, ''); // Digits and dot
-                }
-                else {
-                    // 3. Name/Text fields (Name, City, Category, etc.)
-                    const isNameOrCity = name.includes('name') || name.includes('city') || id.includes('name') || id.includes('city') || id.includes('category');
-                    if (isNameOrCity && !name.includes('username') && !id.includes('username')) {
-                        // Allow letters, spaces, hyphens, apostrophes
-                        val = val.replace(/[^a-zA-Z\s\-']/g, ''); // Fix spaces in name
+            if (!isPassword) {
+                if (isEmail) {
+                    // Emails shouldn't have weird brackets or spaces
+                    val = val.replace(/[^a-zA-Z0-9@\.\-_+]/g, '');
+                } else {
+                    // 2. Number fields (Phone, ZIP, Quantities, Prices)
+                    const isPhoneOrMobile = name.includes('phone') || name.includes('mobile') || id.includes('phone') || id.includes('mobile');
+                    const isZipOrPin = name.includes('zip') || (name.includes('pin') && !name.includes('shipping')) || id.includes('zip') || (id.includes('pin') && !id.includes('shipping'));
+                    const isPriceOrQty = name.includes('price') || name.includes('qty') || name.includes('quantity') || id.includes('price') || id.includes('qty') || input.type === 'number';
+                    
+                    if (isPhoneOrMobile) {
+                        val = val.replace(/[^0-9+]/g, ''); // Digits and +
+                    } 
+                    else if (isZipOrPin) {
+                        val = val.replace(/[^0-9]/g, ''); // Digits only
+                    }
+                    else if (isPriceOrQty) {
+                        val = val.replace(/[^0-9.]/g, ''); // Digits and dot
+                    }
+                    else {
+                        // 3. Name fields (Name, City, Category, etc.)
+                        const isNameOrCity = (name.includes('name') && !name.includes('username')) || name.includes('city') || id.includes('name') || id.includes('city') || id.includes('category');
+                        if (isNameOrCity) {
+                            // Allow letters, spaces, hyphens, apostrophes
+                            val = val.replace(/[^a-zA-Z\s\-']/g, '');
+                        } else {
+                            // 4. Addresses, Messages, Subjects, Descriptions
+                            // Allow Alphanumeric, spaces, and normal punctuation (including # for apt numbers)
+                            val = val.replace(/[^a-zA-Z0-9\s\-\.,!?'"()&\r\n#:]/g, '');
+                        }
                     }
                 }
             }

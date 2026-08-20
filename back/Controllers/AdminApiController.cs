@@ -127,6 +127,11 @@ namespace LeatherLane_Atelier.Controllers
                 return BadRequest(new { message = "Cannot change the status of a cancelled order." });
             }
 
+            if (req.Status == "Cancelled" && transaction.Status == "Delivered")
+            {
+                return BadRequest(new { message = "Cannot cancel an order that has already been delivered." });
+            }
+
             if (transaction.Status == "Payment Verification Pending")
             {
                 return BadRequest(new { message = "Cannot manually change the status. Please verify or reject the payment in the Payment Verification tab first." });
@@ -146,6 +151,7 @@ namespace LeatherLane_Atelier.Controllers
             }
 
             string desc = req.Status switch {
+                "Cancelled" => $"The order was cancelled by Admin. Reason: {req.CancelReason}",
                 "Order Confirmed" => "Your order has been verified and confirmed.",
                 "Preparing Order" => "We are carefully crafting and preparing your items.",
                 "Packed" => "Your order is packed and ready for dispatch.",
@@ -413,6 +419,7 @@ namespace LeatherLane_Atelier.Controllers
     public class UpdateStatusRequest
     {
         public string Status { get; set; } = string.Empty;
+        public string? CancelReason { get; set; }
     }
 
     public class UpdateAdminSettingsRequest
