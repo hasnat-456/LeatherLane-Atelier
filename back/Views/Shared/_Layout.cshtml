@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - LeatherLane Atelier</title>
+    <link rel="stylesheet" href="~/css/global.css" asp-append-version="true" />
+</head>
+<body>
+    <header>
+        <nav class="navbar">
+            <div class="nav-brand">
+                <a href="/">LeatherLane Atelier</a>
+            </div>
+            <ul class="nav-links">
+                <li><a href="/">Home</a></li>
+                <li><a href="/products">Products</a></li>
+                <li><a href="/about">About</a></li>
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    if (User.IsInRole("Admin"))
+                    {
+                        <li><a href="/admin/products">Admin Dashboard</a></li>
+                    }
+                    <li><a href="/logout">Logout</a></li>
+                }
+                else
+                {
+                    <li><a href="/login">Login</a></li>
+                }
+            </ul>
+        </nav>
+    </header>
+    
+    <main role="main" class="container">
+        @RenderBody()
+    </main>
+
+    <footer class="footer">
+        <div class="container text-center">
+            &copy; 2026 - LeatherLane Atelier
+        </div>
+    </footer>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

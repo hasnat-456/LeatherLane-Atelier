@@ -1,0 +1,42 @@
+@model IEnumerable<LeatherLane_Atelier.Models.Product>
+@{
+    ViewData["Title"] = "Admin Dashboard";
+}
+
+<style>
+    .admin-container { max-width: 1000px; margin: 40px auto; padding: 30px; background-color: var(--secondary-bg); border-radius: var(--radius); border: 1px solid var(--borders); }
+    .admin-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    .admin-table th, .admin-table td { padding: 12px; border: 1px solid var(--borders); text-align: left; }
+    .admin-table th { background-color: var(--primary-bg); color: var(--primary-gold); }
+</style>
+
+<div class="admin-container">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h1>Admin Dashboard - Inventory</h1>
+        <a href="/admin/products/add" class="btn-primary" style="width: auto;">+ Add New Stock</a>
+    </div>
+
+    <table class="admin-table">
+        <thead>
+            <tr>
+                <th>Image</th>
+                <th>Name</th>
+                <th>Price</th>
+                <th>Stock</th>
+                <th>Category</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach(var item in Model)
+            {
+                <tr>
+                    <td><img src="@item.Thumbnail" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;" /></td>
+                    <td>@item.Name</td>
+                    <td>$@item.Price.ToString("0.00")</td>
+                    <td>@item.Stock</td>
+                    <td>@item.Category</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

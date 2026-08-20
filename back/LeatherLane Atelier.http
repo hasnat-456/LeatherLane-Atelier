@@ -1,0 +1,6 @@
+@LeatherLane_Atelier_HostAddress = http://localhost:5212
+
+GET {{LeatherLane_Atelier_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
