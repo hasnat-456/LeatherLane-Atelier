@@ -409,6 +409,29 @@
             }
         }
 
+        async function loadSizeGuide() {
+            try {
+                const res = await fetch('/api/settings');
+                if (res.ok) {
+                    const settings = await res.json();
+                    if (settings && settings.sizeGuideData && settings.sizeGuideData !== "[]") {
+                        const data = JSON.parse(settings.sizeGuideData);
+                        const tbody = document.getElementById('sizeGuideBody');
+                        if (tbody && data.length > 0) {
+                            tbody.innerHTML = '';
+                            data.forEach(row => {
+                                const tr = document.createElement('tr');
+                                tr.innerHTML = `<td>${row.pk || row.uk}</td><td>${row.us}</td><td>${row.eu}</td><td>${row.cm}</td>`;
+                                tbody.appendChild(tr);
+                            });
+                        }
+                    }
+                }
+            } catch (e) {
+                console.error("Failed to load size guide", e);
+            }
+        }
+        
         async function loadProduct() {
             const urlParams = new URLSearchParams(window.location.search);
             const productId = parseInt(urlParams.get('id'));
@@ -555,7 +578,7 @@
             const mainDesc = isJsonDesc ? descObj.description : p.description;
 
             const thumbnailsHtml = images.map((img, idx) => `
-                <img src="${img}" class="thumbnail ${idx === 0 ? 'active' : ''}" onclick="changeImage('${img}', this)">
+                <img src="${img}" class="thumbnail ${idx === 0 ? 'active' : ''}" onclick="changeImage(this.src, this)">
             `).join('');
 
             const sizesHtml = (p.sizes || []).map(size => `

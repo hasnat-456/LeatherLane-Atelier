@@ -2,6 +2,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;
 using LeatherLane_Atelier.Models;
+using Microsoft.AspNetCore.Hosting;
+using System.IO;
+using System.Text.RegularExpressions;
 
 namespace LeatherLane_Atelier.Controllers
 {
@@ -10,10 +13,12 @@ namespace LeatherLane_Atelier.Controllers
     public class ProductsController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
+        private readonly IWebHostEnvironment _env;
 
-        public ProductsController(ApplicationDbContext context)
+        public ProductsController(ApplicationDbContext context, IWebHostEnvironment env)
         {
             _context = context;
+            _env = env;
         }
 
         [HttpGet]
@@ -297,6 +302,110 @@ namespace LeatherLane_Atelier.Controllers
 
             return Ok(new { message = "Review added successfully" });
         }
+    
+        [HttpPost("upload-images")]
+        public async Task<IActionResult> UploadImages([FromForm] List<IFormFile> images)
+        {
+            var uploadedUrls = new List<string>();
+            if (images == null || images.Count == 0) return BadRequest("No images received.");
+            
+            var currentDir = Directory.GetCurrentDirectory();
+            var frontPath = currentDir.EndsWith("back", StringComparison.OrdinalIgnoreCase) 
+                ? Path.Combine(currentDir, "..", "front") 
+                : Path.Combine(currentDir, "front");
+            var uploadsFolder = Path.Combine(frontPath, "images", "products");
+            Directory.CreateDirectory(uploadsFolder);
+            
+            foreach (var file in images)
+            {
+                if (file.Length > 0)
+                {
+                    var uniqueFileName = Guid.NewGuid().ToString() + "_" + file.FileName.Replace(" ", "_");
+                    var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+                    
+                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await file.CopyToAsync(stream);
+                    }
+                    uploadedUrls.Add("/images/products/" + uniqueFileName);
+                }
+            }
+            
+            return Ok(uploadedUrls);
+        }
+
+        [HttpGet("migrate-base64")]
+        public async Task<IActionResult> MigrateBase64Images()
+        {
+            var products = await _context.Products.ToListAsync();
+            int migratedCount = 0;
+            
+            var currentDir = Directory.GetCurrentDirectory();
+            var frontPath = currentDir.EndsWith("back", StringComparison.OrdinalIgnoreCase) 
+                ? Path.Combine(currentDir, "..", "front") 
+                : Path.Combine(currentDir, "front");
+            var uploadsFolder = Path.Combine(frontPath, "images", "products");
+            Directory.CreateDirectory(uploadsFolder);
+
+            foreach (var p in products)
+            {
+                bool modified = false;
+                
+                // Migrate Thumbnail
+                if (!string.IsNullOrEmpty(p.Thumbnail) && p.Thumbnail.StartsWith("data:image"))
+                {
+                    p.Thumbnail = SaveBase64ToDisk(p.Thumbnail, uploadsFolder);
+                    modified = true;
+                }
+                
+                // Migrate Images array
+                if (p.Images != null && p.Images.Count > 0)
+                {
+                    for (int i = 0; i < p.Images.Count; i++)
+                    {
+                        if (!string.IsNullOrEmpty(p.Images[i]) && p.Images[i].StartsWith("data:image"))
+                        {
+                            p.Images[i] = SaveBase64ToDisk(p.Images[i], uploadsFolder);
+                            modified = true;
+                        }
+                    }
+                }
+                
+                if (modified)
+                {
+                    migratedCount++;
+                }
+            }
+            
+            await _context.SaveChangesAsync();
+            return Ok(new { message = $"Successfully migrated {migratedCount} products." });
+        }
+        
+        private string SaveBase64ToDisk(string base64String, string uploadsFolder)
+        {
+            try 
+            {
+                var match = Regex.Match(base64String, @"data:image/(?<type>.+?);base64,(?<data>.+)");
+                if (!match.Success) return base64String;
+                
+                string ext = match.Groups["type"].Value.Split(';')[0]; // handle cases like jpeg;charset=utf-8
+                if (ext == "jpeg") ext = "jpg";
+                
+                string base64Data = match.Groups["data"].Value;
+                byte[] bytes = Convert.FromBase64String(base64Data);
+                
+                string fileName = Guid.NewGuid().ToString() + "." + ext;
+                string filePath = Path.Combine(uploadsFolder, fileName);
+                
+                System.IO.File.WriteAllBytes(filePath, bytes);
+                return "/images/products/" + fileName;
+            } 
+            catch 
+            {
+                return base64String; // fallback
+            }
+        }
+
     }
 
     public class ReviewDto
@@ -304,5 +413,6 @@ namespace LeatherLane_Atelier.Controllers
         public int Rating { get; set; }
         public string? Title { get; set; }
         public string Comment { get; set; } = string.Empty;
-    }
+    
+        }
 }

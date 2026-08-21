@@ -585,7 +585,9 @@
                         </div>
                         <div class="form-group">
                             <label>Product Image (Optional if editing)</label>
-                            <input type="file" id="pImage" class="form-control" accept="image/*" style="padding: 9px;">
+                            <input type="file" id="pImage" class="form-control" accept="image/*" multiple style="padding: 9px;">
+                            <div id="existingImagesPreview" style="display:flex; gap:10px; margin-top:10px; overflow-x:auto;"></div>
+                            <div style="font-size: 0.8rem; color: #666; margin-top: 5px;">Select multiple images to create a product gallery. The first image will be the main thumbnail.</div>
                         </div>
                     </div>
 
@@ -1135,7 +1137,7 @@
             window.location.href = 'login.html';
         }
     </script>
-    <script src="js/admin.js?v=1787222477335"></script>
+    <script src="js/admin.js?v=9999991"></script>
 
     
     <footer style="margin-top: 4rem; padding: 2rem 1.5rem; text-align: center; color: #D8C7A6; font-size: 0.9rem; background-color: #4A1515; box-shadow: 0 -4px 15px rgba(0,0,0,0.1);">

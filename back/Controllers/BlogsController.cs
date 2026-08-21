@@ -56,7 +56,11 @@ namespace LeatherLane_Atelier.Controllers
             if (imageFile == null || imageFile.Length == 0)
                 return BadRequest("No image provided.");
 
-            var uploadsFolder = Path.Combine(_env.ContentRootPath, "..", "front", "uploads", "blogs");
+            var currentDir = Directory.GetCurrentDirectory();
+            var frontPath = currentDir.EndsWith("back", StringComparison.OrdinalIgnoreCase) 
+                ? Path.Combine(currentDir, "..", "front") 
+                : Path.Combine(currentDir, "front");
+            var uploadsFolder = Path.Combine(frontPath, "uploads", "blogs");
             Directory.CreateDirectory(uploadsFolder);
 
             var uniqueFileName = Guid.NewGuid().ToString() + "_" + imageFile.FileName;
