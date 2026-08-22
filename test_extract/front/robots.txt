@@ -1,6 +1,0 @@
-User-agent: *
-Disallow: /admin*
-Disallow: /cart.html
-Disallow: /checkout.html
-
-Sitemap: https://www.leatherlaneatelier.com/sitemap.xml
