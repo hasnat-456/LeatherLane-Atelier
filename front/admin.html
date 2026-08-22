@@ -6,12 +6,12 @@
 
     <!-- SEO Meta Tags -->
     <meta name="description" content="Discover premium handcrafted leather bags, wallets, and accessories at LeatherLane Atelier. Experience timeless elegance and superior craftsmanship.">
-    <meta name="keywords" content="handmade leather bags, premium leather wallets, handcrafted leather accessories, LeatherLane Atelier, luxury leather goods">
+    <meta name="keywords" content="handmade Peshawari chappal, leather chappal Pakistan, handcrafted men's footwear, leather sandals Pakistan, LeatherLane Atelier">
     <meta name="author" content="LeatherLane Atelier">
     
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://www.leatherlaneatelier.com/">
+    <meta property="og:url" content="https://leatherlaneatelier.store/admin">
     <meta property="og:title" content="LeatherLane Atelier | Premium Handcrafted Leather">
     <meta property="og:description" content="Discover premium handcrafted leather bags, wallets, and accessories at LeatherLane Atelier. Experience timeless elegance and superior craftsmanship.">
     <meta property="og:image" content="https://www.leatherlaneatelier.com/images/logo.png">
@@ -24,7 +24,7 @@
     <meta property="twitter:image" content="https://www.leatherlaneatelier.com/images/logo.png">
 
     <!-- Canonical Link -->
-    <link rel="canonical" href="https://www.leatherlaneatelier.com/">
+    <link rel="canonical" href="https://leatherlaneatelier.store/admin">
 
     <title>Admin Dashboard | LeatherLane Atelier</title>
     <link rel="stylesheet" href="css/global.css?v=1787222477335">
@@ -456,7 +456,7 @@
     <!-- Top Navbar Matching User Side -->
     <nav class="navbar admin-navbar">
         <div class="nav-brand">
-            <a href="home.html" style="display: flex; align-items: center; text-decoration: none;">
+            <a href="/home" style="display: flex; align-items: center; text-decoration: none;">
                 <img src="upload/logo.svg" alt="LeatherLane Atelier Logo" style="height: 65px; object-fit: contain; transition: transform 0.3s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
             </a>
         </div>
@@ -466,7 +466,7 @@
             <a class="nav-item" onclick="switchTab('orders')">Orders</a>
             <a class="nav-item" onclick="switchTab('products')">Products</a>
             <a class="nav-item" onclick="switchTab('deals')">Deals</a>
-            <a class="nav-item" href="admin-exchanges.html?v=1787222477335">Exchanges</a>
+            <a class="nav-item" href="/admin-exchanges?v=1787222477335">Exchanges</a>
             <a class="nav-item" onclick="switchTab('payment-verification')">Payment Verification</a>
             <a class="nav-item" onclick="switchTab('categories')">Categories</a>
             <a class="nav-item" onclick="switchTab('stories')">Stories</a>
@@ -479,7 +479,7 @@
                     <div id="notifItems">
                         <div style="padding:1rem;text-align:center;color:#777;">Loading...</div>
                     </div>
-                    <div class="notification-footer"><a href="admin-notifications.html">View All Alerts</a></div>
+                    <div class="notification-footer"><a href="/admin-notifications">View All Alerts</a></div>
                 </div>
             </div>
             <a style="color: #ff6b6b; cursor: pointer; font-weight: bold; margin-left: 10px;" onclick="adminLogout()">Sign Out</a>
@@ -1134,7 +1134,7 @@
     <!-- Script must run immediately to prevent flash of unauthenticated content -->
     <script>
         if (!localStorage.getItem('token')) {
-            window.location.href = 'login.html';
+            window.location.href = '/login';
         }
     </script>
     <script src="js/admin.js?v=9999991"></script>
@@ -1153,7 +1153,7 @@
         </div>
     </footer>
 
-    <script src="js/security.js?v=1787222477335"></script>
+    <script src="js/security.js?v=1787391006"></script>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {

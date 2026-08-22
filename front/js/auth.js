@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div id="notifItems">
                         <div style="padding:1rem;text-align:center;color:#777;">Loading...</div>
                     </div>
-                    <div class="notification-footer"><a href="notifications.html?v=5">View All Notifications</a></div>
+                    <div class="notification-footer"><a href="/notifications?v=5">View All Notifications</a></div>
                 </div>
             </div>
             <div class="profile-dropdown" style="display: flex; align-items: center;">
@@ -38,8 +38,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     ${emailHtml}
                     ${emailHtml || phoneHtml ? '' : '<p style="font-size:0.8rem; color:#888;">Welcome back!</p>'}
                     ${phoneHtml}
-                    <a href="profile.html" style="display:block; margin-top:10px; color:var(--primary-gold); font-size:0.9rem; text-decoration:none; font-weight:bold;">My Profile</a>
-                    <a href="transactions.html" style="display:block; margin-top:10px; color:var(--primary-gold); font-size:0.9rem; text-decoration:none; font-weight:bold;">View Orders</a>
+                    <a href="/profile" style="display:block; margin-top:10px; color:var(--primary-gold); font-size:0.9rem; text-decoration:none; font-weight:bold;">My Profile</a>
+                    <a href="/transactions" style="display:block; margin-top:10px; color:var(--primary-gold); font-size:0.9rem; text-decoration:none; font-weight:bold;">View Orders</a>
                     <button class="btn-logout" onclick="logout()">Logout</button>
                 </div>
             </div>
@@ -47,26 +47,26 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
         // Logged out
         authHtml = `
-            <a href="login.html" style="color: #ddd; text-decoration: none;">Login</a>
-            <a href="signup.html" class="btn-register" style="background-color: var(--primary-gold); color: #111; padding: 6px 16px; border-radius: 4px; font-weight: 600; text-decoration: none;">Register</a>
+            <a href="/login" style="color: #ddd; text-decoration: none;">Login</a>
+            <a href="/signup" class="btn-register" style="background-color: var(--primary-gold); color: #111; padding: 6px 16px; border-radius: 4px; font-weight: 600; text-decoration: none;">Register</a>
         `;
     }
 
     // Standard links for all pages (text links only, icons go in their own row)
     const standardLinks = `
-        <a href="home.html" style="color: #ddd; text-decoration: none;">Home</a>
-        <a href="products.html" style="color: #ddd; text-decoration: none;">Shop</a>
-        <a href="about.html" style="color: #ddd; text-decoration: none;">About</a>
-        <a href="deals.html" style="color: #ddd; text-decoration: none;">Deal of the Day</a>
-        <a href="size-guide.html" style="color: #ddd; text-decoration: none;">Size Guide</a>
-        <a href="contact.html" style="color: #ddd; text-decoration: none;">Contact</a>
-        <a href="transactions.html" style="color: #ddd; text-decoration: none;">Orders</a>
-        <a href="favorites.html" style="color: #ddd; text-decoration: none;">Favorites</a>
+        <a href="/home" style="color: #ddd; text-decoration: none;">Home</a>
+        <a href="/products" style="color: #ddd; text-decoration: none;">Shop</a>
+        <a href="/about" style="color: #ddd; text-decoration: none;">About</a>
+        <a href="/deals" style="color: #ddd; text-decoration: none;">Deal of the Day</a>
+        <a href="/size-guide" style="color: #ddd; text-decoration: none;">Size Guide</a>
+        <a href="/contact" style="color: #ddd; text-decoration: none;">Contact</a>
+        <a href="/transactions" style="color: #ddd; text-decoration: none;">Orders</a>
+        <a href="/favorites" style="color: #ddd; text-decoration: none;">Favorites</a>
     `;
 
     // Cart icon + auth icons wrapped in a single flex row so they're always horizontal
     const cartIconHtml = `
-        <a href="cart.html" style="color: var(--primary-gold); text-decoration: none; display: flex; align-items: center; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+        <a href="/cart" style="color: var(--primary-gold); text-decoration: none; display: flex; align-items: center; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
             <span id="cartBadge" class="cart-badge" style="background: var(--primary-gold); color: #111; padding: 2px 6px; border-radius: 50%; font-size: 0.7rem; font-weight: bold; margin-left: 4px; display: none;"></span>
         </a>
@@ -110,39 +110,24 @@ document.addEventListener('DOMContentLoaded', () => {
         .then(cats => {
             let html = '';
             cats.forEach(c => {
-                html += `<li><a href="products.html?category=${encodeURIComponent(c.name)}">${c.name}</a></li>`;
+                html += `<li><a href="/products?category=${encodeURIComponent(c.name)}">${c.name}</a></li>`;
             });
             footerList.innerHTML = html;
         })
         .catch(err => {
             console.error("Dynamic categories fetch failed. Using fallback.", err);
             footerList.innerHTML = `
-                <li><a href="products.html?category=Chappal">Chappal</a></li>
-                <li><a href="products.html?category=Peshawari Chappal">Peshawari Chappal</a></li>
-                <li><a href="products.html?category=Shoes">Shoes</a></li>
-                <li><a href="products.html?category=Sandals">Sandals</a></li>
+                <li><a href="/products?category=Chappal">Chappal</a></li>
+                <li><a href="/products?category=Peshawari Chappal">Peshawari Chappal</a></li>
+                <li><a href="/products?category=Shoes">Shoes</a></li>
+                <li><a href="/products?category=Sandals">Sandals</a></li>
             `;
         });
     }
 
-    // --- Dynamic Settings Injection ---
-    fetch('/api/settings')
-        .then(res => res.json())
-        .then(settings => {
-            if (!settings) return;
-            
-            document.querySelectorAll('.dyn-address').forEach(el => el.textContent = settings.address || '');
-            document.querySelectorAll('.dyn-email').forEach(el => el.textContent = settings.email || '');
-            document.querySelectorAll('.dyn-phone').forEach(el => el.textContent = settings.phone || '');
-            document.querySelectorAll('.dyn-hours').forEach(el => el.textContent = settings.businessHours || '');
-            
-            document.querySelectorAll('.dyn-social-fb').forEach(el => el.href = settings.facebookUrl || '#');
-            document.querySelectorAll('.dyn-social-ig').forEach(el => el.href = settings.instagramUrl || '#');
-            document.querySelectorAll('.dyn-social-wa').forEach(el => el.href = settings.whatsAppUrl || '#');
-            document.querySelectorAll('.dyn-social-tk').forEach(el => el.href = settings.tikTokUrl || '#');
-        })
-        .catch(e => console.error("Could not load dynamic settings", e));
+    
 
+    
     // Inject CSS to ensure it always applies
     const style = document.createElement('style');
     style.textContent = `
@@ -161,7 +146,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Insert back button globally except on home, login, signup, splash
     const path = window.location.pathname.toLowerCase();
-    if (!path.includes('home.html') && !path.includes('login.html') && !path.includes('signup.html') && !path.includes('index.html')) {
+    if (!path.includes('/home') && !path.includes('/login') && !path.includes('/signup') && !path.includes('/index')) {
         // Prevent duplicate back buttons if one already exists
         if (document.querySelector('.btn-back')) {
             return;
@@ -271,28 +256,81 @@ document.addEventListener('DOMContentLoaded', loadNotifications);
 
 function logout() {
     localStorage.removeItem('token');
-    window.location.href = 'login.html';
+    window.location.href = '/login';
 }
 
 
 
-// --- WhatsApp Floating Button ---
-document.addEventListener('DOMContentLoaded', function() {
-    // Only inject if it doesn't already exist and not on admin pages
-    if (document.getElementById('wa-floating-btn') || window.location.href.includes('admin')) return;
+// --- Dynamic Social & WhatsApp Settings ---
+document.addEventListener('DOMContentLoaded', async function() {
+    // 1. First fetch the settings from the server
+    let settings = {};
+    try {
+        const res = await fetch('/api/settings');
+        if (res.ok) {
+            settings = await res.json();
+        }
+    } catch(e) {
+        console.error("Failed to fetch admin settings", e);
+    }
 
-    // Determine WhatsApp Message
-    let waNumber = '923376306162';
+    // 2. Update all standard text fields (address, email, phone, hours)
+    if (settings) {
+        document.querySelectorAll('.dyn-address').forEach(el => el.textContent = settings.address || '');
+        document.querySelectorAll('.dyn-email').forEach(el => el.textContent = settings.email || '');
+        document.querySelectorAll('.dyn-phone').forEach(el => el.textContent = settings.phone || '');
+        document.querySelectorAll('.dyn-hours').forEach(el => el.textContent = settings.businessHours || '');
+    }
+
+    // 3. Helper function to update footer social icons
+    const updateIcon = (title, url) => {
+        document.querySelectorAll(`a[title='${title}']`).forEach(el => {
+            if (url && url.trim() !== '') {
+                el.href = url.trim();
+                el.target = '_blank';
+                el.style.display = 'inline-block';
+            } else {
+                // If the admin didn't provide a link, we hide the icon so it doesn't show a dead link
+                el.style.display = 'none';
+            }
+        });
+    };
+
+    // 4. Apply Facebook, Instagram, and TikTok links
+    updateIcon('Facebook', settings.facebookUrl);
+    updateIcon('Instagram', settings.instagramUrl);
+    updateIcon('TikTok', settings.tikTokUrl);
+
+    // 5. Handle WhatsApp specifically (for both the footer icon and floating button)
+    let waNumber = '923376306162'; // default fallback
+    if (settings && settings.whatsAppUrl && settings.whatsAppUrl.trim() !== '') {
+        waNumber = settings.whatsAppUrl.trim();
+    }
+
     let waMessage = '';
-    
-    if (window.location.href.includes('product-detail.html')) {
+    if (window.location.href.includes('/product-detail')) {
         let currentUrl = window.location.href;
         waMessage = '?text=' + encodeURIComponent('Hi, I need help with this: ' + currentUrl);
     }
     
-    let waUrl = 'https://wa.me/' + waNumber + waMessage;
+    let waUrl = waNumber;
+    if (!waUrl.startsWith('http')) {
+        waUrl = 'https://wa.me/' + waNumber.replace(/[^\d\+]/g, '') + waMessage;
+    } else {
+        if (!waUrl.includes('?')) {
+            waUrl += waMessage;
+        } else {
+            waUrl += waMessage.replace('?', '&');
+        }
+    }
 
-    // Inject CSS
+    // Apply the smart WhatsApp link to the footer icon
+    updateIcon('WhatsApp', waUrl);
+
+    // 6. Only create the floating button if we are NOT on the admin dashboard
+    if (!document.getElementById('wa-floating-btn') && !window.location.href.includes('admin')) {
+        // Inject CSS for floating button
+// Inject CSS
     const style = document.createElement('style');
     style.innerHTML = `
         .wa-floating-container {
@@ -389,6 +427,7 @@ document.addEventListener('DOMContentLoaded', function() {
     container.appendChild(tooltip);
     container.appendChild(link);
     document.body.appendChild(container);
+    }
 });
 
 

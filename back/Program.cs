@@ -85,6 +85,37 @@ if (Directory.Exists(frontPath))
 {
     var fileProvider = new PhysicalFileProvider(frontPath);
 
+    
+    // Clean URL Rewrite Middleware (Strict)
+    app.Use(async (context, next) =>
+    {
+        var path = context.Request.Path.Value;
+        
+        // 1. Force remove .html from browser URL if requested explicitly
+        if (!string.IsNullOrEmpty(path) && path.EndsWith(".html", StringComparison.OrdinalIgnoreCase))
+        {
+            var cleanPath = path.Substring(0, path.Length - 5);
+            if (cleanPath.Equals("/index", StringComparison.OrdinalIgnoreCase))
+                cleanPath = "/home";
+            
+            var qs = context.Request.QueryString.HasValue ? context.Request.QueryString.Value : "";
+            context.Response.Redirect(cleanPath + qs, permanent: true);
+            return;
+        }
+
+        // 2. Secretly append .html on the server side so static files work
+        if (!string.IsNullOrEmpty(path) && !path.StartsWith("/api") && !path.StartsWith("/images") && !System.IO.Path.HasExtension(path))
+        {
+            var htmlPath = (path == "/" ? "/home" : path) + ".html";
+            var physicalPath = System.IO.Path.Combine(frontPath, htmlPath.TrimStart('/'));
+            if (System.IO.File.Exists(physicalPath))
+            {
+                context.Request.Path = htmlPath;
+            }
+        }
+        await next();
+    });
+
     app.UseDefaultFiles(new DefaultFilesOptions
     {
         FileProvider = fileProvider

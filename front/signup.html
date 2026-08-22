@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -6,12 +6,12 @@
 
     <!-- SEO Meta Tags -->
     <meta name="description" content="Discover premium handcrafted leather bags, wallets, and accessories at LeatherLane Atelier. Experience timeless elegance and superior craftsmanship.">
-    <meta name="keywords" content="handmade leather bags, premium leather wallets, handcrafted leather accessories, LeatherLane Atelier, luxury leather goods">
+    <meta name="keywords" content="handmade Peshawari chappal, leather chappal Pakistan, handcrafted men's footwear, leather sandals Pakistan, LeatherLane Atelier">
     <meta name="author" content="LeatherLane Atelier">
     
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://www.leatherlaneatelier.com/">
+    <meta property="og:url" content="https://leatherlaneatelier.store/signup">
     <meta property="og:title" content="LeatherLane Atelier | Premium Handcrafted Leather">
     <meta property="og:description" content="Discover premium handcrafted leather bags, wallets, and accessories at LeatherLane Atelier. Experience timeless elegance and superior craftsmanship.">
     <meta property="og:image" content="https://www.leatherlaneatelier.com/images/logo.png">
@@ -24,7 +24,7 @@
     <meta property="twitter:image" content="https://www.leatherlaneatelier.com/images/logo.png">
 
     <!-- Canonical Link -->
-    <link rel="canonical" href="https://www.leatherlaneatelier.com/">
+    <link rel="canonical" href="https://leatherlaneatelier.store/signup">
 
     <title>Create Account | LeatherLane Atelier</title>
     <link rel="stylesheet" href="css/global.css?v=1787222477335">
@@ -357,7 +357,7 @@
                     <button type="button" class="btn-primary" onclick="doSignup()">Create Account</button>
                     
                     <div style="text-align: center; margin-top: 1.5rem; font-size: 0.9rem;">
-                        Already have an account? <a href="login.html">Sign In</a>
+                        Already have an account? <a href="/login">Sign In</a>
                     </div>
                 </form>
             </div>
@@ -414,7 +414,7 @@
                 if (res.ok) {
                     localStorage.setItem('token', data.token);
                     if (data.name) localStorage.setItem('profile_fname', data.name);
-                    window.location.href = 'home.html';
+                    window.location.href = '/home';
                 } else {
                     alert(data.message || 'Registration failed');
                 }
@@ -442,7 +442,7 @@
                 if (res.ok) {
                     localStorage.setItem('token', data.token);
                     if(data.name) localStorage.setItem('profile_fname', data.name);
-                    window.location.href = 'home.html';
+                    window.location.href = '/home';
                 } else {
                     err.innerText = data.message || 'Invalid OTP';
                     err.style.display = 'block';
@@ -466,7 +466,7 @@
 
         // Block Ctrl +/- and Ctrl+Scroll zooming
     </script>
-    <script src="js/security.js?v=1787222477335"></script>
+    <script src="js/security.js?v=1787391006"></script>
 </body>
 </html>
 

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -6,12 +6,12 @@
 
     <!-- SEO Meta Tags -->
     <meta name="description" content="Discover premium handcrafted leather bags, wallets, and accessories at LeatherLane Atelier. Experience timeless elegance and superior craftsmanship.">
-    <meta name="keywords" content="handmade leather bags, premium leather wallets, handcrafted leather accessories, LeatherLane Atelier, luxury leather goods">
+    <meta name="keywords" content="handmade Peshawari chappal, leather chappal Pakistan, handcrafted men's footwear, leather sandals Pakistan, LeatherLane Atelier">
     <meta name="author" content="LeatherLane Atelier">
     
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://www.leatherlaneatelier.com/">
+    <meta property="og:url" content="https://leatherlaneatelier.store/product-detail">
     <meta property="og:title" content="LeatherLane Atelier | Premium Handcrafted Leather">
     <meta property="og:description" content="Discover premium handcrafted leather bags, wallets, and accessories at LeatherLane Atelier. Experience timeless elegance and superior craftsmanship.">
     <meta property="og:image" content="https://www.leatherlaneatelier.com/images/logo.png">
@@ -24,7 +24,7 @@
     <meta property="twitter:image" content="https://www.leatherlaneatelier.com/images/logo.png">
 
     <!-- Canonical Link -->
-    <link rel="canonical" href="https://www.leatherlaneatelier.com/">
+    <link rel="canonical" href="https://leatherlaneatelier.store/product-detail">
 
     <title>Product Details | LeatherLane Atelier</title>
     <link rel="stylesheet" href="css/global.css?v=1787222477335">
@@ -368,18 +368,18 @@
 <body>
     <nav class="navbar">
         <div class="nav-brand">
-            <a href="home.html" style="display: flex; align-items: center; text-decoration: none;">
+            <a href="/home" style="display: flex; align-items: center; text-decoration: none;">
                 <img src="upload/logo.svg" alt="LeatherLane Atelier Logo" style="height: 65px; object-fit: contain; transition: transform 0.3s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
             </a>
         </div>
         
         <button class="mobile-menu-btn" onclick="document.querySelector('.nav-links').classList.toggle('active')" aria-label="Menu">
-            ☰
+            ?
         </button>
         <div class="nav-links">
-            <a href="home.html">Home</a>
-            <a href="products.html">Shop</a>
-            <a href="about.html">About</a>
+            <a href="/home">HOME</a>
+            <a href="/products">Shop</a>
+            <a href="/about">About</a>
         </div>
     </nav>
 
@@ -437,7 +437,7 @@
             const productId = parseInt(urlParams.get('id'));
 
             if (!productId) {
-                window.location.href = 'products.html';
+                window.location.href = '/products';
                 return;
             }
 
@@ -509,7 +509,7 @@
         async function addToCart() {
             const token = localStorage.getItem('token');
             if (!token) {
-                window.location.href = 'login.html';
+                window.location.href = '/login';
                 return;
             }
 
@@ -676,7 +676,7 @@
 
                     ${sizesHtml ? `
                         <div class="size-section">
-                            <span class="size-label">Select Size <a href="size-guide.html" class="size-guide-link" style="text-decoration: none;"><svg viewBox="0 0 24 24" width="1.2em" height="1.2em" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: text-bottom; margin-right: 4px;"><line x1="21" y1="9" x2="21" y2="9"></line><line x1="17" y1="9" x2="17" y2="9"></line><line x1="13" y1="9" x2="13" y2="9"></line><line x1="9" y1="9" x2="9" y2="9"></line><line x1="5" y1="9" x2="5" y2="9"></line><path d="M4 15h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2z"></path></svg> Size Guide</a></span>
+                            <span class="size-label">Select Size <a href="/size-guide" class="size-guide-link" style="text-decoration: none;"><svg viewBox="0 0 24 24" width="1.2em" height="1.2em" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: text-bottom; margin-right: 4px;"><line x1="21" y1="9" x2="21" y2="9"></line><line x1="17" y1="9" x2="17" y2="9"></line><line x1="13" y1="9" x2="13" y2="9"></line><line x1="9" y1="9" x2="9" y2="9"></line><line x1="5" y1="9" x2="5" y2="9"></line><path d="M4 15h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2z"></path></svg> Size Guide</a></span>
                             <div class="size-options">
                                 ${sizesHtml}
                             </div>
@@ -690,7 +690,7 @@
                             ? `<button class="btn-add" style="flex: 1;" onclick="addToCart()">Add to Cart</button>`
                             : `<button class="btn-add" disabled style="flex: 1; background-color: #ccc; color: #666; cursor: not-allowed; box-shadow: none;">Unavailable</button>`
                         }
-                        <button class="btn-add" style="background-color: #f8f9fa; color: #dc3545; border: 1px solid #dc3545; width: 50px; font-size: 1.2rem; padding: 0; display: flex; align-items: center; justify-content: center;" id="fav-btn-${p.id}" onclick="toggleFavorite(null, ${p.id})" title="Add to Favorites">♡</button>
+                        <button class="btn-add" style="background-color: #f8f9fa; color: #dc3545; border: 1px solid #dc3545; width: 50px; font-size: 1.2rem; padding: 0; display: flex; align-items: center; justify-content: center;" id="fav-btn-${p.id}" onclick="toggleFavorite(null, ${p.id})" title="Add to Favorites">?</button>
                     </div>
 
                     <div class="details-section">
@@ -724,7 +724,7 @@
             const token = localStorage.getItem('token');
             if (!token) {
                 alert('Please log in to add products to your favorites.');
-                window.location.href = 'login.html';
+                window.location.href = '/login';
                 return;
             }
             try {
@@ -744,7 +744,7 @@
                         headers: { 'Authorization': 'Bearer ' + token }
                     });
                     const delData = await delRes.json();
-                    if (btn) btn.innerHTML = '♡';
+                    if (btn) btn.innerHTML = '?';
                 }
             } catch (err) {
                 console.error(err);
@@ -752,7 +752,7 @@
             }
         }
     </script>
-    <script src="js/auth.js?v=1787222477335"></script>
+    <script src="js/auth.js?v=1787391006"></script>
 
     <!-- Size Guide Modal -->
     <div class="size-modal-overlay" id="sizeModal" onclick="closeSizeGuide(event)">
@@ -784,7 +784,7 @@
         </div>
     </div>
 
-    <script src="js/security.js?v=1787222477335"></script>
+    <script src="js/security.js?v=1787391006"></script>
 </body>
 </html>
 

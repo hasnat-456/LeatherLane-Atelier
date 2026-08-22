@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -365,33 +365,34 @@
         }
     </style>
 
+    <link rel="canonical" href="https://leatherlaneatelier.store/admin-exchanges">
 </head>
 <body>
     <nav class="navbar admin-navbar">
         <div class="nav-brand">
-            <a href="home.html" style="display: flex; align-items: center; text-decoration: none;">
+            <a href="/home" style="display: flex; align-items: center; text-decoration: none;">
                 <img src="upload/logo.svg" alt="LeatherLane Atelier Logo" style="height: 65px; object-fit: contain; transition: transform 0.3s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
             </a>
         </div>
         <button class="mobile-menu-btn" onclick="document.querySelector('.admin-nav').classList.toggle('active')" aria-label="Menu" style="margin-left:auto;">&#9776;</button>
         <div class="admin-nav">
-            <a href="admin.html#dashboard" class="nav-item">Dashboard</a>
-            <a href="admin.html#orders" class="nav-item">Orders</a>
-            <a href="admin.html#products" class="nav-item">Products</a>
-            <a href="admin.html#deals" class="nav-item">Deals</a>
-            <a href="admin-exchanges.html?v=1787222477335" class="nav-item active" style="color: var(--primary-gold); font-weight: bold;">Exchanges</a>
-            <a href="admin.html#payment-verification" class="nav-item">Payment Verification</a>
-            <a href="admin.html#categories" class="nav-item">Categories</a>
-            <a href="admin.html#stories" class="nav-item">Stories</a>
-            <a href="admin.html#settings" class="nav-item">Settings</a>
+            <a href="/admin#dashboard" class="nav-item">Dashboard</a>
+            <a href="/admin#orders" class="nav-item">Orders</a>
+            <a href="/admin#products" class="nav-item">Products</a>
+            <a href="/admin#deals" class="nav-item">Deals</a>
+            <a href="/admin-exchanges?v=1787222477335" class="nav-item active" style="color: var(--primary-gold); font-weight: bold;">Exchanges</a>
+            <a href="/admin#payment-verification" class="nav-item">Payment Verification</a>
+            <a href="/admin#categories" class="nav-item">Categories</a>
+            <a href="/admin#stories" class="nav-item">Stories</a>
+            <a href="/admin#settings" class="nav-item">Settings</a>
             <div class="notification-wrapper" style="margin-left: 10px;">
-                <button onclick="window.location.href='admin.html#dashboard'" style="background:none; border:none; font-size:1.2rem; cursor:pointer;">&#x1F514;</button>
+                <button onclick="window.location.href='/admin#dashboard'" style="background:none; border:none; font-size:1.2rem; cursor:pointer;">&#x1F514;</button>
             </div>
             <a style="color: #ff6b6b; cursor: pointer; font-weight: bold; margin-left: 10px;" onclick="adminLogout()">Sign Out</a>
         </div>
     </nav>
 <div style="width: 100%; padding: 0.6rem 2.5rem 0.8rem 2.5rem; box-sizing: border-box; text-align: left; background-color: var(--primary-bg);">
-    <a href="home.html" style="background: none; border: none; color: #C79A52; font-size: 1.25rem; cursor: pointer; padding: 10px 0; margin-bottom: 20px; font-weight: 600; font-family: 'Poppins', sans-serif; display: inline-flex; align-items: center; text-decoration: none;">&larr; Back</a>
+    <a href="/home" style="background: none; border: none; color: #C79A52; font-size: 1.25rem; cursor: pointer; padding: 10px 0; margin-bottom: 20px; font-weight: 600; font-family: 'Poppins', sans-serif; display: inline-flex; align-items: center; text-decoration: none;">&larr; Back</a>
 </div>
 
     <div class="layout">
@@ -438,7 +439,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3 style="margin: 0;">Exchange Details <span id="mExchangeId"></span></h3>
-                <button class="close-btn" onclick="closeModal()">×</button>
+                <button class="close-btn" onclick="closeModal()">�</button>
             </div>
             <div id="modalBody"></div>
             <div id="modalActions" class="action-area"></div>
@@ -452,7 +453,7 @@
 
     <script>
         const token = localStorage.getItem('token');
-        if (!token) window.location.href = 'login.html';
+        if (!token) window.location.href = '/login';
 
         function setActive(element) {
             document.querySelectorAll('#sidebarMenu a').forEach(a => a.classList.remove('active'));
@@ -615,7 +616,7 @@
 
         document.addEventListener('DOMContentLoaded', () => loadExchanges(''));
     </script>
-    <script src="js/auth.js?v=1787222477335"></script>
+    <script src="js/auth.js?v=1787391006"></script>
 
     
     <footer style="margin-top: 4rem; padding: 2rem 1.5rem; text-align: center; color: #D8C7A6; font-size: 0.9rem; background-color: #4A1515; box-shadow: 0 -4px 15px rgba(0,0,0,0.1);">
@@ -631,7 +632,7 @@
         </div>
     </footer>
 
-    <script src="js/security.js?v=1787222477335"></script>
+    <script src="js/security.js?v=1787391006"></script>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {

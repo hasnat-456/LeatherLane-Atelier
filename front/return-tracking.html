@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -167,6 +167,7 @@
         }
     </style>
 
+    <link rel="canonical" href="https://leatherlaneatelier.store/return-tracking">
 </head>
 <body>
     <div class="container">
@@ -186,7 +187,7 @@
             </ul>
         </div>
 
-        <a href="transactions.html" class="btn-back"><i class="fas fa-arrow-left"></i> Back to Orders</a>
+        <a href="/transactions" class="btn-back"><i class="fas fa-arrow-left"></i> Back to Orders</a>
     </div>
 
     <script>
@@ -211,7 +212,7 @@
 
         async function loadTracking() {
             const token = localStorage.getItem('token');
-            if (!token) { window.location.href = 'login.html'; return; }
+            if (!token) { window.location.href = '/login'; return; }
 
             if (!returnId) {
                 document.getElementById('returnDetails').innerHTML = '<div style="color:red; grid-column:1/-1; text-align:center;">Invalid Request ID</div>';
@@ -315,7 +316,7 @@
 
         document.addEventListener('DOMContentLoaded', loadTracking);
     </script>
-    <script src="js/security.js?v=1787222477335"></script>
+    <script src="js/security.js?v=1787391006"></script>
 </body>
 </html>
 

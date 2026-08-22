@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -6,12 +6,12 @@
 
     <!-- SEO Meta Tags -->
     <meta name="description" content="Discover premium handcrafted leather bags, wallets, and accessories at LeatherLane Atelier. Experience timeless elegance and superior craftsmanship.">
-    <meta name="keywords" content="handmade leather bags, premium leather wallets, handcrafted leather accessories, LeatherLane Atelier, luxury leather goods">
+    <meta name="keywords" content="handmade Peshawari chappal, leather chappal Pakistan, handcrafted men's footwear, leather sandals Pakistan, LeatherLane Atelier">
     <meta name="author" content="LeatherLane Atelier">
     
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://www.leatherlaneatelier.com/">
+    <meta property="og:url" content="https://leatherlaneatelier.store/login">
     <meta property="og:title" content="LeatherLane Atelier | Premium Handcrafted Leather">
     <meta property="og:description" content="Discover premium handcrafted leather bags, wallets, and accessories at LeatherLane Atelier. Experience timeless elegance and superior craftsmanship.">
     <meta property="og:image" content="https://www.leatherlaneatelier.com/images/logo.png">
@@ -24,7 +24,7 @@
     <meta property="twitter:image" content="https://www.leatherlaneatelier.com/images/logo.png">
 
     <!-- Canonical Link -->
-    <link rel="canonical" href="https://www.leatherlaneatelier.com/">
+    <link rel="canonical" href="https://leatherlaneatelier.store/login">
 
     <title>Login | LeatherLane Atelier</title>
     <link rel="stylesheet" href="css/global.css?v=1787222477335">
@@ -368,7 +368,7 @@
                         <div class="form-group">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                                 <label style="margin-bottom: 0;">Password</label>
-                                <a href="forgot-password.html" style="font-size: 0.8rem; color: var(--primary-gold); text-decoration: underline;">Forgot Password?</a>
+                                <a href="/forgot-password" style="font-size: 0.8rem; color: var(--primary-gold); text-decoration: underline;">Forgot Password?</a>
                             </div>
                             <input type="password" class="form-control" id="password" placeholder="Enter your password" required>
                             <button type="button" class="password-toggle" onclick="togglePassword()">Show</button>
@@ -387,7 +387,7 @@
                         <span>OR</span>
                     </div>
                     
-                    <button type="button" class="btn-secondary" onclick="window.location.href='signup.html'">Create Account</button>
+                    <button type="button" class="btn-secondary" onclick="window.location.href='/signup'">Create Account</button>
                 </div>
                 
                 <div class="footer-copyright">
@@ -456,7 +456,7 @@
                         }
                         
                         if (data.role === 'Admin') {
-                            window.location.href = 'admin.html';
+                            window.location.href = '/admin';
                         } else {
                             handleRedirect();
                         }
@@ -533,7 +533,7 @@
                 localStorage.removeItem('pendingCartItem');
                 localStorage.removeItem('pendingItem');
                 
-                window.location.href = 'cart.html';
+                window.location.href = '/cart';
                 return;
             }
             
@@ -545,12 +545,12 @@
                 return;
             }
             
-            window.location.href = 'home.html';
+            window.location.href = '/home';
         }
 
         // Block Ctrl +/- and Ctrl+Scroll zooming
     </script>
-    <script src="js/security.js?v=1787222477335"></script>
+    <script src="js/security.js?v=1787391006"></script>
 </body>
 </html>
 
