@@ -146,7 +146,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Insert back button globally except on home, login, signup, splash
     const path = window.location.pathname.toLowerCase();
-    if (!path.includes('/home') && !path.includes('/login') && !path.includes('/signup') && !path.includes('/index')) {
+    if (path !== '/' && path !== '' && !path.includes('/home') && !path.includes('/login') && !path.includes('/signup') && !path.includes('/index')) {
         // Prevent duplicate back buttons if one already exists
         if (document.querySelector('.btn-back')) {
             return;
