@@ -24,7 +24,7 @@ namespace LeatherLane_Atelier.Controllers
         [HttpGet]
         public async Task<IActionResult> GetProducts([FromQuery] string? category, [FromQuery] string? search, [FromQuery] bool? isFeatured)
         {
-            var query = _context.Products.Where(p => p.AvailabilityStatus != "Discontinued").AsQueryable();
+            var query = _context.Products.AsNoTracking().Where(p => p.AvailabilityStatus != "Discontinued").AsQueryable();
 
             if (!string.IsNullOrEmpty(category))
                 query = query.Where(p => p.Category == category);

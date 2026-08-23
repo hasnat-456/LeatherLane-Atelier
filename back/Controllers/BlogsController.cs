@@ -23,7 +23,7 @@ namespace LeatherLane_Atelier.Controllers
         [HttpGet]
         public async Task<IActionResult> GetBlogs([FromQuery] string? category, [FromQuery] string? search, [FromQuery] bool? isFeatured)
         {
-            var query = _context.Blogs.AsQueryable();
+            var query = _context.Blogs.AsNoTracking().AsQueryable();
 
             if (!string.IsNullOrEmpty(category))
                 query = query.Where(b => b.Category == category);

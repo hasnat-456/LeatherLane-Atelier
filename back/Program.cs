@@ -13,7 +13,7 @@ using System.Text.Json.Serialization;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddControllers(options => 
+builder.Services.AddResponseCompression(options => { options.EnableForHttps = true; }); builder.Services.AddControllers(options => 
 {
     options.Filters.Add<LeatherLaneAtelier.Filters.AntiXssFilter>();
 }).AddJsonOptions(options =>
@@ -72,6 +72,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors();
+app.UseResponseCompression();
 
 // Dynamically locate the 'front' folder regardless of working directory
 var currentDir = Directory.GetCurrentDirectory();

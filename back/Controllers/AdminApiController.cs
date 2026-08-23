@@ -101,7 +101,7 @@ namespace LeatherLane_Atelier.Controllers
         [HttpGet("orders")]
         public async Task<IActionResult> GetOrders()
         {
-            var orders = await _context.Transactions
+            var orders = await _context.Transactions.AsNoTracking()
                 .Include(t => t.Items)
                 .OrderByDescending(t => t.CreatedAt)
                 .Select(t => new {
