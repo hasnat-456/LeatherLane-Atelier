@@ -161,7 +161,7 @@ if (Directory.Exists(frontPath))
                             foreach(var p in allProducts.Take(4))
                             {
                                 var img = string.IsNullOrEmpty(p.Thumbnail) ? "https://via.placeholder.com/300x250" : p.Thumbnail;
-                                sb.Append($"<div class='product-card'><a href='/product-detail?id={p.Id}' style='text-decoration: none; color: inherit;'><img src='{img}' class='product-img' style='width: 100%; height: 250px; object-fit: cover;'><div class='product-info'><div class='product-category'>{p.Category}</div><h3 class='product-title'>{p.Name}</h3><div class='product-price'>Rs {p.Price:N0}</div></div></a></div>");
+                                sb.Append($"<div class='product-card'><a href='/product-detail?id={p.Id}' style='text-decoration: none; color: inherit;'><img src='{img}' class='product-img' loading='lazy' style='width: 100%; height: 250px; object-fit: cover;'><div class='product-info'><div class='product-category'>{p.Category}</div><h3 class='product-title'>{p.Name}</h3><div class='product-price'>Rs {p.Price:N0}</div></div></a></div>");
                             }
                             sb.Append("</div></section>");
                         }
@@ -184,20 +184,48 @@ if (Directory.Exists(frontPath))
                             foreach(var p in items.Take(4))
                             {
                                 var img = string.IsNullOrEmpty(p.Thumbnail) ? "https://via.placeholder.com/300x250" : p.Thumbnail;
-                                sb.Append($"<div class='product-card'><a href='/product-detail?id={p.Id}' style='text-decoration: none; color: inherit;'><img src='{img}' class='product-img' style='width: 100%; height: 250px; object-fit: cover;'><div class='product-info'><div class='product-category'>{p.Category}</div><h3 class='product-title'>{p.Name}</h3><div class='product-price'>Rs {p.Price:N0}</div></div></a></div>");
+                                sb.Append($"<div class='product-card'><a href='/product-detail?id={p.Id}' style='text-decoration: none; color: inherit;'><img src='{img}' class='product-img' loading='lazy' style='width: 100%; height: 250px; object-fit: cover;'><div class='product-info'><div class='product-category'>{p.Category}</div><h3 class='product-title'>{p.Name}</h3><div class='product-price'>Rs {p.Price:N0}</div></div></a></div>");
                             }
                             sb.Append("</div></section>");
                         }
                         
                         var regex = new System.Text.RegularExpressions.Regex(@"<div id=""dynamicFeaturedCategories"">[\s\S]*?Loading Products\.\.\.[\s\S]*?</div>\s*</div>\s*</div>");
                         htmlContent = regex.Replace(htmlContent, @"<div id=""dynamicFeaturedCategories"">" + sb.ToString() + @"</div>");
+
+                        // --- Story SSR ---
+                        var recentStories = await dbContext.Blogs.AsNoTracking().OrderByDescending(b => b.CreatedAt).Take(3).ToListAsync();
+                        if (recentStories.Any())
+                        {
+                            var storySb = new System.Text.StringBuilder();
+                            foreach(var story in recentStories)
+                            {
+                                var sImg = string.IsNullOrEmpty(story.Image) ? "https://via.placeholder.com/400x250" : story.Image;
+                                var sCat = string.IsNullOrEmpty(story.Category) ? "Journal" : story.Category;
+                                storySb.Append($@"
+                                <div style='background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); transition: transform 0.3s; cursor: pointer;' onmouseover=""this.style.transform='translateY(-5px)'"" onmouseout=""this.style.transform='translateY(0)'"" onclick=""window.location.href='/story?id={story.Id}'"">
+                                    <img src='{sImg}' style='width: 100%; height: 250px; object-fit: cover;' loading='lazy'>
+                                    <div style='padding: 1.5rem;'>
+                                        <div style='color: var(--primary-gold); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; margin-bottom: 0.5rem;'>{sCat}</div>
+                                        <h4 style='font-family: var(--font-heading); color: var(--primary-bg); font-size: 1.4rem; margin: 0 0 1rem 0;'>{story.Title}</h4>
+                                        <p style='color: #666; font-size: 0.95rem; line-height: 1.5; margin: 0;'>{story.Excerpt ?? ""}</p>
+                                    </div>
+                                </div>");
+                            }
+                            
+                            var storyRegex = new System.Text.RegularExpressions.Regex(@"<div id=""dynamicJournalGrid""[^>]*>[sS]*?</div>");
+                            htmlContent = storyRegex.Replace(htmlContent, @"<div id=""dynamicJournalGrid"" style=""display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 2rem; max-width: 1200px; margin: 0 auto;"">" + storySb.ToString() + @"</div>");
+                            
+                            // Make sure the section is visible
+                            htmlContent = htmlContent.Replace(@"id=""atelierJournalSection"" style=""background-color: #F8F5F2; padding: 4rem 3rem; text-align: left; display: none;""", @"id=""atelierJournalSection"" style=""background-color: #F8F5F2; padding: 4rem 3rem; text-align: left; display: block;""");
+                        }
+
                     }
                     else if (path.Equals("/products.html", StringComparison.OrdinalIgnoreCase))
                     {
                         foreach(var p in allProducts)
                         {
                             var img = string.IsNullOrEmpty(p.Thumbnail) ? "https://via.placeholder.com/300x250" : p.Thumbnail;
-                            sb.Append($"<div class='product-card' data-category='{p.Category?.ToLower()}' data-price='{p.Price}'><a href='/product-detail?id={p.Id}' style='text-decoration: none; color: inherit;'><img src='{img}' class='product-img' style='width: 100%; height: 250px; object-fit: cover;'><div class='product-info'><div class='product-category'>{p.Category}</div><h3 class='product-title'>{p.Name}</h3><div class='product-price'>Rs {p.Price:N0}</div></div></a></div>");
+                            sb.Append($"<div class='product-card' data-category='{p.Category?.ToLower()}' data-price='{p.Price}'><a href='/product-detail?id={p.Id}' style='text-decoration: none; color: inherit;'><img src='{img}' class='product-img' loading='lazy' style='width: 100%; height: 250px; object-fit: cover;'><div class='product-info'><div class='product-category'>{p.Category}</div><h3 class='product-title'>{p.Name}</h3><div class='product-price'>Rs {p.Price:N0}</div></div></a></div>");
                         }
                         
                         var targetString = @"<div style=""padding: 40px; text-align: center; color:#666; grid-column: 1/-1;"">Loading collection...</div>";
