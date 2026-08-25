@@ -1771,3 +1771,60 @@ async function saveSliderSettings() {
         btn.innerText = 'Save Sliders';
     }
 }
+
+
+async function sendAppBroadcast(e) {
+    e.preventDefault();
+    const btn = document.getElementById('broadcastBtn');
+    const msg = document.getElementById('broadcastMsg');
+    
+    if (!document.getElementById('broadcastInApp').checked && !document.getElementById('broadcastEmail').checked) {
+        msg.textContent = 'Please select at least one method (In-App or Email).';
+        msg.style.display = 'block';
+        msg.style.backgroundColor = '#ffe5e5';
+        msg.style.color = '#d63031';
+        return;
+    }
+    
+    btn.disabled = true;
+    btn.textContent = 'Broadcasting...';
+    msg.style.display = 'none';
+    
+    try {
+        const payload = {
+            title: document.getElementById('broadcastTitle').value,
+            message: document.getElementById('broadcastMessage').value,
+            actionUrl: document.getElementById('broadcastUrl').value,
+            sendEmail: document.getElementById('broadcastEmail').checked,
+            sendInApp: document.getElementById('broadcastInApp').checked
+        };
+        
+        const res = await fetch('/api/admin/broadcast', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('token') },
+            body: JSON.stringify(payload)
+        });
+        
+        const data = await res.json();
+        if (res.ok) {
+            msg.textContent = data.message;
+            msg.style.backgroundColor = '#e5ffe5';
+            msg.style.color = '#27ae60';
+            document.getElementById('broadcastTitle').value = '';
+            document.getElementById('broadcastMessage').value = '';
+            document.getElementById('broadcastUrl').value = '';
+        } else {
+            msg.textContent = data.message || 'Failed to send broadcast.';
+            msg.style.backgroundColor = '#ffe5e5';
+            msg.style.color = '#d63031';
+        }
+    } catch (err) {
+        msg.textContent = 'Error sending broadcast.';
+        msg.style.backgroundColor = '#ffe5e5';
+        msg.style.color = '#d63031';
+    } finally {
+        msg.style.display = 'block';
+        btn.disabled = false;
+        btn.textContent = 'Broadcast to All Customers';
+    }
+}

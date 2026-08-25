@@ -384,6 +384,58 @@ namespace LeatherLane_Atelier.Controllers
             return Ok(new { message = "Manual payment settings updated successfully." });
         }
 
+        
+        [HttpPost("broadcast")]
+        public async Task<IActionResult> SendBroadcast([FromBody] BroadcastRequest req)
+        {
+            var users = await _context.Users.ToListAsync();
+            
+            if (req.SendInApp)
+            {
+                var now = DateTime.UtcNow;
+                var notifs = users.Select(u => new Notification
+                {
+                    Title = req.Title,
+                    Message = req.Message,
+                    ActionUrl = req.ActionUrl,
+                    UserId = u.Id
+                }).ToList();
+                
+                _context.Notifications.AddRange(notifs);
+                await _context.SaveChangesAsync();
+            }
+            
+            if (req.SendEmail)
+            {
+                var emailSvc = HttpContext.RequestServices.GetService(typeof(LeatherLane_Atelier.Services.IEmailService)) as LeatherLane_Atelier.Services.IEmailService;
+                if (emailSvc != null)
+                {
+                    _ = Task.Run(async () =>
+                    {
+                        foreach (var u in users)
+                        {
+                            try {
+                                await emailSvc.SendEmailAsync(u.Email, req.Title, req.Message);
+                                await Task.Delay(500); // Small delay to prevent SMTP throttling
+                            } catch {}
+                        }
+                    });
+                }
+            }
+            
+            return Ok(new { message = $"Broadcast successfully sent to {users.Count} customers." });
+        }
+
+        public class BroadcastRequest
+        {
+            public string Title { get; set; } = string.Empty;
+            public string Message { get; set; } = string.Empty;
+            public string? ActionUrl { get; set; }
+            public bool SendEmail { get; set; }
+            public bool SendInApp { get; set; }
+        }
+
+
         // Category Management Endpoints
         [HttpGet("categories")]
         public async Task<IActionResult> GetCategories()
