@@ -189,7 +189,19 @@ namespace LeatherLane_Atelier.Controllers
 
                 // Emails
                 _ = _emailService.SendEmailAsync("leatherlaneatelier@gmail.com", "New Order Received", $"Order #{transaction.Id} was placed.");
-                _ = _emailService.SendEmailAsync(userObj.Email, "Order Confirmation", $"Your order #{transaction.Id} is confirmed.");
+                
+                var orderItems = transaction.Items.Where(i => i.ProductId.HasValue).Select(i => new LeatherLane_Atelier.Services.OrderItemInfo { Name = i.Name, Quantity = i.Quantity, Price = i.Price }).ToList();
+                var emailHtml = LeatherLane_Atelier.Services.EmailTemplateBuilder.BuildOrderEmail(
+                    "🛍️ Order Received", 
+                    userObj.Name, 
+                    transaction.Id.ToString(), 
+                    $"Thank you for shopping with LeatherLane Atelier. Your order #{transaction.Id} has been received and is awaiting payment/processing.",
+                    orderItems,
+                    250m, // Delivery fee mockup, ideally fetched from transaction
+                    transaction.TotalAmount,
+                    $"/order-tracking.html?id={transaction.Id}"
+                );
+                _ = _emailService.SendEmailAsync(userObj.Email, "Your Order has been received! (#" + transaction.Id + ")", emailHtml);
             }
 
             // Clear cart from DB
@@ -288,7 +300,14 @@ namespace LeatherLane_Atelier.Controllers
                     ActionUrl = "transactions.html",
                     UserId = userId
                 });
-                _ = _emailService.SendEmailAsync(userObj.Email, "Order Cancelled", $"Your order #{transaction.Id} has been cancelled.");
+                
+                var emailHtml = LeatherLane_Atelier.Services.EmailTemplateBuilder.BuildStandardEmail(
+                    "❌ Order Cancelled", 
+                    userObj.Name, 
+                    $"Your order #{transaction.Id} has been successfully cancelled as requested.",
+                    $"/transactions.html"
+                );
+                _ = _emailService.SendEmailAsync(userObj.Email, "Order Cancelled (#" + transaction.Id + ")", emailHtml);
             }
 
             await _context.SaveChangesAsync();

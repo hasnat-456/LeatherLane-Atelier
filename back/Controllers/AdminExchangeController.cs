@@ -132,7 +132,8 @@ namespace LeatherLane_Atelier.Controllers
                     ActionUrl = $"exchange-tracking.html?id={id}",
                     UserId = customer.Id
                 });
-                _ = _emailService.SendEmailAsync(customer.Email, "Exchange Approved", $"Your exchange request for Order #{request.OrderId} was approved.");
+                var emailHtml = LeatherLane_Atelier.Services.EmailTemplateBuilder.BuildStandardEmail("✅ Exchange Approved", customer.Name, $"Your exchange request for Order #{request.OrderId} was approved.", "/transactions.html");
+                _ = _emailService.SendEmailAsync(customer.Email, "Exchange Approved (#" + request.OrderId + ")", emailHtml);
             }
 
             await _context.SaveChangesAsync();
@@ -177,7 +178,8 @@ namespace LeatherLane_Atelier.Controllers
                     ActionUrl = $"exchange-tracking.html?id={id}",
                     UserId = customer.Id
                 });
-                _ = _emailService.SendEmailAsync(customer.Email, "Exchange Rejected", $"Your exchange request for Order #{request.OrderId} was rejected. Reason: {dto.Reason}");
+                var emailHtml = LeatherLane_Atelier.Services.EmailTemplateBuilder.BuildStandardEmail("❌ Exchange Request Update", customer.Name, $"Your exchange request for Order #{request.OrderId} was rejected. Reason: {dto.Reason}", "/transactions.html");
+                _ = _emailService.SendEmailAsync(customer.Email, "Exchange Rejected (#" + request.OrderId + ")", emailHtml);
             }
 
             await _context.SaveChangesAsync();

@@ -211,7 +211,24 @@ namespace LeatherLane_Atelier.Controllers
                 var emailSvc = HttpContext.RequestServices.GetService(typeof(LeatherLane_Atelier.Services.IEmailService)) as LeatherLane_Atelier.Services.IEmailService;
                 if (emailSvc != null)
                 {
-                    _ = emailSvc.SendEmailAsync(customer.Email, notifTitle, notifMsg);
+                    
+                    var fancyTitle = notifTitle;
+                    if (req.Status == "Preparing Order") fancyTitle = "🔄 Order Being Prepared";
+                    else if (req.Status == "Packed") fancyTitle = "📦 Order Packed";
+                    else if (req.Status == "Shipped" || req.Status == "Handed to Courier") fancyTitle = "🚚 Order Shipped";
+                    else if (req.Status == "In Transit") fancyTitle = "🚚 Order In Transit";
+                    else if (req.Status == "Out for Delivery") fancyTitle = "📍 Out for Delivery";
+                    else if (req.Status == "Delivered") fancyTitle = "🎉 Order Delivered";
+                    else if (req.Status == "Cancelled") fancyTitle = "❌ Order Cancelled";
+                    else fancyTitle = "📋 Order Update";
+
+                    var emailHtml = LeatherLane_Atelier.Services.EmailTemplateBuilder.BuildStandardEmail(
+                        fancyTitle, 
+                        customer.Name, 
+                        notifMsg,
+                        $"/order-tracking.html?id={transaction.Id}", "Track Order"
+                    );
+                    _ = emailSvc.SendEmailAsync(customer.Email, "Order Status Update (#" + transaction.Id + ")", emailHtml);
                 }
             }
             // ---> END INJECTED LOGIC <---
@@ -415,7 +432,14 @@ namespace LeatherLane_Atelier.Controllers
                         foreach (var u in users)
                         {
                             try {
-                                await emailSvc.SendEmailAsync(u.Email, req.Title, req.Message);
+                                
+                                var emailHtml = LeatherLane_Atelier.Services.EmailTemplateBuilder.BuildStandardEmail(
+                                    "📢 " + req.Title, 
+                                    u.Name, 
+                                    req.Message,
+                                    req.ActionUrl, "Shop Now"
+                                );
+                                await emailSvc.SendEmailAsync(u.Email, req.Title, emailHtml);
                                 await Task.Delay(500); // Small delay to prevent SMTP throttling
                             } catch {}
                         }
