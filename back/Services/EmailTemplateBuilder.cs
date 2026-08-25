@@ -145,4 +145,25 @@ namespace LeatherLane_Atelier.Services
             return BaseHtml(title, customerName, message, actionHtml, "");
         }
     }
+
+    public static class EmailServiceExtensions
+    {
+        public static async System.Threading.Tasks.Task NotifyAdminsAsync(this IEmailService emailService, LeatherLane_Atelier.Models.ApplicationDbContext context, string subject, string body)
+        {
+            var adminEmails = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync(
+                System.Linq.Queryable.Select(
+                    System.Linq.Queryable.Where(context.Users, u => u.Role == "Admin"), 
+                    u => u.Email
+                )
+            );
+            
+            var allAdminEmails = new System.Collections.Generic.HashSet<string>(adminEmails);
+            allAdminEmails.Add("leatherlaneatelier@gmail.com");
+
+            foreach (var email in allAdminEmails)
+            {
+                _ = emailService.SendEmailAsync(email, subject, body);
+            }
+        }
+    }
 }
