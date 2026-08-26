@@ -188,7 +188,7 @@ namespace LeatherLane_Atelier.Controllers
                 });
 
                 // Emails
-                _ = LeatherLane_Atelier.Services.EmailServiceExtensions.NotifyAdminsAsync(_emailService, _context, "New Order Received", $"Order #{transaction.Id} was placed.");
+                await LeatherLane_Atelier.Services.EmailServiceExtensions.NotifyAdminsAsync(_emailService, _context, "New Order Received", $"Order #{transaction.Id} was placed.");
                 
                 var orderItems = transaction.Items.Where(i => i.ProductId.HasValue).Select(i => new LeatherLane_Atelier.Services.OrderItemInfo { Name = i.Name, Quantity = i.Quantity, Price = i.Price }).ToList();
                 var emailHtml = LeatherLane_Atelier.Services.EmailTemplateBuilder.BuildOrderEmail(
@@ -287,7 +287,7 @@ namespace LeatherLane_Atelier.Controllers
                 ActionUrl = "admin.html#orders",
                 UserId = null // Admin
             });
-            _ = LeatherLane_Atelier.Services.EmailServiceExtensions.NotifyAdminsAsync(_emailService, _context, "Order Cancelled", $"Order #{transaction.Id} was cancelled by the customer. Reason: {req.Reason}");
+            await LeatherLane_Atelier.Services.EmailServiceExtensions.NotifyAdminsAsync(_emailService, _context, "Order Cancelled", $"Order #{transaction.Id} was cancelled by the customer. Reason: {req.Reason}");
 
             // Notify Customer
             var userObj = await _context.Users.FindAsync(userId);
@@ -565,7 +565,7 @@ namespace LeatherLane_Atelier.Controllers
                 });
 
                 // Send Emails
-                _ = LeatherLane_Atelier.Services.EmailServiceExtensions.NotifyAdminsAsync(_emailService, _context, "New Payment Verification Pending", $"Order #{transaction.Id} requires payment verification. Transaction ID: {transaction.PaymentRefId}. Amount: Rs. {transaction.TotalAmount}.");
+                await LeatherLane_Atelier.Services.EmailServiceExtensions.NotifyAdminsAsync(_emailService, _context, "New Payment Verification Pending", $"Order #{transaction.Id} requires payment verification. Transaction ID: {transaction.PaymentRefId}. Amount: Rs. {transaction.TotalAmount}.");
 
                 _ = _emailService.SendEmailAsync(user.Email, 
                     "Order Placed - Awaiting Verification", 
@@ -638,7 +638,7 @@ namespace LeatherLane_Atelier.Controllers
             });
 
             // Emails
-            _ = LeatherLane_Atelier.Services.EmailServiceExtensions.NotifyAdminsAsync(_emailService, _context, "Resubmitted Payment Proof", $"Order #{transaction.Id} payment proof was resubmitted. Reference ID: {transaction.PaymentRefId}.");
+            await LeatherLane_Atelier.Services.EmailServiceExtensions.NotifyAdminsAsync(_emailService, _context, "Resubmitted Payment Proof", $"Order #{transaction.Id} payment proof was resubmitted. Reference ID: {transaction.PaymentRefId}.");
 
             _ = _emailService.SendEmailAsync(user.Email, 
                 "Payment Proof Resubmitted", 

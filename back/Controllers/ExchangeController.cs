@@ -242,7 +242,7 @@ namespace LeatherLane_Atelier.Controllers
                 ActionUrl = $"admin-exchange.html?id={exchangeRequest.ExchangeId}",
                 UserId = null // Admin
             });
-            _ = LeatherLane_Atelier.Services.EmailServiceExtensions.NotifyAdminsAsync(_emailService, _context, "New Exchange Request", $"A new exchange request was submitted for Order #{order.Id}.");
+            await LeatherLane_Atelier.Services.EmailServiceExtensions.NotifyAdminsAsync(_emailService, _context, "New Exchange Request", $"A new exchange request was submitted for Order #{order.Id}.");
 
             // Notification for Customer
             _context.Notifications.Add(new Notification
@@ -312,7 +312,7 @@ namespace LeatherLane_Atelier.Controllers
                 ActionUrl = $"admin-exchange.html?id={id}",
                 UserId = null
             });
-            _ = LeatherLane_Atelier.Services.EmailServiceExtensions.NotifyAdminsAsync(_emailService, _context, "Exchange Tracking Submitted", $"Tracking for Exchange #{id} is: {dto.CourierName} {dto.TrackingNumber}");
+            await LeatherLane_Atelier.Services.EmailServiceExtensions.NotifyAdminsAsync(_emailService, _context, "Exchange Tracking Submitted", $"Tracking for Exchange #{id} is: {dto.CourierName} {dto.TrackingNumber}");
 
             var userObj = await _context.Users.FindAsync(userId);
             if (userObj != null)
