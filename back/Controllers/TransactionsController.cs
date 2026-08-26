@@ -567,9 +567,13 @@ namespace LeatherLane_Atelier.Controllers
                 // Send Emails
                 await LeatherLane_Atelier.Services.EmailServiceExtensions.NotifyAdminsAsync(_emailService, _context, "New Payment Verification Pending", $"Order #{transaction.Id} requires payment verification. Transaction ID: {transaction.PaymentRefId}. Amount: Rs. {transaction.TotalAmount}.");
 
-                _ = _emailService.SendEmailAsync(user.Email, 
-                    "Order Placed - Awaiting Verification", 
-                    $"Your payment proof has been received and is awaiting verification. Once verified, your order #{transaction.Id} will automatically move to Order Confirmed.");
+                var details = new System.Collections.Generic.Dictionary<string, string> {
+                    { "Order No.", $"#{transaction.Id}" },
+                    { "Total Amount", $"Rs. {transaction.TotalAmount:N2}" },
+                    { "Status", "Awaiting Verification" }
+                };
+                var htmlEmail = LeatherLane_Atelier.Services.EmailTemplateBuilder.BuildStandardEmail("Order Placed - Awaiting Verification", user.Name, "Your payment proof has been received and is awaiting verification.", $"/order-tracking?id={transaction.Id}", "Track Order", details);
+                _ = _emailService.SendEmailAsync(user.Email, "Order Placed - Awaiting Verification", htmlEmail);
 
                 // Clear Cart
                 var cartItems = await _context.CartItems.Where(c => c.UserId == userId).ToListAsync();
@@ -640,9 +644,13 @@ namespace LeatherLane_Atelier.Controllers
             // Emails
             await LeatherLane_Atelier.Services.EmailServiceExtensions.NotifyAdminsAsync(_emailService, _context, "Resubmitted Payment Proof", $"Order #{transaction.Id} payment proof was resubmitted. Reference ID: {transaction.PaymentRefId}.");
 
-            _ = _emailService.SendEmailAsync(user.Email, 
-                "Payment Proof Resubmitted", 
-                $"Your updated payment proof for Order #{transaction.Id} was received and is awaiting verification.");
+            var details = new System.Collections.Generic.Dictionary<string, string> {
+                    { "Order No.", $"#{transaction.Id}" },
+                    { "Total Amount", $"Rs. {transaction.TotalAmount:N2}" },
+                    { "Status", "Awaiting Verification" }
+                };
+                var htmlEmail = LeatherLane_Atelier.Services.EmailTemplateBuilder.BuildStandardEmail("Payment Proof Resubmitted", user.Name, "Your updated payment proof was received and is awaiting verification.", $"/order-tracking?id={transaction.Id}", "Track Order", details);
+                _ = _emailService.SendEmailAsync(user.Email, "Payment Proof Resubmitted", htmlEmail);
 
             await _context.SaveChangesAsync();
 

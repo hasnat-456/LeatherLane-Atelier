@@ -255,7 +255,12 @@ namespace LeatherLane_Atelier.Controllers
             var userObj = await _context.Users.FindAsync(userId);
             if (userObj != null)
             {
-                _ = _emailService.SendEmailAsync(userObj.Email, "Exchange Request Submitted", $"We have received your exchange request for Order #{order.Id}. Our team will review it shortly.");
+                var details = new System.Collections.Generic.Dictionary<string, string> {
+                    { "Order No.", $"#{order.Id}" },
+                    { "Status", "Request Submitted" }
+                };
+                var htmlEmail = LeatherLane_Atelier.Services.EmailTemplateBuilder.BuildStandardEmail("Exchange Request Submitted", userObj.Name, "We have received your exchange request. Our team will review it shortly.", $"/exchange-tracking?id={order.Id}", "Track Status", details);
+                _ = _emailService.SendEmailAsync(userObj.Email, "Exchange Request Submitted", htmlEmail);
             }
 
             await _context.SaveChangesAsync();
@@ -324,7 +329,13 @@ namespace LeatherLane_Atelier.Controllers
                     ActionUrl = $"exchange-tracking.html?id={id}",
                     UserId = userId
                 });
-                _ = _emailService.SendEmailAsync(userObj.Email, "Tracking Received", $"We have received your return tracking details: {dto.CourierName} {dto.TrackingNumber}. We will notify you once it passes inspection.");
+                var details = new System.Collections.Generic.Dictionary<string, string> {
+                    { "Courier", dto.CourierName },
+                    { "Tracking Number", dto.TrackingNumber },
+                    { "Status", "Tracking Received" }
+                };
+                var htmlEmail = LeatherLane_Atelier.Services.EmailTemplateBuilder.BuildStandardEmail("Tracking Received", userObj.Name, "We have received your return tracking details. We will notify you once it passes inspection.", $"/exchange-tracking?id={id}", "Track Status", details);
+                _ = _emailService.SendEmailAsync(userObj.Email, "Tracking Received", htmlEmail);
             }
 
             await _context.SaveChangesAsync();

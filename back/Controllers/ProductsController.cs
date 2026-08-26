@@ -295,7 +295,12 @@ namespace LeatherLane_Atelier.Controllers
                 var userObj = await _context.Users.FindAsync(userId);
                 if (userObj != null && emailService != null)
                 {
-                    _ = emailService.SendEmailAsync(userObj.Email, "Thank You For Your Review!", $"We appreciate your {dto.Rating}-star review on {product.Name}. Your feedback helps us maintain our timeless craftsmanship!");
+                    var details = new System.Collections.Generic.Dictionary<string, string> {
+                    { "Product", product.Name },
+                    { "Rating", $"{dto.Rating} Stars" }
+                };
+                var htmlEmail = LeatherLane_Atelier.Services.EmailTemplateBuilder.BuildStandardEmail("Thank You For Your Review!", userObj.Name, "We appreciate your review. Your feedback helps us maintain our timeless craftsmanship!", "/products", "Shop New Arrivals", details);
+                _ = emailService.SendEmailAsync(userObj.Email, "Thank You For Your Review!", htmlEmail);
                 }
             }
 
