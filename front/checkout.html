@@ -461,7 +461,7 @@
             <p style="color: #666; margin-bottom: 1rem; font-size: 0.9rem;">Search or click on the map to pinpoint your location.</p>
             
             <div style="display: flex; gap: 10px; margin-bottom: 1rem;">
-                <input type="text" id="mapSearchInput" class="form-control" placeholder="Search for city, street, landmark...">
+                <input type="text" id="mapSearchInput" class="form-control" placeholder="Search for city, street, landmark..." onkeydown="if(event.key === 'Enter') { event.preventDefault(); searchMapLocation(); }">
                 <button type="button" onclick="searchMapLocation()" class="btn-shopping" style="margin-top: 0; padding: 12px 20px; width: auto; white-space: nowrap;">Search</button>
             </div>
 
