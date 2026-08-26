@@ -162,7 +162,8 @@ namespace LeatherLane_Atelier.Services
 
             foreach (var email in allAdminEmails)
             {
-                _ = emailService.SendEmailAsync(email, subject, body);
+                var htmlBody = EmailTemplateBuilder.BuildStandardEmail(subject, "Admin", body, "/admin.html", "Go to Dashboard");
+                _ = emailService.SendEmailAsync(email, subject, htmlBody);
             }
         }
     }

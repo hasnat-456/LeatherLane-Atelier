@@ -81,7 +81,8 @@ namespace LeatherLane_Atelier.Controllers
                                 ActionUrl = $"product-detail.html?id={productId}",
                                 UserId = u.Id
                             });
-                            _ = emailSvc.SendEmailAsync(u.Email, "New Product Alert!", $"Hi {u.Name},\n\nWe just added a new product to our store: {productName}. Visit our website to see more details!");
+                            var htmlEmail = LeatherLane_Atelier.Services.EmailTemplateBuilder.BuildStandardEmail("📢 New Product Alert!", u.Name, $"We just added a new product to our store: <b>{productName}</b>. Visit our website to see more details!", "/products.html", "Shop Now");
+                            _ = emailSvc.SendEmailAsync(u.Email, "New Product Alert!", htmlEmail);
                         }
                         await db.SaveChangesAsync();
                     }
