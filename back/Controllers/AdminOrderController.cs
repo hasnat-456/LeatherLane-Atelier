@@ -87,7 +87,7 @@ namespace LeatherLane_Atelier.Controllers
                     });
 
                     var details = new System.Collections.Generic.Dictionary<string, string> {
-                    { "Order No.", $"#{id}" },
+                    { "Order No.", LeatherLane_Atelier.Services.OrderHelper.FormatOrderNumber(id) },
                     { "Status", dto.Status }
                 };
                 var htmlEmail = LeatherLane_Atelier.Services.EmailTemplateBuilder.BuildStandardEmail($"Order {dto.Status}", customer.Name, message, $"/order-tracking?id={id}", "Track Order", details);

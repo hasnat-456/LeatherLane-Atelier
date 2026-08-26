@@ -256,7 +256,7 @@ namespace LeatherLane_Atelier.Controllers
             if (userObj != null)
             {
                 var details = new System.Collections.Generic.Dictionary<string, string> {
-                    { "Order No.", $"#{order.Id}" },
+                    { "Order No.", LeatherLane_Atelier.Services.OrderHelper.FormatOrderNumber(order.Id) },
                     { "Status", "Request Submitted" }
                 };
                 var htmlEmail = LeatherLane_Atelier.Services.EmailTemplateBuilder.BuildStandardEmail("Exchange Request Submitted", userObj.Name, "We have received your exchange request. Our team will review it shortly.", $"/exchange-tracking?id={order.Id}", "Track Status", details);

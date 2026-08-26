@@ -510,7 +510,7 @@
             let html = `
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
                     <div><strong>Customer:</strong> ${data.customer.name} (${data.customer.email})</div>
-                    <div><strong>Order ID:</strong> #${data.orderId}</div>
+                    <div><strong>Order ID:</strong> ${data.orderNumber || '#' + data.orderId}</div>
                     <div><strong>Original Item:</strong> ${data.originalProduct.name}</div>
                     <div><strong>Requested Replacement:</strong> ${data.replacementProduct ? data.replacementProduct.name : 'N/A'}</div>
                     <div><strong>Reason:</strong> ${data.reason} ${data.otherReason ? `(${data.otherReason})` : ''}</div>

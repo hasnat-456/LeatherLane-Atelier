@@ -226,7 +226,7 @@ namespace LeatherLane_Atelier.Controllers
                         UserId = customer.Id
                     });
                     var details = new System.Collections.Generic.Dictionary<string, string> {
-                    { "Order No.", $"#{request.OrderId}" },
+                    { "Order No.", LeatherLane_Atelier.Services.OrderHelper.FormatOrderNumber(request.OrderId) },
                     { "Status", "Inspection Passed" }
                 };
                 var htmlEmail = LeatherLane_Atelier.Services.EmailTemplateBuilder.BuildStandardEmail("Exchange Inspection Passed", customer.Name, "Good news! Your returned item has arrived and passed inspection. We are packing your replacement now.", $"/exchange-tracking?id={id}", "Track Replacement", details);
@@ -254,7 +254,7 @@ namespace LeatherLane_Atelier.Controllers
                         UserId = customer.Id
                     });
                     var details = new System.Collections.Generic.Dictionary<string, string> {
-                    { "Order No.", $"#{request.OrderId}" },
+                    { "Order No.", LeatherLane_Atelier.Services.OrderHelper.FormatOrderNumber(request.OrderId) },
                     { "Reason", dto.Reason },
                     { "Status", "Inspection Failed" }
                 };
@@ -370,7 +370,7 @@ namespace LeatherLane_Atelier.Controllers
                     UserId = customer.Id
                 });
                 var details = new System.Collections.Generic.Dictionary<string, string> {
-                    { "Order No.", $"#{request.OrderId}" },
+                    { "Order No.", LeatherLane_Atelier.Services.OrderHelper.FormatOrderNumber(request.OrderId) },
                     { "Status", "Delivered" }
                 };
                 var htmlEmail = LeatherLane_Atelier.Services.EmailTemplateBuilder.BuildStandardEmail("Replacement Delivered", customer.Name, "Your replacement item has been delivered. Thank you for your patience.", $"/exchange-tracking?id={id}", "View Details", details);

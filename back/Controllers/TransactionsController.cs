@@ -188,13 +188,13 @@ namespace LeatherLane_Atelier.Controllers
                 });
 
                 // Emails
-                await LeatherLane_Atelier.Services.EmailServiceExtensions.NotifyAdminsAsync(_emailService, _context, "New Order Received", $"Order #{transaction.Id} was placed.");
+                await LeatherLane_Atelier.Services.EmailServiceExtensions.NotifyAdminsAsync(_emailService, _context, "New Order Received",  $"Order {LeatherLane_Atelier.Services.OrderHelper.FormatOrderNumber(transaction.Id)} was placed.");
                 
                 var orderItems = transaction.Items.Where(i => i.ProductId.HasValue).Select(i => new LeatherLane_Atelier.Services.OrderItemInfo { Name = i.Name, Quantity = i.Quantity, Price = i.Price }).ToList();
                 var emailHtml = LeatherLane_Atelier.Services.EmailTemplateBuilder.BuildOrderEmail(
                     "🛍️ Order Received", 
                     userObj.Name, 
-                    transaction.Id.ToString(), 
+                    LeatherLane_Atelier.Services.OrderHelper.FormatOrderNumber(transaction.Id), 
                     $"Thank you for shopping with LeatherLane Atelier. Your order #{transaction.Id} has been received and is awaiting payment/processing.",
                     orderItems,
                     250m, // Delivery fee mockup, ideally fetched from transaction
@@ -568,7 +568,7 @@ namespace LeatherLane_Atelier.Controllers
                 await LeatherLane_Atelier.Services.EmailServiceExtensions.NotifyAdminsAsync(_emailService, _context, "New Payment Verification Pending", $"Order #{transaction.Id} requires payment verification. Transaction ID: {transaction.PaymentRefId}. Amount: Rs. {transaction.TotalAmount}.");
 
                 var details = new System.Collections.Generic.Dictionary<string, string> {
-                    { "Order No.", $"#{transaction.Id}" },
+                    { "Order No.", LeatherLane_Atelier.Services.OrderHelper.FormatOrderNumber(transaction.Id) },
                     { "Total Amount", $"Rs. {transaction.TotalAmount:N2}" },
                     { "Status", "Awaiting Verification" }
                 };
@@ -645,7 +645,7 @@ namespace LeatherLane_Atelier.Controllers
             await LeatherLane_Atelier.Services.EmailServiceExtensions.NotifyAdminsAsync(_emailService, _context, "Resubmitted Payment Proof", $"Order #{transaction.Id} payment proof was resubmitted. Reference ID: {transaction.PaymentRefId}.");
 
             var details = new System.Collections.Generic.Dictionary<string, string> {
-                    { "Order No.", $"#{transaction.Id}" },
+                    { "Order No.", LeatherLane_Atelier.Services.OrderHelper.FormatOrderNumber(transaction.Id) },
                     { "Total Amount", $"Rs. {transaction.TotalAmount:N2}" },
                     { "Status", "Awaiting Verification" }
                 };

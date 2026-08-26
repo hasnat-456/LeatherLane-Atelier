@@ -644,7 +644,7 @@ function renderPendingPayments(payments) {
 
         html += `
             <tr>
-                <td style="font-weight: bold;">#${p.id}</td>
+                <td style="font-weight: bold;">${p.orderNumber || '#' + p.id}</td>
                 <td>${dateStr}</td>
                 <td>${p.customer}</td>
                 <td>Rs. ${p.amount.toFixed(2)}</td>
@@ -952,7 +952,7 @@ function renderAdminCategoriesTable() {
         
         html += `
             <tr>
-                <td style="font-weight: bold;">#${c.id}</td>
+                <td style="font-weight: bold;">${c.orderNumber || '#' + c.id}</td>
                 <td>${c.name}</td>
                 <td>${statusBadge}</td>
                 <td>${c.displayOrder}</td>

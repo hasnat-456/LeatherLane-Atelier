@@ -230,7 +230,7 @@
                     const detailsHtml = `
                         <div class="details-col">
                             <div><span class="details-label">Return ID:</span> #${data.returnId}</div>
-                            <div><span class="details-label">Order ID:</span> #${data.orderId}</div>
+                            <div><span class="details-label">Order ID:</span> ${data.orderNumber || '#' + data.orderId}</div>
                             <div><span class="details-label">Request Date:</span> ${new Date(data.requestDate).toLocaleDateString()}</div>
                             <div><span class="details-label">Status:</span> <strong style="color: var(--primary-gold);">${data.status}</strong></div>
                         </div>

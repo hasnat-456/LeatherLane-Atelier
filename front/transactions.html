@@ -472,7 +472,7 @@
                             <div class="tx-card">
                                 <div class="tx-header" style="display: flex; flex-direction: column; gap: 0.8rem; border-bottom: 1px solid #ddd; padding-bottom: 1rem; margin-bottom: 1.5rem;">
                                     <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; gap: 10px; flex-wrap: wrap;">
-                                        <span style="color: #333; font-weight: 600; font-size: 1rem;">Date: ${dateStr}</span>
+                                        <span style="color: #333; font-weight: 600; font-size: 1rem;">Order ${tx.orderNumber || '#' + tx.id}</span> <span style="font-size: 0.85rem; color: #666;">(${dateStr})</span>
                                         <span class="tx-status" style="background-color: ${badgeBg}; color: ${badgeColor}; font-size: 0.8rem; text-align: right;">${tx.status}</span>
                                     </div>
                                     <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; gap: 10px; flex-wrap: wrap;">

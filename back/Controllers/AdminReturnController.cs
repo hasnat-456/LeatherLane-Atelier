@@ -73,7 +73,7 @@ namespace LeatherLane_Atelier.Controllers
                     UserId = customer.Id
                 });
                 var details = new System.Collections.Generic.Dictionary<string, string> {
-                    { "Order No.", $"#{req.OrderId}" },
+                    { "Order No.", LeatherLane_Atelier.Services.OrderHelper.FormatOrderNumber(req.OrderId) },
                     { "Status", "Return Approved" }
                 };
                 var htmlEmail = LeatherLane_Atelier.Services.EmailTemplateBuilder.BuildStandardEmail("Return Approved", customer.Name, "Your return request has been approved. A pickup will be scheduled soon.", $"/return-tracking?id={id}", "Track Return", details);
@@ -119,7 +119,7 @@ namespace LeatherLane_Atelier.Controllers
                     UserId = customer.Id
                 });
                 var details = new System.Collections.Generic.Dictionary<string, string> {
-                    { "Order No.", $"#{req.OrderId}" },
+                    { "Order No.", LeatherLane_Atelier.Services.OrderHelper.FormatOrderNumber(req.OrderId) },
                     { "Reason", dto.Reason },
                     { "Status", "Rejected" }
                 };
@@ -196,7 +196,7 @@ namespace LeatherLane_Atelier.Controllers
                         UserId = customer.Id
                     });
                     var details = new System.Collections.Generic.Dictionary<string, string> {
-                    { "Order No.", $"#{req.OrderId}" },
+                    { "Order No.", LeatherLane_Atelier.Services.OrderHelper.FormatOrderNumber(req.OrderId) },
                     { "Reason", dto.Reason },
                     { "Status", "Inspection Failed" }
                 };
@@ -242,7 +242,7 @@ namespace LeatherLane_Atelier.Controllers
                     ActionUrl = "return-tracking.html?id=" + id,
                     UserId = customer.Id
                 });
-                var details = new System.Collections.Generic.Dictionary<string, string> { { "Order No.", $"#{req.OrderId}" }, { "Refund Amount", $"Rs. {req.RefundAmount:N2}" }, { "Status", "Refund Processed" } };
+                var details = new System.Collections.Generic.Dictionary<string, string> { { "Order No.", LeatherLane_Atelier.Services.OrderHelper.FormatOrderNumber(req.OrderId) }, { "Refund Amount", $"Rs. {req.RefundAmount:N2}" }, { "Status", "Refund Processed" } };
                 var htmlEmail = LeatherLane_Atelier.Services.EmailTemplateBuilder.BuildStandardEmail("Refund Completed", customer.Name, "Your refund has been successfully processed.", $"/return-tracking?id={id}", "View Return Details", details);
                 _ = _emailService.SendEmailAsync(customer.Email, "Refund Completed", htmlEmail);
             }
