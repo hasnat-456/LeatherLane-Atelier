@@ -1,11 +1,27 @@
+# Visual Studio & IDE files
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.rej
+
+# Build results
 back/bin/
 back/obj/
+publish_output/
+
+# Database & SQLite files
 *.db
 *.sqlite
+*.db-shm
+*.db-wal
+
+# Temporary / Uploads
 front/uploads/
 front/temp_backup/
 *.zip
 
+# Sensitive settings
 back/appsettings.json
 back/appsettings.Development.json
-publish_output/
