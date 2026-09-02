@@ -86,7 +86,12 @@ namespace LeatherLane_Atelier.Controllers
                         UserId = customer.Id
                     });
 
-                    _ = _emailService.SendEmailAsync(customer.Email, $"Order {dto.Status}", message);
+                    var details = new System.Collections.Generic.Dictionary<string, string> {
+                    { "Order No.", LeatherLane_Atelier.Services.OrderHelper.FormatOrderNumber(id) },
+                    { "Status", dto.Status }
+                };
+                var htmlEmail = LeatherLane_Atelier.Services.EmailTemplateBuilder.BuildStandardEmail($"Order {dto.Status}", customer.Name, message, $"/order-tracking?id={id}", "Track Order", details);
+                _ = _emailService.SendEmailAsync(customer.Email, $"Order {dto.Status}", htmlEmail);
 
                     if (dto.Status == "Delivered")
                     {
@@ -98,7 +103,8 @@ namespace LeatherLane_Atelier.Controllers
                             ActionUrl = $"transactions.html",
                             UserId = customer.Id
                         });
-                        _ = _emailService.SendEmailAsync(customer.Email, "We'd Love Your Review!", reviewMsg);
+                        var reviewHtmlEmail = LeatherLane_Atelier.Services.EmailTemplateBuilder.BuildStandardEmail("We'd Love Your Review!", customer.Name, reviewMsg, "/transactions", "Write a Review");
+                        _ = _emailService.SendEmailAsync(customer.Email, "We'd Love Your Review!", reviewHtmlEmail);
                     }
                 }
             }

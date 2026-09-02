@@ -242,7 +242,7 @@ namespace LeatherLane_Atelier.Controllers
                 ActionUrl = $"admin-exchange.html?id={exchangeRequest.ExchangeId}",
                 UserId = null // Admin
             });
-            _ = _emailService.SendEmailAsync("leatherlaneatelier@gmail.com", "New Exchange Request", $"A new exchange request was submitted for Order #{order.Id}.");
+            await LeatherLane_Atelier.Services.EmailServiceExtensions.NotifyAdminsAsync(_emailService, _context, "New Exchange Request", $"A new exchange request was submitted for Order #{order.Id}.");
 
             // Notification for Customer
             _context.Notifications.Add(new Notification
@@ -255,7 +255,12 @@ namespace LeatherLane_Atelier.Controllers
             var userObj = await _context.Users.FindAsync(userId);
             if (userObj != null)
             {
-                _ = _emailService.SendEmailAsync(userObj.Email, "Exchange Request Submitted", $"We have received your exchange request for Order #{order.Id}. Our team will review it shortly.");
+                var details = new System.Collections.Generic.Dictionary<string, string> {
+                    { "Order No.", LeatherLane_Atelier.Services.OrderHelper.FormatOrderNumber(order.Id) },
+                    { "Status", "Request Submitted" }
+                };
+                var htmlEmail = LeatherLane_Atelier.Services.EmailTemplateBuilder.BuildStandardEmail("Exchange Request Submitted", userObj.Name, "We have received your exchange request. Our team will review it shortly.", $"/exchange-tracking?id={order.Id}", "Track Status", details);
+                _ = _emailService.SendEmailAsync(userObj.Email, "Exchange Request Submitted", htmlEmail);
             }
 
             await _context.SaveChangesAsync();
@@ -312,7 +317,7 @@ namespace LeatherLane_Atelier.Controllers
                 ActionUrl = $"admin-exchange.html?id={id}",
                 UserId = null
             });
-            _ = _emailService.SendEmailAsync("leatherlaneatelier@gmail.com", "Exchange Tracking Submitted", $"Tracking for Exchange #{id} is: {dto.CourierName} {dto.TrackingNumber}");
+            await LeatherLane_Atelier.Services.EmailServiceExtensions.NotifyAdminsAsync(_emailService, _context, "Exchange Tracking Submitted", $"Tracking for Exchange #{id} is: {dto.CourierName} {dto.TrackingNumber}");
 
             var userObj = await _context.Users.FindAsync(userId);
             if (userObj != null)
@@ -324,7 +329,13 @@ namespace LeatherLane_Atelier.Controllers
                     ActionUrl = $"exchange-tracking.html?id={id}",
                     UserId = userId
                 });
-                _ = _emailService.SendEmailAsync(userObj.Email, "Tracking Received", $"We have received your return tracking details: {dto.CourierName} {dto.TrackingNumber}. We will notify you once it passes inspection.");
+                var details = new System.Collections.Generic.Dictionary<string, string> {
+                    { "Courier", dto.CourierName },
+                    { "Tracking Number", dto.TrackingNumber },
+                    { "Status", "Tracking Received" }
+                };
+                var htmlEmail = LeatherLane_Atelier.Services.EmailTemplateBuilder.BuildStandardEmail("Tracking Received", userObj.Name, "We have received your return tracking details. We will notify you once it passes inspection.", $"/exchange-tracking?id={id}", "Track Status", details);
+                _ = _emailService.SendEmailAsync(userObj.Email, "Tracking Received", htmlEmail);
             }
 
             await _context.SaveChangesAsync();

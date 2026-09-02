@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             
             stories.forEach(story => {
                 html += `
-                    <div style="background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); transition: transform 0.3s; cursor: pointer;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'" onclick="window.location.href='story.html?id=${story.id}'">
+                    <div style="background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); transition: transform 0.3s; cursor: pointer;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'" onclick="window.location.href='/story?id=${story.id}'">
                         <img src="${story.image || 'https://via.placeholder.com/400x250'}" style="width: 100%; height: 250px; object-fit: cover;">
                         <div style="padding: 1.5rem;">
                             <div style="color: var(--primary-gold); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; margin-bottom: 0.5rem;">${story.category || 'Journal'}</div>

@@ -72,7 +72,6 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors();
-
 // Dynamically locate the 'front' folder regardless of working directory
 var currentDir = Directory.GetCurrentDirectory();
 var frontPath = currentDir.EndsWith("back", StringComparison.OrdinalIgnoreCase) 
@@ -84,6 +83,165 @@ frontPath = Path.GetFullPath(frontPath);
 if (Directory.Exists(frontPath))
 {
     var fileProvider = new PhysicalFileProvider(frontPath);
+
+    
+    // Clean URL Rewrite Middleware (Strict)
+    app.Use(async (context, next) =>
+    {
+        var path = context.Request.Path.Value;
+        
+        // 1. Force remove .html from browser URL if requested explicitly
+        if (!string.IsNullOrEmpty(path) && path.EndsWith(".html", StringComparison.OrdinalIgnoreCase))
+        {
+            var cleanPath = path.Substring(0, path.Length - 5);
+            if (cleanPath.Equals("/index", StringComparison.OrdinalIgnoreCase))
+                cleanPath = "/home";
+            
+            var qs = context.Request.QueryString.HasValue ? context.Request.QueryString.Value : "";
+            context.Response.Redirect(cleanPath + qs, permanent: true);
+            return;
+        }
+
+        // 2. Secretly append .html on the server side so static files work
+        if (!string.IsNullOrEmpty(path) && !path.StartsWith("/api") && !path.StartsWith("/images") && !System.IO.Path.HasExtension(path))
+        {
+            var htmlPath = (path == "/" ? "/home" : path) + ".html";
+            var physicalPath = System.IO.Path.Combine(frontPath, htmlPath.TrimStart('/'));
+            if (System.IO.File.Exists(physicalPath))
+            {
+                context.Request.Path = htmlPath;
+            }
+        }
+        await next();
+    });
+
+    
+    // SSR Middleware for Products (SEO)
+    app.Use(async (context, next) =>
+    {
+        var path = context.Request.Path.Value;
+        
+        if (path != null && (path.Equals("/home.html", StringComparison.OrdinalIgnoreCase) || path.Equals("/products.html", StringComparison.OrdinalIgnoreCase)))
+        {
+            var physicalPath = System.IO.Path.Combine(frontPath, path.TrimStart('/'));
+            if (System.IO.File.Exists(physicalPath))
+            {
+                var htmlContent = await System.IO.File.ReadAllTextAsync(physicalPath);
+                
+                try 
+                {
+                    using var scope = app.Services.CreateScope();
+                    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                    
+                    var categories = await dbContext.ProductCategories
+                        .Where(c => c.IsActive)
+                        .OrderBy(c => c.DisplayOrder)
+                        .ThenBy(c => c.Name)
+                        .ToListAsync();
+                            
+                    var allProducts = await dbContext.Products
+                        .Where(p => p.Available)
+                        .OrderByDescending(p => p.CreatedAt)
+                        .ToListAsync();
+                    
+                    var sb = new System.Text.StringBuilder();
+                    
+                    if (path.Equals("/home.html", StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (allProducts.Any())
+                        {
+                            sb.Append("<section class='products-section' style='padding: 4rem 2rem; background-color: #fff; border-bottom: 1px solid #eaeaea;'>");
+                            sb.Append("<div style='display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; max-width: 1200px; margin-left: auto; margin-right: auto; padding: 0 1rem;'>");
+                            sb.Append("<h3 style='font-family: var(--font-heading); color: var(--primary-bg); font-size: 2.2rem; text-transform: uppercase; margin: 0; border-bottom: 2px solid var(--primary-gold); padding-bottom: 5px;'>New Arrivals</h3>");
+                            if (allProducts.Count > 4) sb.Append("<a href='/products' style='color: var(--primary-gold); font-weight: 600; text-decoration: none; font-size: 1rem; transition: opacity 0.2s;'>Shop All New Arrivals &rarr;</a>");
+                            sb.Append("</div><div class='product-grid' style='margin-bottom: 2rem;'>");
+                            
+                            foreach(var p in allProducts.Take(4))
+                            {
+                                var img = string.IsNullOrEmpty(p.Thumbnail) ? "https://via.placeholder.com/300x250" : p.Thumbnail;
+                                sb.Append($"<div class='product-card'><a href='/product-detail?id={p.Id}' style='text-decoration: none; color: inherit;'><img src='{img}' class='product-img' loading='lazy' style='width: 100%; height: 250px; object-fit: cover;'><div class='product-info'><div class='product-category'>{p.Category}</div><h3 class='product-title'>{p.Name}</h3><div class='product-price'>Rs {p.Price:N0}</div></div></a></div>");
+                            }
+                            sb.Append("</div></section>");
+                        }
+                        
+                        int catIndex = 0;
+                        foreach(var cat in categories)
+                        {
+                            var items = allProducts.Where(p => string.Equals(p.Category, cat.Name, StringComparison.OrdinalIgnoreCase)).ToList();
+                            if (!items.Any()) continue;
+                            
+                            string bgColor = catIndex % 2 == 0 ? "var(--light-bg)" : "#fff";
+                            catIndex++;
+                            
+                            sb.Append($"<section class='products-section' style='padding: 4rem 2rem; background-color: {bgColor}; border-bottom: 1px solid #eaeaea;'>");
+                            sb.Append("<div style='display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; max-width: 1200px; margin-left: auto; margin-right: auto; padding: 0 1rem;'>");
+                            sb.Append($"<h3 style='font-family: var(--font-heading); color: var(--primary-bg); font-size: 2.2rem; text-transform: uppercase; margin: 0; border-bottom: 2px solid var(--primary-gold); padding-bottom: 5px;'>{cat.Name}</h3>");
+                            if (items.Count > 4) sb.Append($"<a href='/products?category={System.Uri.EscapeDataString(cat.Name)}' style='color: var(--primary-gold); font-weight: 600; text-decoration: none; font-size: 1rem; transition: opacity 0.2s;'>See More in {cat.Name} &rarr;</a>");
+                            sb.Append("</div><div class='product-grid' style='margin-bottom: 2rem;'>");
+                            
+                            foreach(var p in items.Take(4))
+                            {
+                                var img = string.IsNullOrEmpty(p.Thumbnail) ? "https://via.placeholder.com/300x250" : p.Thumbnail;
+                                sb.Append($"<div class='product-card'><a href='/product-detail?id={p.Id}' style='text-decoration: none; color: inherit;'><img src='{img}' class='product-img' loading='lazy' style='width: 100%; height: 250px; object-fit: cover;'><div class='product-info'><div class='product-category'>{p.Category}</div><h3 class='product-title'>{p.Name}</h3><div class='product-price'>Rs {p.Price:N0}</div></div></a></div>");
+                            }
+                            sb.Append("</div></section>");
+                        }
+                        
+                        var regex = new System.Text.RegularExpressions.Regex(@"<div id=""dynamicFeaturedCategories"">[\s\S]*?Loading Products\.\.\.[\s\S]*?</div>\s*</div>\s*</div>");
+                        htmlContent = regex.Replace(htmlContent, @"<div id=""dynamicFeaturedCategories"">" + sb.ToString() + @"</div>");
+
+                        // --- Story SSR ---
+                        var recentStories = await dbContext.Blogs.AsNoTracking().OrderByDescending(b => b.CreatedAt).Take(3).ToListAsync();
+                        if (recentStories.Any())
+                        {
+                            var storySb = new System.Text.StringBuilder();
+                            foreach(var story in recentStories)
+                            {
+                                var sImg = string.IsNullOrEmpty(story.Image) ? "https://via.placeholder.com/400x250" : story.Image;
+                                var sCat = string.IsNullOrEmpty(story.Category) ? "Journal" : story.Category;
+                                storySb.Append($@"
+                                <div style='background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); transition: transform 0.3s; cursor: pointer;' onmouseover=""this.style.transform='translateY(-5px)'"" onmouseout=""this.style.transform='translateY(0)'"" onclick=""window.location.href='/story?id={story.Id}'"">
+                                    <img src='{sImg}' style='width: 100%; height: 250px; object-fit: cover;' loading='lazy'>
+                                    <div style='padding: 1.5rem;'>
+                                        <div style='color: var(--primary-gold); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; margin-bottom: 0.5rem;'>{sCat}</div>
+                                        <h4 style='font-family: var(--font-heading); color: var(--primary-bg); font-size: 1.4rem; margin: 0 0 1rem 0;'>{story.Title}</h4>
+                                        <p style='color: #666; font-size: 0.95rem; line-height: 1.5; margin: 0;'>{story.Excerpt ?? ""}</p>
+                                    </div>
+                                </div>");
+                            }
+                            
+                            var storyRegex = new System.Text.RegularExpressions.Regex(@"<div id=""dynamicJournalGrid""[^>]*>[sS]*?</div>");
+                            htmlContent = storyRegex.Replace(htmlContent, @"<div id=""dynamicJournalGrid"" style=""display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 2rem; max-width: 1200px; margin: 0 auto;"">" + storySb.ToString() + @"</div>");
+                            
+                            // Make sure the section is visible
+                            htmlContent = htmlContent.Replace(@"id=""atelierJournalSection"" style=""background-color: #F8F5F2; padding: 4rem 3rem; text-align: left; display: none;""", @"id=""atelierJournalSection"" style=""background-color: #F8F5F2; padding: 4rem 3rem; text-align: left; display: block;""");
+                        }
+
+                    }
+                    else if (path.Equals("/products.html", StringComparison.OrdinalIgnoreCase))
+                    {
+                        foreach(var p in allProducts)
+                        {
+                            var img = string.IsNullOrEmpty(p.Thumbnail) ? "https://via.placeholder.com/300x250" : p.Thumbnail;
+                            sb.Append($"<div class='product-card' data-category='{p.Category?.ToLower()}' data-price='{p.Price}'><a href='/product-detail?id={p.Id}' style='text-decoration: none; color: inherit;'><img src='{img}' class='product-img' loading='lazy' style='width: 100%; height: 250px; object-fit: cover;'><div class='product-info'><div class='product-category'>{p.Category}</div><h3 class='product-title'>{p.Name}</h3><div class='product-price'>Rs {p.Price:N0}</div></div></a></div>");
+                        }
+                        
+                        var targetString = @"<div style=""padding: 40px; text-align: center; color:#666; grid-column: 1/-1;"">Loading collection...</div>";
+                        htmlContent = htmlContent.Replace(targetString, sb.ToString());
+                    }
+                }
+                catch (System.Exception ex)
+                {
+                    System.Console.WriteLine("SSR Failed: " + ex.Message);
+                }
+
+                context.Response.ContentType = "text/html; charset=utf-8";
+                await context.Response.WriteAsync(htmlContent);
+                return;
+            }
+        }
+        await next();
+    });
 
     app.UseDefaultFiles(new DefaultFilesOptions
     {
@@ -395,3 +553,4 @@ catch (Exception ex)
 }
 
 app.Run();
+

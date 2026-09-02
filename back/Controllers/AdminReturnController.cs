@@ -72,7 +72,12 @@ namespace LeatherLane_Atelier.Controllers
                     ActionUrl = "return-tracking.html?id=" + id,
                     UserId = customer.Id
                 });
-                _ = _emailService.SendEmailAsync(customer.Email, "Return Approved", $"Your return request for Order #{req.OrderId} has been approved.");
+                var details = new System.Collections.Generic.Dictionary<string, string> {
+                    { "Order No.", LeatherLane_Atelier.Services.OrderHelper.FormatOrderNumber(req.OrderId) },
+                    { "Status", "Return Approved" }
+                };
+                var htmlEmail = LeatherLane_Atelier.Services.EmailTemplateBuilder.BuildStandardEmail("Return Approved", customer.Name, "Your return request has been approved. A pickup will be scheduled soon.", $"/return-tracking?id={id}", "Track Return", details);
+                _ = _emailService.SendEmailAsync(customer.Email, "Return Approved", htmlEmail);
             }
 
             await _context.SaveChangesAsync();
@@ -113,7 +118,13 @@ namespace LeatherLane_Atelier.Controllers
                     ActionUrl = "return-tracking.html?id=" + id,
                     UserId = customer.Id
                 });
-                _ = _emailService.SendEmailAsync(customer.Email, "Return Rejected", $"Your return request for Order #{req.OrderId} was rejected. Reason: {dto.Reason}");
+                var details = new System.Collections.Generic.Dictionary<string, string> {
+                    { "Order No.", LeatherLane_Atelier.Services.OrderHelper.FormatOrderNumber(req.OrderId) },
+                    { "Reason", dto.Reason },
+                    { "Status", "Rejected" }
+                };
+                var htmlEmail = LeatherLane_Atelier.Services.EmailTemplateBuilder.BuildStandardEmail("Return Rejected", customer.Name, "Your return request has been rejected.", $"/return-tracking?id={id}", "Track Return", details);
+                _ = _emailService.SendEmailAsync(customer.Email, "Return Rejected", htmlEmail);
             }
 
             await _context.SaveChangesAsync();
@@ -184,7 +195,13 @@ namespace LeatherLane_Atelier.Controllers
                         ActionUrl = "return-tracking.html?id=" + id,
                         UserId = customer.Id
                     });
-                    _ = _emailService.SendEmailAsync(customer.Email, "Return Inspection Failed", $"Your returned item for Order #{req.OrderId} failed inspection. Reason: {dto.Reason}");
+                    var details = new System.Collections.Generic.Dictionary<string, string> {
+                    { "Order No.", LeatherLane_Atelier.Services.OrderHelper.FormatOrderNumber(req.OrderId) },
+                    { "Reason", dto.Reason },
+                    { "Status", "Inspection Failed" }
+                };
+                var htmlEmail = LeatherLane_Atelier.Services.EmailTemplateBuilder.BuildStandardEmail("Return Inspection Failed", customer.Name, "Your returned item failed inspection.", $"/return-tracking?id={id}", "Track Return", details);
+                _ = _emailService.SendEmailAsync(customer.Email, "Return Inspection Failed", htmlEmail);
                 }
             }
 
@@ -225,7 +242,9 @@ namespace LeatherLane_Atelier.Controllers
                     ActionUrl = "return-tracking.html?id=" + id,
                     UserId = customer.Id
                 });
-                _ = _emailService.SendEmailAsync(customer.Email, "Refund Completed", $"Your refund of ${req.RefundAmount} for Order #{req.OrderId} has been successfully processed.");
+                var details = new System.Collections.Generic.Dictionary<string, string> { { "Order No.", LeatherLane_Atelier.Services.OrderHelper.FormatOrderNumber(req.OrderId) }, { "Refund Amount", $"Rs. {req.RefundAmount:N2}" }, { "Status", "Refund Processed" } };
+                var htmlEmail = LeatherLane_Atelier.Services.EmailTemplateBuilder.BuildStandardEmail("Refund Completed", customer.Name, "Your refund has been successfully processed.", $"/return-tracking?id={id}", "View Return Details", details);
+                _ = _emailService.SendEmailAsync(customer.Email, "Refund Completed", htmlEmail);
             }
 
             await _context.SaveChangesAsync();

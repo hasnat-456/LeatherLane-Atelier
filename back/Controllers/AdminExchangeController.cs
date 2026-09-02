@@ -132,7 +132,8 @@ namespace LeatherLane_Atelier.Controllers
                     ActionUrl = $"exchange-tracking.html?id={id}",
                     UserId = customer.Id
                 });
-                _ = _emailService.SendEmailAsync(customer.Email, "Exchange Approved", $"Your exchange request for Order #{request.OrderId} was approved.");
+                var emailHtml = LeatherLane_Atelier.Services.EmailTemplateBuilder.BuildStandardEmail("✅ Exchange Approved", customer.Name, $"Your exchange request for Order #{request.OrderId} was approved.", "/transactions.html");
+                _ = _emailService.SendEmailAsync(customer.Email, "Exchange Approved (#" + request.OrderId + ")", emailHtml);
             }
 
             await _context.SaveChangesAsync();
@@ -177,7 +178,8 @@ namespace LeatherLane_Atelier.Controllers
                     ActionUrl = $"exchange-tracking.html?id={id}",
                     UserId = customer.Id
                 });
-                _ = _emailService.SendEmailAsync(customer.Email, "Exchange Rejected", $"Your exchange request for Order #{request.OrderId} was rejected. Reason: {dto.Reason}");
+                var emailHtml = LeatherLane_Atelier.Services.EmailTemplateBuilder.BuildStandardEmail("❌ Exchange Request Update", customer.Name, $"Your exchange request for Order #{request.OrderId} was rejected. Reason: {dto.Reason}", "/transactions.html");
+                _ = _emailService.SendEmailAsync(customer.Email, "Exchange Rejected (#" + request.OrderId + ")", emailHtml);
             }
 
             await _context.SaveChangesAsync();
@@ -223,7 +225,12 @@ namespace LeatherLane_Atelier.Controllers
                         ActionUrl = $"exchange-tracking.html?id={id}",
                         UserId = customer.Id
                     });
-                    _ = _emailService.SendEmailAsync(customer.Email, "Exchange Inspection Passed", $"Good news! Your returned item for Order #{request.OrderId} has arrived and passed inspection. We are packing your replacement now.");
+                    var details = new System.Collections.Generic.Dictionary<string, string> {
+                    { "Order No.", LeatherLane_Atelier.Services.OrderHelper.FormatOrderNumber(request.OrderId) },
+                    { "Status", "Inspection Passed" }
+                };
+                var htmlEmail = LeatherLane_Atelier.Services.EmailTemplateBuilder.BuildStandardEmail("Exchange Inspection Passed", customer.Name, "Good news! Your returned item has arrived and passed inspection. We are packing your replacement now.", $"/exchange-tracking?id={id}", "Track Replacement", details);
+                _ = _emailService.SendEmailAsync(customer.Email, "Exchange Inspection Passed", htmlEmail);
                 }
             }
             else
@@ -246,7 +253,13 @@ namespace LeatherLane_Atelier.Controllers
                         ActionUrl = $"exchange-tracking.html?id={id}",
                         UserId = customer.Id
                     });
-                    _ = _emailService.SendEmailAsync(customer.Email, "Exchange Inspection Failed", $"Your returned item for Order #{request.OrderId} was received but failed inspection. Reason: {dto.Reason}");
+                    var details = new System.Collections.Generic.Dictionary<string, string> {
+                    { "Order No.", LeatherLane_Atelier.Services.OrderHelper.FormatOrderNumber(request.OrderId) },
+                    { "Reason", dto.Reason },
+                    { "Status", "Inspection Failed" }
+                };
+                var htmlEmail = LeatherLane_Atelier.Services.EmailTemplateBuilder.BuildStandardEmail("Exchange Inspection Failed", customer.Name, "Your returned item was received but failed inspection.", $"/exchange-tracking?id={id}", "Track Status", details);
+                _ = _emailService.SendEmailAsync(customer.Email, "Exchange Inspection Failed", htmlEmail);
                 }
             }
 
@@ -280,7 +293,12 @@ namespace LeatherLane_Atelier.Controllers
                     ActionUrl = $"exchange-tracking.html?id={id}",
                     UserId = customer.Id
                 });
-                _ = _emailService.SendEmailAsync(customer.Email, "Replacement Shipped", $"Your replacement item has shipped. Tracking: {dto.TrackingNumber}");
+                var details = new System.Collections.Generic.Dictionary<string, string> {
+                    { "Tracking Number", dto.TrackingNumber },
+                    { "Status", "Shipped" }
+                };
+                var htmlEmail = LeatherLane_Atelier.Services.EmailTemplateBuilder.BuildStandardEmail("Replacement Shipped", customer.Name, "Your replacement item has shipped.", $"/exchange-tracking?id={id}", "Track Package", details);
+                _ = _emailService.SendEmailAsync(customer.Email, "Replacement Shipped", htmlEmail);
             }
 
             await _context.SaveChangesAsync();
@@ -351,7 +369,12 @@ namespace LeatherLane_Atelier.Controllers
                     ActionUrl = $"exchange-tracking.html?id={id}",
                     UserId = customer.Id
                 });
-                _ = _emailService.SendEmailAsync(customer.Email, "Replacement Delivered", $"Your replacement item for Order #{request.OrderId} has been delivered. Thank you for your patience.");
+                var details = new System.Collections.Generic.Dictionary<string, string> {
+                    { "Order No.", LeatherLane_Atelier.Services.OrderHelper.FormatOrderNumber(request.OrderId) },
+                    { "Status", "Delivered" }
+                };
+                var htmlEmail = LeatherLane_Atelier.Services.EmailTemplateBuilder.BuildStandardEmail("Replacement Delivered", customer.Name, "Your replacement item has been delivered. Thank you for your patience.", $"/exchange-tracking?id={id}", "View Details", details);
+                _ = _emailService.SendEmailAsync(customer.Email, "Replacement Delivered", htmlEmail);
             }
 
             await _context.SaveChangesAsync();

@@ -51,7 +51,8 @@ namespace LeatherLane_Atelier.Controllers
                         <br>
                         <p>Best regards,<br><strong>LeatherLane Atelier Team</strong></p>
                     </div>";
-                await _emailService.SendEmailAsync(req.Email, subject, body);
+                var htmlEmail = LeatherLane_Atelier.Services.EmailTemplateBuilder.BuildStandardEmail(subject, "", body, "/products", "Shop Now");
+                await _emailService.SendEmailAsync(req.Email, subject, htmlEmail);
             }
             return Ok(new { message = "Subscribed successfully" });
         }
@@ -91,7 +92,8 @@ namespace LeatherLane_Atelier.Controllers
             
             foreach (var email in emailsToSend)
             {
-                await _emailService.SendEmailAsync(email, req.Subject, req.Body);
+                var htmlEmail = LeatherLane_Atelier.Services.EmailTemplateBuilder.BuildStandardEmail(req.Subject, "", req.Body, "/products", "Shop Now");
+                await _emailService.SendEmailAsync(email, req.Subject, htmlEmail);
             }
 
             return Ok(new { message = $"Sent emails to {emailsToSend.Count} subscribers." });

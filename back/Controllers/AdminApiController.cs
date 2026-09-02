@@ -101,7 +101,7 @@ namespace LeatherLane_Atelier.Controllers
         [HttpGet("orders")]
         public async Task<IActionResult> GetOrders()
         {
-            var orders = await _context.Transactions
+            var orders = await _context.Transactions.AsNoTracking()
                 .Include(t => t.Items)
                 .OrderByDescending(t => t.CreatedAt)
                 .Select(t => new {
@@ -174,7 +174,65 @@ namespace LeatherLane_Atelier.Controllers
                 IsCompleted = req.Status == "Delivered" || req.Status == "Cancelled"
             };
 
+            
             _context.TimelineEvents.Add(newEvent);
+
+            // ---> INJECTED NOTIFICATION LOGIC <---
+            var customer = await _context.Users.FindAsync(transaction.UserId);
+            if (customer != null)
+            {
+                var notifTitle = "Order Status Updated";
+                var notifMsg = $"Your order #{transaction.Id} status is now: {req.Status}.";
+                
+                if (req.Status == "Cancelled") 
+                {
+                    notifTitle = "Order Cancelled";
+                    notifMsg = $"Your order #{transaction.Id} has been cancelled by Admin. Reason: {req.CancelReason}";
+                }
+                else if (req.Status == "Delivered")
+                {
+                    notifTitle = "Order Delivered";
+                    notifMsg = $"Your order #{transaction.Id} has been delivered successfully. Thank you for shopping with us!";
+                }
+                else if (req.Status == "Handed to Courier" || req.Status == "Shipped")
+                {
+                    notifTitle = "Order Shipped";
+                    notifMsg = $"Your order #{transaction.Id} has been handed to the courier and is on its way.";
+                }
+
+                _context.Notifications.Add(new Notification
+                {
+                    Title = notifTitle,
+                    Message = notifMsg,
+                    ActionUrl = $"order-tracking.html?id={transaction.Id}",
+                    UserId = customer.Id
+                });
+
+                var emailSvc = HttpContext.RequestServices.GetService(typeof(LeatherLane_Atelier.Services.IEmailService)) as LeatherLane_Atelier.Services.IEmailService;
+                if (emailSvc != null)
+                {
+                    
+                    var fancyTitle = notifTitle;
+                    if (req.Status == "Preparing Order") fancyTitle = "🔄 Order Being Prepared";
+                    else if (req.Status == "Packed") fancyTitle = "📦 Order Packed";
+                    else if (req.Status == "Shipped" || req.Status == "Handed to Courier") fancyTitle = "🚚 Order Shipped";
+                    else if (req.Status == "In Transit") fancyTitle = "🚚 Order In Transit";
+                    else if (req.Status == "Out for Delivery") fancyTitle = "📍 Out for Delivery";
+                    else if (req.Status == "Delivered") fancyTitle = "🎉 Order Delivered";
+                    else if (req.Status == "Cancelled") fancyTitle = "❌ Order Cancelled";
+                    else fancyTitle = "📋 Order Update";
+
+                    var emailHtml = LeatherLane_Atelier.Services.EmailTemplateBuilder.BuildStandardEmail(
+                        fancyTitle, 
+                        customer.Name, 
+                        notifMsg,
+                        $"/order-tracking.html?id={transaction.Id}", "Track Order"
+                    );
+                    _ = emailSvc.SendEmailAsync(customer.Email, "Order Status Update (#" + transaction.Id + ")", emailHtml);
+                }
+            }
+            // ---> END INJECTED LOGIC <---
+
 
             await _context.SaveChangesAsync();
 
@@ -342,6 +400,65 @@ namespace LeatherLane_Atelier.Controllers
             await _context.SaveChangesAsync();
             return Ok(new { message = "Manual payment settings updated successfully." });
         }
+
+        
+        [HttpPost("broadcast")]
+        public async Task<IActionResult> SendBroadcast([FromBody] BroadcastRequest req)
+        {
+            var users = await _context.Users.ToListAsync();
+            
+            if (req.SendInApp)
+            {
+                var now = DateTime.UtcNow;
+                var notifs = users.Select(u => new Notification
+                {
+                    Title = req.Title,
+                    Message = req.Message,
+                    ActionUrl = req.ActionUrl,
+                    UserId = u.Id
+                }).ToList();
+                
+                _context.Notifications.AddRange(notifs);
+                await _context.SaveChangesAsync();
+            }
+            
+            if (req.SendEmail)
+            {
+                var emailSvc = HttpContext.RequestServices.GetService(typeof(LeatherLane_Atelier.Services.IEmailService)) as LeatherLane_Atelier.Services.IEmailService;
+                if (emailSvc != null)
+                {
+                    _ = Task.Run(async () =>
+                    {
+                        foreach (var u in users)
+                        {
+                            try {
+                                
+                                var emailHtml = LeatherLane_Atelier.Services.EmailTemplateBuilder.BuildStandardEmail(
+                                    "📢 " + req.Title, 
+                                    u.Name, 
+                                    req.Message,
+                                    req.ActionUrl, "Shop Now"
+                                );
+                                await emailSvc.SendEmailAsync(u.Email, req.Title, emailHtml);
+                                await Task.Delay(500); // Small delay to prevent SMTP throttling
+                            } catch {}
+                        }
+                    });
+                }
+            }
+            
+            return Ok(new { message = $"Broadcast successfully sent to {users.Count} customers." });
+        }
+
+        public class BroadcastRequest
+        {
+            public string Title { get; set; } = string.Empty;
+            public string Message { get; set; } = string.Empty;
+            public string? ActionUrl { get; set; }
+            public bool SendEmail { get; set; }
+            public bool SendInApp { get; set; }
+        }
+
 
         // Category Management Endpoints
         [HttpGet("categories")]

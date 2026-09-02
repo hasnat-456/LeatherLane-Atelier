@@ -44,6 +44,7 @@ namespace LeatherLane_Atelier.Controllers
             return Ok(new
             {
                 orderId = order.Id,
+                orderNumber = LeatherLane_Atelier.Services.OrderHelper.FormatOrderNumber(order.Id),
                 orderDate = order.CreatedAt,
                 paymentStatus = order.Status,
                 paymentMethod = order.PaymentMethod,
@@ -77,6 +78,7 @@ namespace LeatherLane_Atelier.Controllers
             {
                 exchangeId = exchange.ExchangeId,
                 orderId = exchange.OrderId,
+                orderNumber = LeatherLane_Atelier.Services.OrderHelper.FormatOrderNumber(exchange.OrderId),
                 originalProduct = exchange.OriginalProduct?.Name,
                 replacementProduct = exchange.ReplacementProduct?.Name,
                 reason = exchange.Reason,
@@ -105,6 +107,7 @@ namespace LeatherLane_Atelier.Controllers
             {
                 returnId = ret.ReturnId,
                 orderId = ret.OrderId,
+                orderNumber = LeatherLane_Atelier.Services.OrderHelper.FormatOrderNumber(ret.OrderId),
                 product = ret.Product?.Name,
                 reason = ret.Reason,
                 status = ret.Status,

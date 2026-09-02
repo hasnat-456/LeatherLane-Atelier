@@ -2,6 +2,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;
 using LeatherLane_Atelier.Models;
+using Microsoft.AspNetCore.Hosting;
+using System.IO;
+using System.Text.RegularExpressions;
 
 namespace LeatherLane_Atelier.Controllers
 {
@@ -10,16 +13,18 @@ namespace LeatherLane_Atelier.Controllers
     public class ProductsController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
+        private readonly IWebHostEnvironment _env;
 
-        public ProductsController(ApplicationDbContext context)
+        public ProductsController(ApplicationDbContext context, IWebHostEnvironment env)
         {
             _context = context;
+            _env = env;
         }
 
         [HttpGet]
         public async Task<IActionResult> GetProducts([FromQuery] string? category, [FromQuery] string? search, [FromQuery] bool? isFeatured)
         {
-            var query = _context.Products.Where(p => p.AvailabilityStatus != "Discontinued").AsQueryable();
+            var query = _context.Products.AsNoTracking().Where(p => p.AvailabilityStatus != "Discontinued").AsQueryable();
 
             if (!string.IsNullOrEmpty(category))
                 query = query.Where(p => p.Category == category);
@@ -147,7 +152,8 @@ namespace LeatherLane_Atelier.Controllers
                                 ActionUrl = $"product-detail.html?id={productId}",
                                 UserId = u.Id
                             });
-                            _ = emailSvc.SendEmailAsync(u.Email, "New Product Alert!", $"Hi {u.Name},\n\nWe just added a new product to our store: {productName}. Visit our website to see more details!");
+                            var htmlEmail = LeatherLane_Atelier.Services.EmailTemplateBuilder.BuildStandardEmail("📢 New Product Alert!", u.Name, $"We just added a new product to our store: <b>{productName}</b>. Visit our website to see more details!", "/products.html", "Shop Now");
+                            _ = emailSvc.SendEmailAsync(u.Email, "New Product Alert!", htmlEmail);
                         }
                         await db.SaveChangesAsync();
                     }
@@ -272,7 +278,7 @@ namespace LeatherLane_Atelier.Controllers
             var emailService = HttpContext.RequestServices.GetService(typeof(LeatherLane_Atelier.Services.IEmailService)) as LeatherLane_Atelier.Services.IEmailService;
             if (emailService != null)
             {
-                _ = emailService.SendEmailAsync("leatherlaneatelier@gmail.com", "New Product Review", $"A customer left a {dto.Rating}-star review for {product.Name}:\n\n{dto.Comment}");
+                await LeatherLane_Atelier.Services.EmailServiceExtensions.NotifyAdminsAsync(emailService, _context, "New Product Review", $"A customer left a {dto.Rating}-star review for {product.Name}:\n\n{dto.Comment}");
             }
 
             if (userId > 0)
@@ -289,7 +295,12 @@ namespace LeatherLane_Atelier.Controllers
                 var userObj = await _context.Users.FindAsync(userId);
                 if (userObj != null && emailService != null)
                 {
-                    _ = emailService.SendEmailAsync(userObj.Email, "Thank You For Your Review!", $"We appreciate your {dto.Rating}-star review on {product.Name}. Your feedback helps us maintain our timeless craftsmanship!");
+                    var details = new System.Collections.Generic.Dictionary<string, string> {
+                    { "Product", product.Name },
+                    { "Rating", $"{dto.Rating} Stars" }
+                };
+                var htmlEmail = LeatherLane_Atelier.Services.EmailTemplateBuilder.BuildStandardEmail("Thank You For Your Review!", userObj.Name, "We appreciate your review. Your feedback helps us maintain our timeless craftsmanship!", "/products", "Shop New Arrivals", details);
+                _ = emailService.SendEmailAsync(userObj.Email, "Thank You For Your Review!", htmlEmail);
                 }
             }
 
@@ -297,6 +308,110 @@ namespace LeatherLane_Atelier.Controllers
 
             return Ok(new { message = "Review added successfully" });
         }
+    
+        [HttpPost("upload-images")]
+        public async Task<IActionResult> UploadImages([FromForm] List<IFormFile> images)
+        {
+            var uploadedUrls = new List<string>();
+            if (images == null || images.Count == 0) return BadRequest("No images received.");
+            
+            var currentDir = Directory.GetCurrentDirectory();
+            var frontPath = currentDir.EndsWith("back", StringComparison.OrdinalIgnoreCase) 
+                ? Path.Combine(currentDir, "..", "front") 
+                : Path.Combine(currentDir, "front");
+            var uploadsFolder = Path.Combine(frontPath, "images", "products");
+            Directory.CreateDirectory(uploadsFolder);
+            
+            foreach (var file in images)
+            {
+                if (file.Length > 0)
+                {
+                    var uniqueFileName = Guid.NewGuid().ToString() + "_" + file.FileName.Replace(" ", "_");
+                    var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+                    
+                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await file.CopyToAsync(stream);
+                    }
+                    uploadedUrls.Add("/images/products/" + uniqueFileName);
+                }
+            }
+            
+            return Ok(uploadedUrls);
+        }
+
+        [HttpGet("migrate-base64")]
+        public async Task<IActionResult> MigrateBase64Images()
+        {
+            var products = await _context.Products.ToListAsync();
+            int migratedCount = 0;
+            
+            var currentDir = Directory.GetCurrentDirectory();
+            var frontPath = currentDir.EndsWith("back", StringComparison.OrdinalIgnoreCase) 
+                ? Path.Combine(currentDir, "..", "front") 
+                : Path.Combine(currentDir, "front");
+            var uploadsFolder = Path.Combine(frontPath, "images", "products");
+            Directory.CreateDirectory(uploadsFolder);
+
+            foreach (var p in products)
+            {
+                bool modified = false;
+                
+                // Migrate Thumbnail
+                if (!string.IsNullOrEmpty(p.Thumbnail) && p.Thumbnail.StartsWith("data:image"))
+                {
+                    p.Thumbnail = SaveBase64ToDisk(p.Thumbnail, uploadsFolder);
+                    modified = true;
+                }
+                
+                // Migrate Images array
+                if (p.Images != null && p.Images.Count > 0)
+                {
+                    for (int i = 0; i < p.Images.Count; i++)
+                    {
+                        if (!string.IsNullOrEmpty(p.Images[i]) && p.Images[i].StartsWith("data:image"))
+                        {
+                            p.Images[i] = SaveBase64ToDisk(p.Images[i], uploadsFolder);
+                            modified = true;
+                        }
+                    }
+                }
+                
+                if (modified)
+                {
+                    migratedCount++;
+                }
+            }
+            
+            await _context.SaveChangesAsync();
+            return Ok(new { message = $"Successfully migrated {migratedCount} products." });
+        }
+        
+        private string SaveBase64ToDisk(string base64String, string uploadsFolder)
+        {
+            try 
+            {
+                var match = Regex.Match(base64String, @"data:image/(?<type>.+?);base64,(?<data>.+)");
+                if (!match.Success) return base64String;
+                
+                string ext = match.Groups["type"].Value.Split(';')[0]; // handle cases like jpeg;charset=utf-8
+                if (ext == "jpeg") ext = "jpg";
+                
+                string base64Data = match.Groups["data"].Value;
+                byte[] bytes = Convert.FromBase64String(base64Data);
+                
+                string fileName = Guid.NewGuid().ToString() + "." + ext;
+                string filePath = Path.Combine(uploadsFolder, fileName);
+                
+                System.IO.File.WriteAllBytes(filePath, bytes);
+                return "/images/products/" + fileName;
+            } 
+            catch 
+            {
+                return base64String; // fallback
+            }
+        }
+
     }
 
     public class ReviewDto
@@ -304,5 +419,6 @@ namespace LeatherLane_Atelier.Controllers
         public int Rating { get; set; }
         public string? Title { get; set; }
         public string Comment { get; set; } = string.Empty;
-    }
+    
+        }
 }

@@ -6,6 +6,9 @@ namespace LeatherLane_Atelier.Models
     public class Transaction
     {
         public int Id { get; set; }
+
+        [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+        public string OrderNumber => LeatherLane_Atelier.Services.OrderHelper.FormatOrderNumber(Id);
         
         public int UserId { get; set; }
         public User User { get; set; } = null!;
@@ -39,6 +42,9 @@ namespace LeatherLane_Atelier.Models
     public class TransactionItem
     {
         public int Id { get; set; }
+
+        [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+        public string OrderNumber => LeatherLane_Atelier.Services.OrderHelper.FormatOrderNumber(Id);
         public int? ProductId { get; set; }
         public string Name { get; set; } = string.Empty;
         public decimal Price { get; set; }

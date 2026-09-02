@@ -104,7 +104,7 @@ namespace LeatherLane_Atelier.Controllers
                 ActionUrl = $"admin-return.html",
                 UserId = null // Admin
             });
-            _ = _emailService.SendEmailAsync("leatherlaneatelier@gmail.com", "New Return Request", $"A new return request was submitted for Order #{dto.OrderId}.");
+            await LeatherLane_Atelier.Services.EmailServiceExtensions.NotifyAdminsAsync(_emailService, _context, "New Return Request", $"A new return request was submitted for Order #{dto.OrderId}.");
 
             // Notification for Customer
             _context.Notifications.Add(new Notification
@@ -117,7 +117,8 @@ namespace LeatherLane_Atelier.Controllers
             var userObj = await _context.Users.FindAsync(userId);
             if (userObj != null)
             {
-                _ = _emailService.SendEmailAsync(userObj.Email, "Return Request Submitted", $"We have received your return request for Order #{dto.OrderId}. Our team will review it shortly.");
+                var emailHtml = LeatherLane_Atelier.Services.EmailTemplateBuilder.BuildStandardEmail("🔄 Return Request Received", userObj.Name, $"We have received your return request for Order #{dto.OrderId}. Our team will review it shortly.", "/transactions.html");
+                _ = _emailService.SendEmailAsync(userObj.Email, "Return Request Submitted (#" + dto.OrderId + ")", emailHtml);
             }
 
             await _context.SaveChangesAsync();

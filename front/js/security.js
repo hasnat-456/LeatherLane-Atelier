@@ -16,11 +16,15 @@ document.addEventListener('DOMContentLoaded', () => {
             const id = (this.id || '').toLowerCase();
             const isEmail = input.type === 'email' || name.includes('email') || id.includes('email');
             const isPassword = input.type === 'password' || name.includes('password') || id.includes('password');
+            const isUrl = input.type === 'url' || name.includes('url') || id.includes('url') || name.includes('link') || id.includes('link');
 
             if (!isPassword) {
                 if (isEmail) {
                     // Emails shouldn't have weird brackets or spaces
-                    val = val.replace(/[^a-zA-Z0-9@\.\-_+]/g, '');
+                    val = val.replace(/[^a-zA-Z0-9@\\.\\-_+]/g, '');
+                } else if (isUrl) {
+                    // Allow valid URL characters
+                    val = val.replace(/[^a-zA-Z0-9\\-\\.\\_~:/?#\\[\\]@!$&'()*+,;=%]/g, '');
                 } else {
                     // 2. Number fields (Phone, ZIP, Quantities, Prices)
                     const isPhoneOrMobile = name.includes('phone') || name.includes('mobile') || id.includes('phone') || id.includes('mobile');
@@ -41,11 +45,11 @@ document.addEventListener('DOMContentLoaded', () => {
                         const isNameOrCity = (name.includes('name') && !name.includes('username')) || name.includes('city') || id.includes('name') || id.includes('city') || id.includes('category');
                         if (isNameOrCity) {
                             // Allow letters, spaces, hyphens, apostrophes
-                            val = val.replace(/[^a-zA-Z\s\-']/g, '');
+                            val = val.replace(/[^a-zA-Z\\s\\-']/g, '');
                         } else {
                             // 4. Addresses, Messages, Subjects, Descriptions
                             // Allow Alphanumeric, spaces, and normal punctuation (including # for apt numbers)
-                            val = val.replace(/[^a-zA-Z0-9\s\-\.,!?'"()&\r\n#:]/g, '');
+                            val = val.replace(/[^a-zA-Z0-9\\s\\-\\.,!?'"()&\\r\\n#:\\/=@%+_]/g, '');
                         }
                     }
                 }
