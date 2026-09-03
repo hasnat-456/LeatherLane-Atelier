@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -245,9 +245,7 @@
             </a>
         </div>
         
-          <button class="mobile-menu-btn" onclick="document.querySelector('.nav-links').classList.toggle('active')" aria-label="Menu">
-              ?
-          </button>
+          <button class="mobile-menu-btn" onclick="document.querySelector('.nav-links').classList.toggle('active')" aria-label="Menu">&#9776;</button>
           <div class="nav-links">
             <a href="/home">HOME</a>
             <a href="/products">Shop</a>
@@ -420,12 +418,15 @@
                                     
                                     let exchangeHtml = '';
                                     if (item.hasBeenExchanged) {
-                                        exchangeHtml = `<span style="background: #e0e0e0; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; color: #333; font-weight: bold;">Replacement Requested</span>
-                                                        <a href="/exchange-tracking?id=${item.exchangeRequestId}" style="font-size: 0.8rem; color: var(--primary-bg); font-weight: bold; margin-left: 10px; text-decoration: underline;">Track Replacement</a>`;
+                                        const badgeText = item.exchangeCompleted ? 'Exchange Completed' : 'Exchange in Progress';
+                                        const badgeBg = item.exchangeCompleted ? '#d4edda' : '#fff3cd';
+                                        const badgeColor = item.exchangeCompleted ? '#155724' : '#856404';
+                                        exchangeHtml = `<span style="background: ${badgeBg}; color: ${badgeColor}; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: bold;">${badgeText}</span>
+                                                        <a href="/exchange-tracking.html?id=${item.exchangeRequestId}" style="font-size: 0.8rem; color: var(--primary-bg); font-weight: bold; margin-left: 10px; text-decoration: underline;">Track Replacement</a>`;
                                     } else if (diffDays > 7) {
                                         exchangeHtml = `<span style="background: #e0e0e0; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; color: #333; font-weight: bold;">Not Eligible (Expired)</span>`;
                                     } else {
-                                        exchangeHtml = `<a href="/replacement-request?orderId=${tx.id}&itemId=${item.id}&productId=${item.productId}" style="background: var(--primary-bg); color: #fff; padding: 8px 16px; border-radius: 6px; font-size: 0.95rem; text-decoration: none; font-weight: 600; font-family: 'Poppins', sans-serif; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display: inline-block; transition: background 0.3s;">Request Replacement</a>`;
+                                        exchangeHtml = `<a href="/replacement-request.html?orderId=${tx.id}&itemId=${item.id}&productId=${item.productId}" style="background: var(--primary-bg); color: #fff; padding: 8px 16px; border-radius: 6px; font-size: 0.95rem; text-decoration: none; font-weight: 600; font-family: 'Poppins', sans-serif; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display: inline-block; transition: background 0.3s;">Request Replacement</a>`;
                                     }
 
                                     itemsHtml += `
@@ -472,11 +473,11 @@
                             <div class="tx-card">
                                 <div class="tx-header" style="display: flex; flex-direction: column; gap: 0.8rem; border-bottom: 1px solid #ddd; padding-bottom: 1rem; margin-bottom: 1.5rem;">
                                     <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; gap: 10px; flex-wrap: wrap;">
-                                        <span style="color: #333; font-weight: 600; font-size: 1rem;">Order ${tx.orderNumber || '#' + tx.id}</span> <span style="font-size: 0.85rem; color: #666;">(${dateStr})</span>
+                                        <span style="color: #333; font-weight: 700; font-size: 1rem;">Order ID: <span style="color: #8C5E3C; font-family: var(--font-heading);">${tx.orderId || tx.orderNumber}</span></span> <span style="font-size: 0.85rem; color: #666;">(${dateStr})</span>
                                         <span class="tx-status" style="background-color: ${badgeBg}; color: ${badgeColor}; font-size: 0.8rem; text-align: right;">${tx.status}</span>
                                     </div>
                                     <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; gap: 10px; flex-wrap: wrap;">
-                                        <a href="/order-tracking?id=${tx.id}" style="font-size: 0.85rem; color: var(--primary-bg); font-weight: bold; text-decoration: underline; white-space: nowrap;">Track Order</a>
+                                        <a href="/order-tracking.html?id=${tx.orderId || tx.orderNumber || tx.id}" style="font-size: 0.85rem; color: var(--primary-bg); font-weight: bold; text-decoration: underline; white-space: nowrap;">Track Order</a>
                                         <div>
                                             ${cancelBtnHtml}
                                         </div>

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -319,9 +319,7 @@
             </a>
         </div>
         
-          <button class="mobile-menu-btn" onclick="document.querySelector('.nav-links').classList.toggle('active')" aria-label="Menu">
-              ☰
-          </button>
+          <button class="mobile-menu-btn" onclick="document.querySelector('.nav-links').classList.toggle('active')" aria-label="Menu">&#9776;</button>
           <div class="nav-links">
             <a href="/home">HOME</a>
             <a href="/products">Shop</a>
@@ -362,18 +360,22 @@
                 </div>
 
                 <!-- Payment Instructions -->
-                <div class="checkout-card" style="border: 1px solid var(--primary-gold); background-color: #faf6f0; color: #333;">
-                    <h2>Payment Instructions</h2>
-                    <div style="font-size: 0.95rem; line-height: 1.6; margin-top: 10px;">
-                        <ol style="margin-left: 1.25rem; margin-bottom: 10px;">
-                            <li>Transfer the exact order amount.</li>
-                            <li>Use one of the payment methods below.</li>
-                            <li>Save your payment receipt.</li>
-                            <li>Upload the payment screenshot.</li>
-                            <li>Enter the transaction/reference ID.</li>
-                            <li>Submit your order.</li>
+                <div class="checkout-card" style="border: 1.5px solid var(--primary-gold); background-color: #fdfbf7; color: #333; border-radius: 8px;">
+                    <h2 style="color: var(--primary-bg); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 8px;">
+                        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="color: var(--primary-gold);"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+                        Payment Instructions
+                    </h2>
+                    <div style="font-size: 0.92rem; line-height: 1.6; margin-top: 10px;">
+                        <ol style="margin-left: 1.25rem; margin-bottom: 12px; padding-left: 0;">
+                            <li style="margin-bottom: 6px;"><strong>Select Method:</strong> Choose Bank Transfer, JazzCash, Easypaisa, or Raast below.</li>
+                            <li style="margin-bottom: 6px;"><strong>Transfer Exact Total:</strong> Send total amount to our displayed account details.</li>
+                            <li style="margin-bottom: 6px;"><strong>Sender Info (Compulsory):</strong> Enter your Account/Sender Name &amp; Sender Mobile Number.</li>
+                            <li style="margin-bottom: 6px;"><strong>Payment Screenshot (Compulsory):</strong> Upload a clear screenshot/receipt of the transfer.</li>
+                            <li style="margin-bottom: 6px;"><strong>Transaction ID:</strong> Required for Bank &amp; Raast; Optional for JazzCash &amp; Easypaisa.</li>
                         </ol>
-                        <strong style="color: #c0392b;">Your order will only be processed after payment verification.</strong>
+                        <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 8px 12px; font-size: 0.85rem; color: #856404; border-radius: 4px;">
+                            <strong>Notice:</strong> Your order will be verified and prepared immediately upon confirmation of your payment screenshot.
+                        </div>
                     </div>
                 </div>
 
@@ -391,13 +393,14 @@
                     </div>
                     
                     <div class="form-group">
-                        <label>Transaction / Reference ID *</label>
-                        <input type="text" id="paymentRefId" class="form-control" placeholder="Enter Transaction or Reference ID" required oninput="validateProofForm()">
+                        <label id="lblPaymentRefId">Transaction / Reference ID *</label>
+                        <input type="text" id="paymentRefId" class="form-control" placeholder="Enter Transaction or Reference ID" oninput="validateProofForm()">
+                        <div id="hintPaymentRefId" style="font-size: 0.8rem; color: #777; margin-top: 4px; display: none;"></div>
                     </div>
 
                     <div class="form-group">
                         <label>Sender Name *</label>
-                        <input type="text" id="senderName" class="form-control" placeholder="Enter Sender Name" required oninput="validateProofForm()">
+                        <input type="text" id="senderName" class="form-control" placeholder="Enter Sender / Account Holder Name" required oninput="validateProofForm()">
                     </div>
 
                     <div class="form-group">
@@ -408,7 +411,7 @@
                     <div class="form-group">
                         <label>Upload Payment Screenshot *</label>
                         <input type="file" id="paymentScreenshot" class="form-control" accept=".jpg,.jpeg,.png,.pdf" style="padding: 9px;" required onchange="validateProofForm()">
-                        <span style="font-size: 0.8rem; color: #666; margin-top: 4px; display: block;">Accepted types: JPG, JPEG, PNG, PDF</span>
+                        <span style="font-size: 0.8rem; color: #666; margin-top: 4px; display: block;">Accepted formats: JPG, JPEG, PNG, PDF (Compulsory for all payments)</span>
                     </div>
                 </div>
             </div>
@@ -457,16 +460,14 @@
     <!-- Map Modal -->
     <div class="modal-overlay" id="mapModal">
         <div class="modal-content" style="max-width: 600px; padding: 2rem; max-height: 90vh; overflow-y: auto;">
-            <h2 style="color: var(--primary-bg); margin-bottom: 1rem; font-family: var(--font-heading);">Select Address</h2>
-            <p style="color: #666; margin-bottom: 1rem; font-size: 0.9rem;">Search or click on the map to pinpoint your location.</p>
-            
-            <div style="display: flex; gap: 10px; margin-bottom: 1rem;">
-                <input type="text" id="mapSearchInput" class="form-control" placeholder="Search for city, street, landmark..." onkeydown="if(event.key === 'Enter') { event.preventDefault(); searchMapLocation(); }">
-                <button type="button" onclick="searchMapLocation()" class="btn-shopping" style="margin-top: 0; padding: 12px 20px; width: auto; white-space: nowrap;">Search</button>
+            <h2 style="color: var(--primary-bg); margin-bottom: 0.5rem; font-family: var(--font-heading);">Select Address</h2>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 8px;">
+                <p style="color: #666; margin: 0; font-size: 0.9rem;">Click or tap anywhere on the map to pinpoint your location.</p>
+                <button type="button" onclick="useCurrentLocation()" class="btn-cancel" style="margin-top: 0; padding: 6px 12px; font-size: 0.85rem; border-color: var(--primary-gold); color: var(--primary-gold); cursor: pointer;">📍 My Location</button>
             </div>
 
-            <div id="map" style="height: 300px; width: 100%; border-radius: 8px; margin-bottom: 1rem; background: #eee;"></div>
-            <div id="mapAddressPreview" style="font-size: 0.9rem; color: #333; margin-bottom: 1rem; min-height: 40px; text-align: left; padding: 10px; background: #f9f9f9; border: 1px solid #ddd; border-radius: 4px;">No location selected yet.</div>
+            <div id="map" style="height: 320px; width: 100%; border-radius: 8px; margin-bottom: 1rem; background: #eee; border: 1px solid #ddd;"></div>
+            <div id="mapAddressPreview" style="font-size: 0.9rem; color: #333; margin-bottom: 1rem; min-height: 40px; text-align: left; padding: 10px; background: #f9f9f9; border: 1px solid #ddd; border-radius: 4px;">No location selected yet. Click on the map to drop a pin.</div>
             <button class="btn-shopping" id="btnConfirmMap" onclick="confirmMapAddress()" style="margin-top: 0;">Confirm Address</button>
             <button onclick="closeMapModal()" class="btn-cancel" style="width: 100%; margin-top: 10px;">Cancel</button>
         </div>
@@ -580,48 +581,56 @@
                             selectedAddress = data.display_name;
                             document.getElementById('mapAddressPreview').innerText = selectedAddress;
                         } else {
-                            document.getElementById('mapAddressPreview').innerText = "Could not resolve address.";
-                            selectedAddress = "";
+                            document.getElementById('mapAddressPreview').innerText = `Location pinned: Lat ${lat.toFixed(4)}, Lng ${lng.toFixed(4)}`;
+                            selectedAddress = `Lat ${lat.toFixed(4)}, Lng ${lng.toFixed(4)}`;
                         }
                     } catch (err) {
-                        document.getElementById('mapAddressPreview').innerText = "Error fetching address.";
-                        selectedAddress = "";
+                        document.getElementById('mapAddressPreview').innerText = `Location pinned: Lat ${lat.toFixed(4)}, Lng ${lng.toFixed(4)}`;
+                        selectedAddress = `Lat ${lat.toFixed(4)}, Lng ${lng.toFixed(4)}`;
                     }
                 });
             }
             setTimeout(() => { map.invalidateSize(); }, 100);
         }
 
-        async function searchMapLocation() {
-            const query = document.getElementById('mapSearchInput').value.trim();
-            if (!query) return;
-
-            document.getElementById('mapAddressPreview').innerText = "Searching...";
-            
-            try {
-                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`);
-                const data = await res.json();
-                if (data && data.length > 0) {
-                    const lat = data[0].lat;
-                    const lon = data[0].lon;
-                    
-                    const latlng = [lat, lon];
-                    map.setView(latlng, 15);
-                    
+        function useCurrentLocation() {
+            if (!navigator.geolocation) {
+                alert("Geolocation is not supported by your browser.");
+                return;
+            }
+            document.getElementById('mapAddressPreview').innerText = "Locating your position via GPS...";
+            navigator.geolocation.getCurrentPosition(async function(pos) {
+                const lat = pos.coords.latitude;
+                const lng = pos.coords.longitude;
+                const latlng = [lat, lng];
+                
+                if (map) {
+                    map.setView(latlng, 16);
                     if (mapMarker) {
                         mapMarker.setLatLng(latlng);
                     } else {
                         mapMarker = L.marker(latlng).addTo(map);
                     }
-
-                    selectedAddress = data[0].display_name;
-                    document.getElementById('mapAddressPreview').innerText = selectedAddress;
-                } else {
-                    document.getElementById('mapAddressPreview').innerText = "No results found.";
                 }
-            } catch (err) {
-                document.getElementById('mapAddressPreview').innerText = "Error searching location.";
-            }
+                
+                try {
+                    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`);
+                    const data = await res.json();
+                    if (data && data.display_name) {
+                        selectedAddress = data.display_name;
+                        document.getElementById('mapAddressPreview').innerText = selectedAddress;
+                    } else {
+                        document.getElementById('mapAddressPreview').innerText = `Current Location: Lat ${lat.toFixed(4)}, Lng ${lng.toFixed(4)}`;
+                        selectedAddress = `Lat ${lat.toFixed(4)}, Lng ${lng.toFixed(4)}`;
+                    }
+                } catch (err) {
+                    document.getElementById('mapAddressPreview').innerText = `Current Location: Lat ${lat.toFixed(4)}, Lng ${lng.toFixed(4)}`;
+                    selectedAddress = `Lat ${lat.toFixed(4)}, Lng ${lng.toFixed(4)}`;
+                }
+            }, function(err) {
+                alert("Unable to access your current location. Please click directly on the map.");
+                document.getElementById('mapAddressPreview').innerText = "Click on the map to drop a pin.";
+            });
         }
 
         function closeMapModal() {
@@ -631,6 +640,7 @@
         function confirmMapAddress() {
             if (selectedAddress) {
                 document.getElementById('shippingAddress').value = selectedAddress;
+                validateProofForm();
             }
             closeMapModal();
         }
@@ -647,11 +657,27 @@
                 const response = await fetch('/api/cart', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
-                const cart = await response.json();
+                let cart = await response.json();
 
                 if (!cart || cart.length === 0) {
                     window.location.href = '/cart';
                     return;
+                }
+
+                // Filter by selected products if coming from the cart selection
+                let selectedIds = null;
+                try {
+                    const rawSelection = localStorage.getItem('selectedCheckoutProductIds');
+                    if (rawSelection) {
+                        selectedIds = JSON.parse(rawSelection);
+                    }
+                } catch(e) {}
+
+                if (selectedIds && Array.isArray(selectedIds) && selectedIds.length > 0) {
+                    const filtered = cart.filter(item => selectedIds.includes(item.productId));
+                    if (filtered.length > 0) {
+                        cart = filtered;
+                    }
                 }
 
                 cartItems = [];
@@ -736,6 +762,24 @@
             const chosen = select.value;
             const detailsBox = document.getElementById('methodDetailsBox');
             
+            const lblRef = document.getElementById('lblPaymentRefId');
+            const inputRef = document.getElementById('paymentRefId');
+            const hintRef = document.getElementById('hintPaymentRefId');
+            
+            const isWallet = chosen === "JazzCash" || chosen === "Easypaisa";
+            
+            if (isWallet) {
+                lblRef.innerHTML = `Transaction ID / TID <span style="font-weight: normal; color: #888; font-size: 0.85rem;">(Optional)</span>`;
+                inputRef.placeholder = `e.g. 1234567890 (Optional if screenshot is attached)`;
+                hintRef.style.display = 'block';
+                hintRef.innerText = `For ${chosen}, entering the TID is optional as long as your payment screenshot is clear.`;
+            } else {
+                lblRef.innerHTML = `Transaction / Reference ID <span style="color: red;">*</span>`;
+                inputRef.placeholder = `Enter Bank Transfer / Raast Reference ID`;
+                hintRef.style.display = 'none';
+                hintRef.innerText = ``;
+            }
+
             if (!chosen) {
                 detailsBox.style.display = 'none';
                 detailsBox.innerHTML = '';
@@ -804,8 +848,13 @@
             const shippingAddress = document.getElementById('shippingAddress').value.trim();
             
             const fileSelected = fileInput.files && fileInput.files.length > 0;
+            const isWallet = method === "JazzCash" || method === "Easypaisa";
             
-            const isValid = method && refId && name && mobile && fileSelected && termsChecked && shippingName && shippingPhone && shippingAddress;
+            // Transaction ID is optional for JazzCash/Easypaisa, but compulsory for Bank Transfer/Raast
+            const refValid = isWallet ? true : (refId.length > 0);
+            
+            // Sender Name, Sender Mobile, Payment Screenshot, Shipping Details, and Terms are strictly COMPULSORY for ALL
+            const isValid = method && refValid && name && mobile && fileSelected && termsChecked && shippingName && shippingPhone && shippingAddress;
             
             btn.disabled = !isValid;
         }
@@ -833,14 +882,29 @@
             }
 
             const method = document.getElementById('paymentMethod').value;
-            const refId = document.getElementById('paymentRefId').value.trim();
+            let refId = document.getElementById('paymentRefId').value.trim();
             const name = document.getElementById('senderName').value.trim();
             const mobile = document.getElementById('senderMobile').value.trim();
             const fileInput = document.getElementById('paymentScreenshot');
 
-            if (!fileInput.files || fileInput.files.length === 0) {
-                alert("Please select a payment screenshot.");
+            const isWallet = method === "JazzCash" || method === "Easypaisa";
+            if (!isWallet && !refId) {
+                alert("Please enter your Transaction or Reference ID.");
                 return;
+            }
+
+            if (!name || !mobile) {
+                alert("Please enter the Sender / Account Holder Name and Mobile Number used for the payment.");
+                return;
+            }
+
+            if (!fileInput.files || fileInput.files.length === 0) {
+                alert("Please upload your payment screenshot or receipt.");
+                return;
+            }
+
+            if (!refId && isWallet) {
+                refId = "N/A - Screenshot Attached";
             }
 
             const btn = document.getElementById('btnInitiate');
@@ -893,6 +957,7 @@
                 });
 
                 if (placeOrderRes.ok) {
+                    localStorage.removeItem('selectedCheckoutProductIds');
                     alert("Your payment proof has been submitted successfully.\nOur team will verify your payment.\nOnce verified, your order will automatically move to Order Confirmed.");
                     window.location.href = '/transactions';
                 } else {

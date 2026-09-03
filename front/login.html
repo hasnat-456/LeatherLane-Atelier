@@ -27,7 +27,7 @@
     <link rel="canonical" href="https://leatherlaneatelier.store/login">
 
     <title>Login | LeatherLane Atelier</title>
-    <link rel="stylesheet" href="css/global.css?v=1787222477335">
+    <link rel="stylesheet" href="css/global.css?v=1788361743120">
     <style>
         .split-layout {
             display: flex;
@@ -176,6 +176,26 @@
             font-size: 0.8rem;
             color: var(--secondary-text);
             left: 0;
+        }
+
+        /* Chrome / Safari / Edge Autofill Dark Theme Override */
+        input:-webkit-autofill,
+        input:-webkit-autofill:hover, 
+        input:-webkit-autofill:focus, 
+        input:-webkit-autofill:active {
+            -webkit-box-shadow: 0 0 0 1000px #3A271F inset !important;
+            box-shadow: 0 0 0 1000px #3A271F inset !important;
+            -webkit-text-fill-color: #F5EFE7 !important;
+            color: #F5EFE7 !important;
+            caret-color: #C79A52 !important;
+            border-color: rgba(199, 154, 82, 0.35) !important;
+            transition: background-color 5000s ease-in-out 0s !important;
+        }
+
+        input:-webkit-autofill:focus {
+            border-color: #C79A52 !important;
+            -webkit-box-shadow: 0 0 0 1000px #3A271F inset, 0 0 10px rgba(199, 154, 82, 0.2) !important;
+            box-shadow: 0 0 0 1000px #3A271F inset, 0 0 10px rgba(199, 154, 82, 0.2) !important;
         }
 
         @media (max-width: 900px) {

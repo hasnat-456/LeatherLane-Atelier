@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -204,9 +204,7 @@
             </a>
         </div>
         
-          <button class="mobile-menu-btn" onclick="document.querySelector('.nav-links').classList.toggle('active')" aria-label="Menu">
-              ?
-          </button>
+          <button class="mobile-menu-btn" onclick="document.querySelector('.nav-links').classList.toggle('active')" aria-label="Menu">&#9776;</button>
           <div class="nav-links">
             <a href="/home">HOME</a>
             <a href="/products">Shop</a>
@@ -467,17 +465,36 @@
                     }
                     document.getElementById('timeline').innerHTML = timelineHtml;
 
+        function getCourierTrackUrl(courierName, trackingNumber) {
+            if (!courierName) return '#';
+            const c = courierName.toLowerCase();
+            const t = (trackingNumber || '').trim();
+            if (c.includes('tcs')) {
+                return t ? `https://www.tcsexpress.com/tracking?trackNo=${encodeURIComponent(t)}` : 'https://www.tcsexpress.com';
+            }
+            if (c.includes('m&p') || c.includes('m and p') || c.includes('m & p') || c.includes('mulphi')) {
+                return t ? `https://track.mulphilog.com/index.php?tracking_no=${encodeURIComponent(t)}` : 'https://mulphilog.com';
+            }
+            if (c.includes('leopard')) {
+                return t ? `https://www.leopardscourier.com/tracking?trackNo=${encodeURIComponent(t)}` : 'https://www.leopardscourier.com';
+            }
+            if (c.includes('postex')) {
+                return t ? `https://postex.pk/tracking?cn=${encodeURIComponent(t)}` : 'https://postex.pk';
+            }
+            return t ? `https://www.google.com/search?q=${encodeURIComponent(courierName + ' tracking ' + t)}` : '#';
+        }
+
                     if (latestTracking && latestTracking.trackingNumber) {
-                        const trackUrl = latestTracking.courierName.toLowerCase().includes('tcs') ? `https://www.tcsexpress.com/tracking?trackNo=${latestTracking.trackingNumber}` : '#';
+                        const trackUrl = getCourierTrackUrl(latestTracking.courierName, latestTracking.trackingNumber);
                         document.getElementById('trackingInfoCard').innerHTML = `
                             <div class="tracking-card">
                                 <div class="tracking-info">
                                     <div><strong>Courier Name:</strong> ${latestTracking.courierName}</div>
                                     <div><strong>Tracking Number:</strong> ${latestTracking.trackingNumber}</div>
-                                    <div style="font-size: 0.85rem; color: #666; margin-top: 5px;">Enter this Tracking ID on the courier website.</div>
+                                    <div style="font-size: 0.85rem; color: #666; margin-top: 5px;">Enter this Tracking ID on the courier website to view real-time delivery status.</div>
                                 </div>
                                 <div>
-                                    <button class="track-btn" onclick="window.open('${trackUrl}', '_blank')"><i class="fas fa-search-location"></i> Track Shipment</button>
+                                    <button class="track-btn" onclick="window.open('${trackUrl}', '_blank')"><i class="fas fa-search-location"></i> Track Shipment on ${latestTracking.courierName}</button>
                                 </div>
                             </div>
                         `;

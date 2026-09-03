@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -378,6 +378,16 @@
                 margin-right: 16px !important;
                 border-radius: 8px !important;
             }
+
+            .products-toolbar {
+                flex-direction: column !important;
+                gap: 15px !important;
+                align-items: stretch !important;
+            }
+            .products-search-box {
+                max-width: 100% !important;
+                margin: 0 !important;
+            }
         }
     </style>
 
@@ -391,9 +401,7 @@
             </a>
         </div>
         
-          <button class="mobile-menu-btn" onclick="document.querySelector('.nav-links').classList.toggle('active')" aria-label="Menu">
-              ☰
-          </button>
+          <button class="mobile-menu-btn" onclick="document.querySelector('.nav-links').classList.toggle('active')" aria-label="Menu">&#9776;</button>
           <div class="nav-links">
             <a href="/home">HOME</a>
             <a href="/products">Shop</a>
@@ -430,6 +438,11 @@
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M6 12h12m-9 6h6"/></svg>
                     FILTERS
                 </button>
+                <div class="products-search-box" style="position: relative; flex: 1; max-width: 450px; min-width: 200px; margin: 0 15px;">
+                    <svg viewBox="0 0 24 24" width="18" height="18" stroke="#8C5E3C" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); pointer-events: none;"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    <input type="text" id="productSearchInput" placeholder="Search by name or Product ID (e.g. LLA-SH-...)..." oninput="syncSearch(this); applyFilters()" style="width: 100%; padding: 10px 38px 10px 40px; border: 1.5px solid #d4af37; border-radius: 25px; font-size: 0.9rem; font-family: var(--font-body); outline: none; background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,0.04); transition: all 0.2s ease;">
+                    <button id="clearSearchBtn" onclick="clearSearch()" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; font-size: 1.2rem; color: #999; cursor: pointer; display: none; line-height: 1;" title="Clear search">&times;</button>
+                </div>
                 <div style="display: flex; align-items: center; gap: 10px;">
                     <span style="font-family: var(--font-heading); font-weight: 600; color: var(--primary-bg);">SORT BY:</span>
                     <select id="sortSelectTop" class="sort-select" onchange="applyFilters()">
@@ -462,6 +475,14 @@
             <button class="close-drawer" onclick="toggleDrawer()">&times;</button>
         </div>
         <div class="drawer-content">
+            <!-- Search in Drawer -->
+            <div style="margin-bottom: 1.2rem; border-bottom: 1px solid #eee; padding-bottom: 1.2rem;">
+                <label style="font-weight: 600; font-family: var(--font-heading); color: var(--primary-bg); text-transform: uppercase; font-size: 0.85rem; display: block; margin-bottom: 8px;">SEARCH PRODUCTS</label>
+                <div style="position: relative;">
+                    <svg viewBox="0 0 24 24" width="16" height="16" stroke="#888" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); pointer-events: none;"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    <input type="text" id="drawerSearchInput" placeholder="Search by name or Product ID..." oninput="syncSearch(this); applyFilters()" style="width: 100%; padding: 8px 12px 8px 36px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.9rem; font-family: var(--font-body); outline: none;">
+                </div>
+            </div>
             
             <!-- Sort By (Drawer) -->
             <div class="filter-accordion">
@@ -663,6 +684,28 @@
             document.getElementById('priceSlider').value = maxInput.value;
         }
 
+        // Search sync and clear
+        function syncSearch(el) {
+            const val = el.value;
+            const mainInput = document.getElementById('productSearchInput');
+            const drawerInput = document.getElementById('drawerSearchInput');
+            if(mainInput && mainInput !== el) mainInput.value = val;
+            if(drawerInput && drawerInput !== el) drawerInput.value = val;
+            
+            const clearBtn = document.getElementById('clearSearchBtn');
+            if(clearBtn) clearBtn.style.display = val.trim() ? 'block' : 'none';
+        }
+
+        function clearSearch() {
+            const mainInput = document.getElementById('productSearchInput');
+            const drawerInput = document.getElementById('drawerSearchInput');
+            if(mainInput) mainInput.value = '';
+            if(drawerInput) drawerInput.value = '';
+            const clearBtn = document.getElementById('clearSearchBtn');
+            if(clearBtn) clearBtn.style.display = 'none';
+            applyFilters();
+        }
+
         async function loadShopData() {
             try {
                 // Fetch categories
@@ -675,6 +718,15 @@
                 // Also check URL params for initial pre-selection
                 const urlParams = new URLSearchParams(window.location.search);
                 const initialCategory = urlParams.get('category');
+                const initialSearch = urlParams.get('search') || urlParams.get('q');
+                if (initialSearch) {
+                    const mainInput = document.getElementById('productSearchInput');
+                    const drawerInput = document.getElementById('drawerSearchInput');
+                    if (mainInput) mainInput.value = initialSearch;
+                    if (drawerInput) drawerInput.value = initialSearch;
+                    const clearBtn = document.getElementById('clearSearchBtn');
+                    if (clearBtn) clearBtn.style.display = 'block';
+                }
                 
                 categories.forEach(cat => {
                     const catName = typeof cat === 'string' ? cat : (cat.name || cat.Name);
@@ -774,6 +826,11 @@
         }
 
         function applyFilters() {
+            // Search Input
+            const searchTerm = (document.getElementById('productSearchInput')?.value || '').trim().toLowerCase();
+            const clearBtn = document.getElementById('clearSearchBtn');
+            if(clearBtn) clearBtn.style.display = searchTerm ? 'block' : 'none';
+
             // Categories
             const checkboxes = document.querySelectorAll('.category-filter-checkbox:checked');
             selectedCategories = Array.from(checkboxes).map(cb => cb.value);
@@ -785,14 +842,28 @@
             // In Stock
             const inStockOnly = document.getElementById('inStockToggle').checked;
             
-            // Sizes (Dummy Logic: since sizes aren't in current products list directly to filter on, we simulate or skip if none selected)
-            // If they are in the DB, we filter by it. Let's assume currentProduct.sizes isn't loaded in summary, so we just dummy filter if they try to use it.
-            // Actually, products API might return sizes! Wait, `sizes` might be an array.
+            // Sizes
             const sizeCheckboxes = document.querySelectorAll('.size-filter-checkbox:checked');
             const selectedSizes = Array.from(sizeCheckboxes).map(cb => cb.value);
             
             let filtered = allProducts;
             
+            // Filter by Search Name / Keywords
+            if (searchTerm) {
+                const terms = searchTerm.split(/\s+/).filter(Boolean);
+                filtered = filtered.filter(p => {
+                    const searchTarget = [
+                        p.name || '',
+                        p.productId || '',
+                        p.category || '',
+                        p.subcategory || '',
+                        p.description || '',
+                        p.leatherType || ''
+                    ].join(' ').toLowerCase();
+                    return terms.every(term => searchTarget.includes(term));
+                });
+            }
+
             // Filter Categories
             if (selectedCategories.length > 0) {
                 filtered = filtered.filter(p => selectedCategories.includes(p.category));
@@ -829,12 +900,12 @@
             } else if(sortVal === 'oldest') {
                 filtered.sort((a,b) => a.id - b.id);
             }
-            // 'best-selling' is default, assume id descending for dummy
             
             renderProducts(filtered);
         }
 
         function resetFilters() {
+            clearSearch();
             document.querySelectorAll('.category-filter-checkbox').forEach(cb => cb.checked = false);
             document.querySelectorAll('.size-filter-checkbox').forEach(cb => cb.checked = false);
             document.getElementById('priceMin').value = 0;

@@ -6,6 +6,7 @@ namespace LeatherLane_Atelier.Models
     public class Product
     {
         public int Id { get; set; }
+        public string? ProductId { get; set; }
         public string Name { get; set; } = string.Empty;
         public string Slug { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
@@ -15,10 +16,12 @@ namespace LeatherLane_Atelier.Models
         public string? Subcategory { get; set; }
         
         public int? CategoryId { get; set; }
-        public string AvailabilityStatus { get; set; } = "Available";
+        public string? AvailabilityStatus { get; set; } = "Available";
         
         public List<string> Images { get; set; } = new();
         public string? Thumbnail { get; set; }
+        [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+        public string? Image => Thumbnail ?? (Images != null && Images.Count > 0 ? Images[0] : null);
         
         public string? LeatherType { get; set; }
         public List<string> Colors { get; set; } = new();

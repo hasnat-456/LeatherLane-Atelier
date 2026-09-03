@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -289,9 +289,7 @@
             </a>
         </div>
         
-          <button class="mobile-menu-btn" onclick="document.querySelector('.nav-links').classList.toggle('active')" aria-label="Menu">
-              ☰
-          </button>
+          <button class="mobile-menu-btn" onclick="document.querySelector('.nav-links').classList.toggle('active')" aria-label="Menu">&#9776;</button>
           <div class="nav-links">
             <a href="/home">HOME</a>
             <a href="/products">Shop</a>
@@ -381,6 +379,10 @@
         </div>
     </footer>
     <script>
+        let currentCart = [];
+        let selectedProductIds = new Set();
+        let isInitialLoad = true;
+
         async function removeFromCart(productId) {
             const token = localStorage.getItem('token');
             if(!token) return;
@@ -388,6 +390,7 @@
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${token}` }
             });
+            selectedProductIds.delete(productId);
             renderCart();
         }
 
@@ -404,6 +407,112 @@
             } else if (currentQty + delta === 0) {
                 removeFromCart(productId);
             }
+        }
+
+        function toggleSelectAll(checked) {
+            if (checked) {
+                currentCart.forEach(item => selectedProductIds.add(item.productId));
+            } else {
+                selectedProductIds.clear();
+            }
+            updateCartSummaryUI();
+        }
+
+        function toggleItemSelection(productId, checked) {
+            if (checked) {
+                selectedProductIds.add(productId);
+            } else {
+                selectedProductIds.delete(productId);
+            }
+            updateCartSummaryUI();
+        }
+
+        function updateCartSummaryUI() {
+            // Update individual item checkboxes
+            const itemCheckboxes = document.querySelectorAll('.cart-item-checkbox');
+            itemCheckboxes.forEach(cb => {
+                const pId = parseInt(cb.getAttribute('data-product-id'));
+                cb.checked = selectedProductIds.has(pId);
+            });
+
+            // Update master Select All checkbox
+            const selectAllCb = document.getElementById('selectAllCheckbox');
+            const selectedCount = selectedProductIds.size;
+            const totalCount = currentCart.length;
+
+            if (selectAllCb) {
+                selectAllCb.checked = (selectedCount === totalCount && totalCount > 0);
+            }
+
+            const counterLabel = document.getElementById('selectedItemsCounter');
+            if (counterLabel) {
+                counterLabel.innerText = `Select All (${selectedCount} of ${totalCount} selected)`;
+            }
+
+            // Calculate totals for selected items
+            let subtotal = 0;
+            let originalSubtotal = 0;
+            let selectedUnits = 0;
+
+            currentCart.forEach(item => {
+                if (selectedProductIds.has(item.productId)) {
+                    const qty = item.quantity || 1;
+                    const price = item.product.price || 0;
+                    const originalPrice = item.product.originalPrice || price;
+                    subtotal += (price * qty);
+                    originalSubtotal += (originalPrice * qty);
+                    selectedUnits += qty;
+                }
+            });
+
+            const totalDiscount = originalSubtotal - subtotal;
+            const tax = subtotal * 0.05;
+            const total = subtotal + tax;
+
+            const sumSubtotalEl = document.getElementById('sumSubtotal');
+            const sumDiscountEl = document.getElementById('sumDiscount');
+            const rowDiscountEl = document.getElementById('rowDiscount');
+            const sumTaxEl = document.getElementById('sumTax');
+            const sumTotalEl = document.getElementById('sumTotal');
+            const btnCheckoutEl = document.getElementById('btnCheckout');
+
+            if (sumSubtotalEl) sumSubtotalEl.innerText = `Rs. ${originalSubtotal.toFixed(2)}`;
+            
+            if (rowDiscountEl) {
+                if (totalDiscount > 0) {
+                    rowDiscountEl.style.display = 'flex';
+                    if (sumDiscountEl) sumDiscountEl.innerText = `-Rs. ${totalDiscount.toFixed(2)}`;
+                } else {
+                    rowDiscountEl.style.display = 'none';
+                }
+            }
+
+            if (sumTaxEl) sumTaxEl.innerText = `Rs. ${tax.toFixed(2)}`;
+            if (sumTotalEl) sumTotalEl.innerText = `Rs. ${total.toFixed(2)}`;
+
+            if (btnCheckoutEl) {
+                if (selectedCount === 0) {
+                    btnCheckoutEl.disabled = true;
+                    btnCheckoutEl.style.opacity = '0.6';
+                    btnCheckoutEl.style.cursor = 'not-allowed';
+                    btnCheckoutEl.innerText = 'Select At Least 1 Item to Checkout';
+                } else {
+                    btnCheckoutEl.disabled = false;
+                    btnCheckoutEl.style.opacity = '1';
+                    btnCheckoutEl.style.cursor = 'pointer';
+                    btnCheckoutEl.innerText = `Proceed to Checkout (${selectedUnits} item${selectedUnits > 1 ? 's' : ''})`;
+                }
+            }
+        }
+
+        function proceedToCheckout() {
+            if (selectedProductIds.size === 0) {
+                alert("Please select at least one product to proceed to checkout.");
+                return;
+            }
+            const selectedIdsArray = Array.from(selectedProductIds);
+            localStorage.setItem('selectedCheckoutProductIds', JSON.stringify(selectedIdsArray));
+            window.location.href = '/checkout';
         }
 
         async function renderCart() {
@@ -427,8 +536,10 @@
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 const cart = await response.json();
+                currentCart = cart || [];
                 
-                if (!cart || cart.length === 0) {
+                if (!currentCart || currentCart.length === 0) {
+                    selectedProductIds.clear();
                     container.innerHTML = `
                         <div class="empty-cart-card">
                             <div class="cart-icon"><svg viewBox="0 0 24 24" width="1.2em" height="1.2em" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: text-bottom;"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg></div>
@@ -437,24 +548,34 @@
                             <a href="/products" class="btn-shopping">Continue Shopping</a>
                         </div>
                     `;
-                    // Update badge across site
                     const badge = document.getElementById('cartBadge');
                     if(badge) badge.style.display = 'none';
                     return;
                 }
                 
-                let subtotal = 0;
-                let originalSubtotal = 0;
+                // Select all items by default on initial load
+                if (isInitialLoad || selectedProductIds.size === 0) {
+                    selectedProductIds.clear();
+                    currentCart.forEach(item => selectedProductIds.add(item.productId));
+                    isInitialLoad = false;
+                } else {
+                    // Filter out any removed product IDs
+                    const validIds = new Set(currentCart.map(i => i.productId));
+                    selectedProductIds = new Set([...selectedProductIds].filter(id => validIds.has(id)));
+                    if (selectedProductIds.size === 0) {
+                        currentCart.forEach(item => selectedProductIds.add(item.productId));
+                    }
+                }
+                
                 let totalItems = 0;
-                let itemsHtml = cart.map((item) => {
+                let itemsHtml = currentCart.map((item) => {
                     const qty = item.quantity || 1;
                     const price = item.product.price || 0;
                     const originalPrice = item.product.originalPrice || price;
                     const discount = item.product.discount || 0;
                     const itemTotal = price * qty;
-                    subtotal += itemTotal;
-                    originalSubtotal += (originalPrice * qty);
                     totalItems += qty;
+                    const isSelected = selectedProductIds.has(item.productId);
                     
                     let priceHtml = `Rs. ${price} each`;
                     if (originalPrice > price) {
@@ -462,75 +583,78 @@
                     }
                     
                     return `
-                        <div class="cart-item-row">
-                            <div>
-                                <div style="font-weight: 600; font-size: 1.1rem;">${item.product.name}</div>
-                                <div style="color: var(--secondary-text); font-size: 0.9rem; margin-top: 4px;">${priceHtml}</div>
+                        <div class="cart-item-row" style="display: flex; align-items: center; gap: 12px;">
+                            <input type="checkbox" class="cart-item-checkbox" data-product-id="${item.productId}" onchange="toggleItemSelection(${item.productId}, this.checked)" ${isSelected ? 'checked' : ''} style="width: 18px; height: 18px; accent-color: var(--primary-bg); cursor: pointer;">
+                            <div style="flex: 1;">
+                                <div style="font-weight: 600; font-size: 1.05rem; color: var(--primary-bg);">${item.product.name}</div>
+                                <div style="color: var(--secondary-text); font-size: 0.88rem; margin-top: 4px;">${priceHtml}</div>
                             </div>
                             <div class="cart-item-actions">
-                                <div style="display: flex; align-items: center; gap: 10px;">
-                                    <button onclick="updateQuantity(${item.productId}, ${qty}, -1)" style="width: 28px; height: 28px; border-radius: 4px; border: 1px solid #ddd; background: #fff; cursor: pointer;">-</button>
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <button onclick="updateQuantity(${item.productId}, ${qty}, -1)" style="width: 28px; height: 28px; border-radius: 4px; border: 1px solid #ddd; background: #fff; cursor: pointer; font-weight: bold;">-</button>
                                     <span style="font-weight: bold; width: 20px; text-align: center;">${qty}</span>
-                                    <button onclick="updateQuantity(${item.productId}, ${qty}, 1)" style="width: 28px; height: 28px; border-radius: 4px; border: 1px solid #ddd; background: #fff; cursor: pointer;">+</button>
+                                    <button onclick="updateQuantity(${item.productId}, ${qty}, 1)" style="width: 28px; height: 28px; border-radius: 4px; border: 1px solid #ddd; background: #fff; cursor: pointer; font-weight: bold;">+</button>
                                 </div>
-                                <div style="color: var(--primary-gold); font-weight: bold; width: 60px; text-align: right;">Rs. ${itemTotal}</div>
-                                <button onclick="removeFromCart(${item.productId})" style="background: none; border: none; color: #ff6b6b; cursor: pointer; text-decoration: underline;">Remove</button>
+                                <div style="color: var(--primary-gold); font-weight: bold; width: 75px; text-align: right;">Rs. ${itemTotal}</div>
+                                <button onclick="removeFromCart(${item.productId})" style="background: none; border: none; color: #ff6b6b; cursor: pointer; text-decoration: underline; font-size: 0.85rem;">Remove</button>
                             </div>
                         </div>
                     `;
                 }).join('');
                 
-                // Update badge
+                // Update cart icon badge
                 const badge = document.getElementById('cartBadge');
                 if (badge) {
                     badge.style.display = 'inline-block';
                     badge.innerText = totalItems;
                 }
 
-                const tax = subtotal * 0.05;
-                const total = subtotal + tax;
-                const totalDiscount = originalSubtotal - subtotal;
-                
-                let discountRow = '';
-                if (totalDiscount > 0) {
-                    discountRow = `
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px; color: #e91e63;">
-                            <span>Discount</span>
-                            <span style="font-weight: 600;">-Rs. ${totalDiscount.toFixed(2)}</span>
-                        </div>
-                    `;
-                }
-
                 container.innerHTML = `
                     <div class="cart-grid">
                         <div style="background: #fff; padding: 2rem; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
-                            <h2 style="color: var(--primary-bg); margin-bottom: 1.5rem; border-bottom: 2px solid var(--primary-gold); padding-bottom: 10px;">Your Cart</h2>
+                            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--primary-gold); padding-bottom: 10px; margin-bottom: 1rem;">
+                                <h2 style="color: var(--primary-bg); margin: 0; font-family: var(--font-heading);">Your Cart</h2>
+                            </div>
+                            
+                            <!-- Master Select All Bar -->
+                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; background: #faf8f5; border: 1px solid #eee; border-radius: 6px; margin-bottom: 15px;">
+                                <label style="display: flex; align-items: center; gap: 10px; font-weight: 600; cursor: pointer; color: var(--primary-bg); margin: 0; font-size: 0.95rem;">
+                                    <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll(this.checked)" checked style="width: 18px; height: 18px; accent-color: var(--primary-bg); cursor: pointer;">
+                                    <span id="selectedItemsCounter">Select All (${selectedProductIds.size} of ${currentCart.length} selected)</span>
+                                </label>
+                            </div>
+
                             ${itemsHtml}
                         </div>
                         
                         <div style="background: #fff; padding: 2rem; border-radius: 8px; height: fit-content; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
-                            <h2 style="color: var(--primary-bg); margin-bottom: 1.5rem; border-bottom: 1px solid #eee; padding-bottom: 10px;">Order Summary</h2>
+                            <h2 style="color: var(--primary-bg); margin-bottom: 1.5rem; border-bottom: 1px solid #eee; padding-bottom: 10px; font-family: var(--font-heading);">Order Summary</h2>
                             <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
                                 <span style="color: #666;">Subtotal</span>
-                                <span style="font-weight: 600;">Rs. ${originalSubtotal.toFixed(2)}</span>
+                                <span id="sumSubtotal" style="font-weight: 600;">Rs. 0.00</span>
                             </div>
-                            ${discountRow}
+                            <div id="rowDiscount" style="display: none; justify-content: space-between; margin-bottom: 10px; color: #e91e63;">
+                                <span>Discount</span>
+                                <span id="sumDiscount" style="font-weight: 600;">-Rs. 0.00</span>
+                            </div>
                             <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
                                 <span style="color: #666;">Shipping</span>
-                                <span style="font-weight: 600;">Free</span>
+                                <span style="font-weight: 600; color: #2e6b4d;">Free</span>
                             </div>
                             <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
                                 <span style="color: #666;">Tax (5%)</span>
-                                <span style="font-weight: 600;">Rs. ${tax.toFixed(2)}</span>
+                                <span id="sumTax" style="font-weight: 600;">Rs. 0.00</span>
                             </div>
                             <div style="display: flex; justify-content: space-between; padding-top: 15px; border-top: 1px solid #eee; margin-bottom: 20px;">
-                                <h3 style="color: var(--primary-bg);">Total</h3>
-                                <h3 style="color: var(--primary-bg);">Rs. ${total.toFixed(2)}</h3>
+                                <h3 style="color: var(--primary-bg); margin: 0;">Total</h3>
+                                <h3 id="sumTotal" style="color: var(--primary-bg); margin: 0;">Rs. 0.00</h3>
                             </div>
-                            <button class="btn-shopping" onclick="window.location.href='/checkout'" style="width: 100%;">Proceed to Checkout</button>
+                            <button class="btn-shopping" id="btnCheckout" onclick="proceedToCheckout()" style="width: 100%; transition: all 0.2s;">Proceed to Checkout</button>
                         </div>
                     </div>
                 `;
+
+                updateCartSummaryUI();
             } catch (err) {
                 console.error("Failed to load cart", err);
             }

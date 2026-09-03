@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -186,9 +186,7 @@
             </a>
         </div>
         
-          <button class="mobile-menu-btn" onclick="document.querySelector('.nav-links').classList.toggle('active')" aria-label="Menu">
-              ?
-          </button>
+          <button class="mobile-menu-btn" onclick="document.querySelector('.nav-links').classList.toggle('active')" aria-label="Menu">&#9776;</button>
           <div class="nav-links">
             <a href="/home">HOME</a>
             <a href="/products">Shop</a>
@@ -252,7 +250,7 @@
                 </label>
             </div>
 
-            <button type="submit" class="btn-submit">Submit Replacement Request</button>
+            <button type="submit" id="submitBtn" class="btn-submit">Submit Replacement Request</button>
         </form>
     </div>
 
@@ -275,7 +273,7 @@
             products.forEach(p => {
                 if (p.id == originalProductId) {
                     document.getElementById('originalProductContainer').innerHTML = `
-                        <img src="${p.thumbnail}" alt="Product">
+                        <img src="${p.thumbnail || 'https://via.placeholder.com/80'}" alt="Product">
                         <div>
                             <div style="font-weight: bold; font-size: 1.2rem;">${p.name}</div>
                             <div style="color: #666;">Original Price: Rs. ${p.price.toFixed(2)}</div>
@@ -293,13 +291,14 @@
 
         document.getElementById('exchangeForm').addEventListener('submit', async (e) => {
             e.preventDefault();
+            const submitBtn = document.getElementById('submitBtn');
             const formData = new FormData();
             formData.append('OrderId', orderId);
             formData.append('OrderItemId', itemId);
-            formData.append('Reason', document.getElementById('reason').value);
-            formData.append('OtherReason', document.getElementById('otherReason').value);
+            formData.append('Reason', document.getElementById('reason')?.value || '');
+            formData.append('OtherReason', document.getElementById('otherReason')?.value || '');
             formData.append('ReplacementProductId', originalProductId); // Force same product
-            formData.append('CustomerConfirmed', document.getElementById('customerConfirmed').checked);
+            formData.append('CustomerConfirmed', document.getElementById('customerConfirmed')?.checked || false);
             
             const files = document.getElementById('images').files;
             if (files.length === 0) { alert('You must upload at least one image showing the defect.'); return; }
@@ -310,8 +309,16 @@
             }
 
             const token = localStorage.getItem('token');
-            document.getElementById('submitBtn').innerText = 'Submitting...';
-            document.getElementById('submitBtn').disabled = true;
+            if (!token) {
+                alert('Please log in to submit a replacement request.');
+                window.location.href = '/login';
+                return;
+            }
+
+            if (submitBtn) {
+                submitBtn.innerText = 'Submitting...';
+                submitBtn.disabled = true;
+            }
 
             try {
                 const res = await fetch('/api/exchange/request', {
@@ -322,16 +329,21 @@
                 const result = await res.json();
                 if (res.ok) {
                     alert('Replacement request submitted successfully!');
-                    window.location.href = `exchange-tracking.html?id=${result.exchangeId}`;
+                    window.location.href = `/exchange-tracking.html?id=${result.exchangeCode || result.exchangeId}`;
                 } else {
                     alert(result.message || 'Error submitting request.');
-                    document.getElementById('submitBtn').innerText = 'Submit Replacement Request';
-                    document.getElementById('submitBtn').disabled = false;
+                    if (submitBtn) {
+                        submitBtn.innerText = 'Submit Replacement Request';
+                        submitBtn.disabled = false;
+                    }
                 }
             } catch (err) {
-                alert('Connection error.');
-                document.getElementById('submitBtn').innerText = 'Submit Replacement Request';
-                document.getElementById('submitBtn').disabled = false;
+                console.error(err);
+                alert('Connection error. Please try again.');
+                if (submitBtn) {
+                    submitBtn.innerText = 'Submit Replacement Request';
+                    submitBtn.disabled = false;
+                }
             }
         });
 

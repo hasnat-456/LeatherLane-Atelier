@@ -27,24 +27,26 @@ namespace LeatherLane_Atelier.Controllers
         }
 
         [HttpGet("order/{id}")]
-        public async Task<IActionResult> GetOrderTracking(int id)
+        public async Task<IActionResult> GetOrderTracking(string id)
         {
             var userId = GetUserId();
+            int.TryParse(id.TrimStart('#'), out var numericId);
+
             var order = await _context.Transactions
                 .Include(t => t.Items)
-                .FirstOrDefaultAsync(t => t.Id == id && t.UserId == userId);
+                .FirstOrDefaultAsync(t => (t.OrderId == id || (numericId > 0 && t.Id == numericId)) && t.UserId == userId);
 
             if (order == null) return NotFound(new { message = "Order not found." });
 
             var timeline = await _context.TimelineEvents
-                .Where(t => t.ReferenceId == id && t.Type == "Order")
+                .Where(t => t.ReferenceId == order.Id && t.Type == "Order")
                 .OrderBy(t => t.EventDateTime)
                 .ToListAsync();
 
             return Ok(new
             {
                 orderId = order.Id,
-                orderNumber = LeatherLane_Atelier.Services.OrderHelper.FormatOrderNumber(order.Id),
+                orderNumber = order.OrderId,
                 orderDate = order.CreatedAt,
                 paymentStatus = order.Status,
                 paymentMethod = order.PaymentMethod,
@@ -59,26 +61,30 @@ namespace LeatherLane_Atelier.Controllers
         }
 
         [HttpGet("exchange/{id}")]
-        public async Task<IActionResult> GetExchangeTracking(int id)
+        public async Task<IActionResult> GetExchangeTracking(string id)
         {
             var userId = GetUserId();
+            int.TryParse(id.TrimStart('#'), out var numericId);
+
             var exchange = await _context.ExchangeRequests
+                .Include(e => e.Order)
                 .Include(e => e.OriginalProduct)
                 .Include(e => e.ReplacementProduct)
-                .FirstOrDefaultAsync(e => e.ExchangeId == id && e.CustomerId == userId);
+                .FirstOrDefaultAsync(e => (e.ExchangeCode == id || (numericId > 0 && e.ExchangeId == numericId)) && e.CustomerId == userId);
 
             if (exchange == null) return NotFound(new { message = "Exchange request not found." });
 
             var timeline = await _context.TimelineEvents
-                .Where(t => t.ReferenceId == id && t.Type == "Exchange")
+                .Where(t => t.ReferenceId == exchange.ExchangeId && t.Type == "Exchange")
                 .OrderBy(t => t.EventDateTime)
                 .ToListAsync();
 
             return Ok(new
             {
                 exchangeId = exchange.ExchangeId,
+                exchangeCode = exchange.ExchangeCode,
                 orderId = exchange.OrderId,
-                orderNumber = LeatherLane_Atelier.Services.OrderHelper.FormatOrderNumber(exchange.OrderId),
+                orderNumber = exchange.Order?.OrderId ?? exchange.OrderId.ToString(),
                 originalProduct = exchange.OriginalProduct?.Name,
                 replacementProduct = exchange.ReplacementProduct?.Name,
                 reason = exchange.Reason,
@@ -89,25 +95,29 @@ namespace LeatherLane_Atelier.Controllers
         }
 
         [HttpGet("return/{id}")]
-        public async Task<IActionResult> GetReturnTracking(int id)
+        public async Task<IActionResult> GetReturnTracking(string id)
         {
             var userId = GetUserId();
+            int.TryParse(id.TrimStart('#'), out var numericId);
+
             var ret = await _context.ReturnRequests
+                .Include(r => r.Order)
                 .Include(r => r.Product)
-                .FirstOrDefaultAsync(r => r.ReturnId == id && r.CustomerId == userId);
+                .FirstOrDefaultAsync(r => (r.ReturnCode == id || (numericId > 0 && (r.ReturnId == numericId || r.OrderId == numericId))) && r.CustomerId == userId);
 
             if (ret == null) return NotFound(new { message = "Return request not found." });
 
             var timeline = await _context.TimelineEvents
-                .Where(t => t.ReferenceId == id && t.Type == "Return")
+                .Where(t => t.ReferenceId == ret.ReturnId && t.Type == "Return")
                 .OrderBy(t => t.EventDateTime)
                 .ToListAsync();
 
             return Ok(new
             {
                 returnId = ret.ReturnId,
+                returnCode = ret.ReturnCode,
                 orderId = ret.OrderId,
-                orderNumber = LeatherLane_Atelier.Services.OrderHelper.FormatOrderNumber(ret.OrderId),
+                orderNumber = ret.Order?.OrderId ?? ret.OrderId.ToString(),
                 product = ret.Product?.Name,
                 reason = ret.Reason,
                 status = ret.Status,

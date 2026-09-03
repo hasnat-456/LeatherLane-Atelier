@@ -51,7 +51,7 @@ namespace LeatherLane_Atelier.Services
 
                 var mailMessage = new MailMessage
                 {
-                    From = new MailAddress(_smtpUser, "LeatherLane Atelier Notifications"),
+                    From = new MailAddress(_smtpUser, "LeatherLane Atelier"),
                     Subject = subject,
                     Body = body,
                     IsBodyHtml = true

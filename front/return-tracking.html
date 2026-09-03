@@ -210,6 +210,31 @@
             return 'fa-circle';
         }
 
+        function getCourierTrackUrl(courierName, trackingNumber) {
+            if (!courierName) return '#';
+            const c = courierName.toLowerCase();
+            const t = (trackingNumber || '').trim();
+            if (c.includes('tcs')) {
+                return t ? `https://www.tcsexpress.com/tracking?trackNo=${encodeURIComponent(t)}` : 'https://www.tcsexpress.com';
+            }
+            if (c.includes('m&p') || c.includes('m and p') || c.includes('m & p') || c.includes('mulphi')) {
+                return t ? `https://track.mulphilog.com/index.php?tracking_no=${encodeURIComponent(t)}` : 'https://mulphilog.com';
+            }
+            if (c.includes('leopard')) {
+                return t ? `https://www.leopardscourier.com/tracking?trackNo=${encodeURIComponent(t)}` : 'https://www.leopardscourier.com';
+            }
+            if (c.includes('postex')) {
+                return t ? `https://postex.pk/tracking?cn=${encodeURIComponent(t)}` : 'https://postex.pk';
+            }
+            if (c.includes('trax')) {
+                return t ? `https://trax.pk/tracking?tracking_id=${encodeURIComponent(t)}` : 'https://trax.pk';
+            }
+            if (c.includes('call courier') || c.includes('callcourier')) {
+                return t ? `https://callcourier.com.pk/tracking/?tc=${encodeURIComponent(t)}` : 'https://callcourier.com.pk';
+            }
+            return t ? `https://www.google.com/search?q=${encodeURIComponent(courierName + ' tracking ' + t)}` : '#';
+        }
+
         async function loadTracking() {
             const token = localStorage.getItem('token');
             if (!token) { window.location.href = '/login'; return; }
@@ -229,8 +254,8 @@
                     
                     const detailsHtml = `
                         <div class="details-col">
-                            <div><span class="details-label">Return ID:</span> #${data.returnId}</div>
-                            <div><span class="details-label">Order ID:</span> ${data.orderNumber || '#' + data.orderId}</div>
+                            <div><span class="details-label">Return ID:</span> <strong style="color: var(--primary-bg);">${data.returnCode || 'RET-' + data.returnId}</strong></div>
+                            <div><span class="details-label">Order ID:</span> <strong style="color: #8C5E3C;">${data.orderNumber || data.orderId}</strong></div>
                             <div><span class="details-label">Request Date:</span> ${new Date(data.requestDate).toLocaleDateString()}</div>
                             <div><span class="details-label">Status:</span> <strong style="color: var(--primary-gold);">${data.status}</strong></div>
                         </div>
@@ -277,10 +302,10 @@
                     document.getElementById('timeline').innerHTML = timelineHtml;
 
                     if (latestTracking && latestTracking.trackingNumber) {
-                        const trackUrl = latestTracking.courierName.toLowerCase().includes('tcs') ? `https://www.tcsexpress.com/tracking?trackNo=${latestTracking.trackingNumber}` : '#';
+                        const trackUrl = getCourierTrackUrl(latestTracking.courierName, latestTracking.trackingNumber);
                         
                         let trackingTitle = "Tracking Information";
-                        let trackingExplanation = "Enter this Tracking ID on the courier website.";
+                        let trackingExplanation = "Enter this Tracking ID on the courier website to view real-time delivery status.";
                         
                         if (latestTracking.status === 'Pickup Scheduled') {
                             trackingTitle = "Return Pickup Tracking Info";
@@ -291,15 +316,15 @@
                         }
                         
                         document.getElementById('trackingInfoCard').innerHTML = `
-                            <div class="tracking-card">
-                                <h4 style="margin-top:0; margin-bottom:1rem; color:var(--primary-bg); font-family: var(--font-heading); font-size:1.2rem; border-bottom:1px solid #eee; padding-bottom:0.5rem;">${trackingTitle}</h4>
-                                <div class="tracking-info">
-                                    <div><strong>Courier Name:</strong> ${latestTracking.courierName}</div>
-                                    <div><strong>Tracking Number:</strong> ${latestTracking.trackingNumber}</div>
-                                    <div style="font-size: 0.85rem; color: #666; margin-top: 5px;">${trackingExplanation}</div>
+                            <div class="tracking-card" style="margin-bottom: 2rem; background: #fff; border: 1px solid #e2d7c5; border-radius: 8px; padding: 1.5rem; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+                                <h4 style="margin-top:0; margin-bottom:1rem; color:var(--primary-bg); font-family: var(--font-heading); font-size:1.15rem; border-bottom:1px solid #f0e6d6; padding-bottom:0.6rem;">${trackingTitle}</h4>
+                                <div class="tracking-info" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; font-size: 0.95rem; margin-bottom: 10px;">
+                                    <div><span style="color:#666;">Courier Name:</span> <strong style="color:var(--primary-bg);">${latestTracking.courierName}</strong></div>
+                                    <div><span style="color:#666;">Tracking / CN #:</span> <strong style="color: #8C5E3C; font-family: monospace; font-size: 1rem;">${latestTracking.trackingNumber}</strong></div>
                                 </div>
-                                <div style="margin-top: 1rem;">
-                                    <button class="track-btn" onclick="window.open('${trackUrl}', '_blank')"><i class="fas fa-search-location"></i> Track Shipment</button>
+                                <div style="font-size: 0.85rem; color: #666; margin-bottom: 1.2rem;">${trackingExplanation}</div>
+                                <div>
+                                    <button class="track-btn" onclick="window.open('${trackUrl}', '_blank')" style="display: inline-flex; align-items: center; gap: 8px; background: var(--primary-bg); color: #fff; border: none; padding: 10px 22px; border-radius: 4px; font-weight: 600; cursor: pointer; text-decoration: none; font-size: 0.95rem;"><i class="fas fa-external-link-alt"></i> Track Shipment on ${latestTracking.courierName}</button>
                                 </div>
                             </div>
                         `;

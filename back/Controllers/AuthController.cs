@@ -16,11 +16,13 @@ namespace LeatherLane_Atelier.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly IConfiguration _config;
+        private readonly LeatherLane_Atelier.Services.IEmailService _emailService;
 
-        public AuthController(ApplicationDbContext context, IConfiguration config)
+        public AuthController(ApplicationDbContext context, IConfiguration config, LeatherLane_Atelier.Services.IEmailService emailService)
         {
             _context = context;
             _config = config;
+            _emailService = emailService;
         }
 
         private string GenerateToken(int userId, string role)
@@ -205,10 +207,17 @@ namespace LeatherLane_Atelier.Controllers
         [HttpPost("forgot-password")]
         public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest req)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == req.Email);
+            if (string.IsNullOrWhiteSpace(req.Email))
+            {
+                return Ok(new { message = "If an account with that email exists, a reset link has been sent." });
+            }
+
+            var cleanEmail = req.Email.Trim().ToLower();
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == cleanEmail);
             
             if (user == null)
             {
+                Console.WriteLine($"[ForgotPassword] No user found with email: {cleanEmail}");
                 // Always return Ok to prevent email enumeration
                 return Ok(new { message = "If an account with that email exists, a reset link has been sent." });
             }
@@ -218,34 +227,23 @@ namespace LeatherLane_Atelier.Controllers
             user.ResetPasswordExpiry = DateTime.UtcNow.AddMinutes(15);
             await _context.SaveChangesAsync();
 
-            var smtpHost = _config["Smtp:Host"];
-            var smtpPort = int.TryParse(_config["Smtp:Port"], out int port) ? port : 587;
-            var smtpEmail = _config["Smtp:Email"];
-            var smtpPass = _config["Smtp:Password"];
-
             var resetLink = $"{Request.Scheme}://{Request.Host}/reset-password.html?token={token}";
+
+            Console.WriteLine("=================================================");
+            Console.WriteLine($"[PASSWORD RESET GENERATED for {user.Email}]");
+            Console.WriteLine($"Token: {token}");
+            Console.WriteLine($"Link: {resetLink}");
+            Console.WriteLine("=================================================");
 
             try 
             {
-                using var client = new SmtpClient(smtpHost, smtpPort)
-                {
-                    Credentials = new NetworkCredential(smtpEmail, smtpPass),
-                    EnableSsl = true
-                };
-                var mailMessage = new MailMessage
-                {
-                    From = new MailAddress(smtpEmail, "LeatherLane Atelier"),
-                    Subject = "Reset Your Password",
-                    Body = $"Hello {user.Name},\n\nPlease click the following link to reset your password. This link will expire in 15 minutes.\n\n{resetLink}\n\nIf you did not request this, please ignore this email.",
-                    IsBodyHtml = false,
-                };
-                mailMessage.To.Add(user.Email);
-                await client.SendMailAsync(mailMessage);
+                var htmlBody = LeatherLane_Atelier.Services.EmailTemplateBuilder.BuildPasswordResetEmail(user.Name, resetLink);
+                await _emailService.SendEmailAsync(user.Email, "Reset Your Password | LeatherLane Atelier", htmlBody);
+                Console.WriteLine($"[ForgotPassword] Password reset email queued successfully to {user.Email}");
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Error sending email: " + ex.Message);
-                Console.WriteLine($"RESET LINK FOR {user.Email}: {resetLink}");
+                Console.WriteLine($"[ForgotPassword Error] Failed to send email to {user.Email}: {ex.Message}");
             }
 
             return Ok(new { message = "If an account with that email exists, a reset link has been sent." });

@@ -59,9 +59,10 @@
         .admin-nav {
             display: flex;
             align-items: center;
-            gap: 1.5rem;
+            gap: 1.1rem;
+            flex-wrap: nowrap;
         }
-        .admin-nav .nav-item { white-space: nowrap;  color: #ddd; cursor: pointer; text-decoration: none; font-weight: 500; font-size: 0.95rem; }
+        .admin-nav .nav-item { white-space: nowrap; flex-shrink: 0; color: #ddd; cursor: pointer; text-decoration: none; font-weight: 500; font-size: 0.95rem; }
         .admin-nav .nav-item:hover { color: #fff; }
         .admin-nav .nav-item.active { color: var(--primary-gold); font-weight: bold; border-bottom: 2px solid var(--primary-gold); padding-bottom: 4px; }
         
@@ -141,18 +142,44 @@
             div[style*="grid-template-columns: 1fr 1fr"] {
                 grid-template-columns: 1fr !important;
             }
+            /* Force inline flex form rows to stack vertically on mobile */
+            div[style*="display: flex; gap: 1rem"],
+            div[style*="display: flex; gap: 1.5rem"],
+            .form-row-responsive {
+                flex-direction: column !important;
+                gap: 0.5rem !important;
+            }
+            div[style*="display: flex; gap: 1rem"] > div,
+            div[style*="display: flex; gap: 1.5rem"] > div,
+            .form-row-responsive > div {
+                width: 100% !important;
+                min-width: 100% !important;
+            }
+
             /* Make all inputs strictly box-bound */
-            .admin-form .form-control, input, textarea, select, .ql-toolbar, .ql-container, .card {
+            .admin-form .form-control, input, textarea, select, .ql-toolbar, .ql-container {
                 max-width: 100% !important;
                 box-sizing: border-box !important;
                 width: 100%;
             }
+            #adminOrderSearch {
+                min-width: 0 !important;
+                width: 100% !important;
+                box-sizing: border-box !important;
+            }
+
+            /* Allow cards containing tables to scroll horizontally so columns are not clipped */
             .card {
                 padding: 1rem !important;
-                overflow-x: hidden;
+                overflow-x: auto !important;
+                -webkit-overflow-scrolling: touch;
             }
+            table {
+                min-width: 650px !important;
+            }
+
             /* Ensure buttons don't bleed out */
-            .btn-primary, .btn-secondary {
+            .btn-primary, .btn-secondary, button[type="submit"] {
                 max-width: 100% !important;
                 box-sizing: border-box !important;
                 white-space: normal !important;
@@ -166,7 +193,7 @@
                 display: block;
                 overflow-x: auto;
             }
-            /* Original fixes below */
+            /* Navbar */
             .navbar.admin-navbar {
                 flex-direction: row !important;
                 align-items: center !important;
@@ -200,28 +227,10 @@
                 box-sizing: border-box !important;
                 padding: 0 1rem !important;
                 overflow-x: hidden !important;
-            }
-
-            
-            .admin-nav {
-                display: none !important;
-                flex-direction: column !important;
-                position: absolute !important;
-                top: 100% !important;
-                left: 0 !important;
-                width: 100% !important;
-                background-color: var(--primary-bg) !important;
-                padding: 1rem 0 !important;
-                z-index: 1000 !important;
-                box-shadow: 0 4px 6px rgba(0,0,0,0.3) !important;
-                overflow-x: hidden !important;
+                margin: 1.5rem auto;
             }
             .grid-2, .grid-3 {
                 grid-template-columns: 1fr;
-            }
-            .container {
-                padding: 0 1rem;
-                margin: 1.5rem auto;
             }
             .topbar {
                 flex-direction: column;
@@ -231,16 +240,10 @@
             .stat-card {
                 padding: 1.5rem;
             }
-            .card {
-                padding: 1rem;
-            }
             table th, table td {
                 padding: 0.8rem;
                 font-size: 0.9rem;
             }
-        }
-
-    
             .admin-nav.active {
                 display: flex !important;
             }
@@ -251,6 +254,7 @@
                 padding: 12px 0 !important;
                 border-bottom: 1px solid rgba(255,255,255,0.05);
             }
+        }
         </style>
 
     <!-- Quill.js for Rich Text Editing -->
@@ -482,7 +486,7 @@
                     <div class="notification-footer"><a href="/admin-notifications">View All Alerts</a></div>
                 </div>
             </div>
-            <a style="color: #ff6b6b; cursor: pointer; font-weight: bold; margin-left: 10px;" onclick="adminLogout()">Sign Out</a>
+            <a style="color: #ff6b6b; cursor: pointer; font-weight: bold; margin-left: 10px; white-space: nowrap; flex-shrink: 0;" onclick="adminLogout()">Sign Out</a>
         </div>
     </nav>
 
@@ -506,8 +510,9 @@
 
         <!-- Orders Section -->
         <div id="orders" class="section">
-            <div class="topbar">
-                <h1>Order Management</h1>
+            <div class="topbar" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+                <h1 style="margin: 0;">Order Management</h1>
+                <input type="text" id="adminOrderSearch" placeholder="Search by Order ID or Customer..." oninput="filterAdminOrders(this.value)" style="padding: 8px 16px; border: 1.5px solid #d4af37; border-radius: 20px; font-size: 0.9rem; min-width: 280px; outline: none; background: #fff;">
             </div>
             <div class="card" style="padding: 0; overflow-x: auto;">
                 <table class="table">
@@ -516,6 +521,7 @@
                             <th>Order ID</th>
                             <th>Date</th>
                             <th>Customer</th>
+                            <th>Ordered Products (ID, Name, Qty)</th>
                             <th>Amount</th>
                             <th>Current Status</th>
                             <th>Action</th>
@@ -530,9 +536,12 @@
 
         <!-- Products Section -->
         <div id="products" class="section">
-            <div class="topbar">
-                <h1>Product Inventory</h1>
-                <button class="btn-primary" style="width: auto; padding: 10px 20px;" onclick="showAddProduct()">+ Add Product</button>
+            <div class="topbar" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+                <h1 style="margin: 0;">Product Inventory</h1>
+                <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                    <input type="text" id="adminProductSearch" placeholder="Search by Product ID, Name, or Category..." oninput="filterAdminProducts(this.value)" style="padding: 8px 16px; border: 1.5px solid #d4af37; border-radius: 20px; font-size: 0.9rem; min-width: 280px; outline: none; background: #fff;">
+                    <button class="btn-primary" style="width: auto; padding: 10px 20px;" onclick="showAddProduct()">+ Add Product</button>
+                </div>
             </div>
             
             <div id="productsList" class="card" style="padding: 0; overflow-x: auto;">
@@ -540,10 +549,11 @@
                     <thead>
                         <tr>
                             <th>Image</th>
+                            <th>Product ID</th>
                             <th>Name</th>
                             <th>Category</th>
                             <th>Price</th>
-                            <th>Stock</th>
+                            <th>Status</th>
                             <th>Action</th>
                         </tr>
                     </thead>
@@ -1137,7 +1147,7 @@
             window.location.href = '/login';
         }
     </script>
-    <script src="js/admin.js?v=9999991"></script>
+    <script src="js/admin.js?v=1788429000000"></script>
 
     
     <footer style="margin-top: 4rem; padding: 2rem 1.5rem; text-align: center; color: #D8C7A6; font-size: 0.9rem; background-color: #4A1515; box-shadow: 0 -4px 15px rgba(0,0,0,0.1);">

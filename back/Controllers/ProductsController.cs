@@ -24,13 +24,13 @@ namespace LeatherLane_Atelier.Controllers
         [HttpGet]
         public async Task<IActionResult> GetProducts([FromQuery] string? category, [FromQuery] string? search, [FromQuery] bool? isFeatured)
         {
-            var query = _context.Products.AsNoTracking().Where(p => p.AvailabilityStatus != "Discontinued").AsQueryable();
+            var query = _context.Products.AsNoTracking().Where(p => p.AvailabilityStatus == null || p.AvailabilityStatus != "Discontinued").AsQueryable();
 
             if (!string.IsNullOrEmpty(category))
                 query = query.Where(p => p.Category == category);
 
             if (!string.IsNullOrEmpty(search))
-                query = query.Where(p => p.Name.Contains(search) || p.Description.Contains(search));
+                query = query.Where(p => p.Name.Contains(search) || p.Description.Contains(search) || (p.ProductId != null && p.ProductId.Contains(search)) || p.Category.Contains(search));
 
             if (isFeatured.HasValue && isFeatured.Value)
                 query = query.Where(p => p.IsFeatured);
@@ -47,13 +47,14 @@ namespace LeatherLane_Atelier.Controllers
             
             var products = productsEntities.Select(p => new {
                     p.Id,
+                    ProductId = p.ProductId ?? LeatherLane_Atelier.Services.IdGenerator.GenerateProductId(p.Category),
                     p.Name,
                     p.Slug,
                     p.Price,
                     p.OriginalPrice,
                     p.Category,
                     p.CategoryId,
-                    p.AvailabilityStatus,
+                    AvailabilityStatus = p.AvailabilityStatus ?? "Available",
                     p.Subcategory,
                     p.Thumbnail,
                     p.Rating,
@@ -90,6 +91,12 @@ namespace LeatherLane_Atelier.Controllers
             if (product == null)
                 return NotFound(new { message = "Product not found" });
 
+            if (string.IsNullOrEmpty(product.ProductId))
+            {
+                product.ProductId = LeatherLane_Atelier.Services.IdGenerator.GenerateProductId(product.Category);
+                await _context.SaveChangesAsync();
+            }
+
             var now = DateTime.Now;
             var activeDeals = await _context.Deals.Where(d => d.StartTime <= now && d.EndTime >= now).ToListAsync();
             Deal.ApplyActiveDeals(product, activeDeals);
@@ -106,6 +113,14 @@ namespace LeatherLane_Atelier.Controllers
                 if (category != null)
                 {
                     product.Category = category.Name;
+                }
+            }
+            else if (!string.IsNullOrEmpty(product.Category))
+            {
+                var category = await _context.ProductCategories.FirstOrDefaultAsync(c => c.Name == product.Category);
+                if (category != null)
+                {
+                    product.CategoryId = category.Id;
                 }
             }
 
@@ -125,6 +140,16 @@ namespace LeatherLane_Atelier.Controllers
                 product.Stock = 0;
             }
 
+            if (string.IsNullOrEmpty(product.ProductId))
+            {
+                string candidateId;
+                do
+                {
+                    candidateId = LeatherLane_Atelier.Services.IdGenerator.GenerateProductId(product.Category);
+                } while (await _context.Products.AnyAsync(p => p.ProductId == candidateId));
+                product.ProductId = candidateId;
+            }
+
             _context.Products.Add(product);
             await _context.SaveChangesAsync();
 
@@ -134,6 +159,12 @@ namespace LeatherLane_Atelier.Controllers
             {
                 var productId = product.Id;
                 var productName = product.Name;
+                var productCode = product.ProductId;
+                var productCategory = product.Category ?? "Artisan Footwear";
+                var productPrice = product.Price;
+                var productThumbnail = product.Image;
+                var productSizes = product.Sizes;
+
                 _ = Task.Run(async () =>
                 {
                     using var scope = serviceScopeFactory.CreateScope();
@@ -152,8 +183,17 @@ namespace LeatherLane_Atelier.Controllers
                                 ActionUrl = $"product-detail.html?id={productId}",
                                 UserId = u.Id
                             });
-                            var htmlEmail = LeatherLane_Atelier.Services.EmailTemplateBuilder.BuildStandardEmail("📢 New Product Alert!", u.Name, $"We just added a new product to our store: <b>{productName}</b>. Visit our website to see more details!", "/products.html", "Shop Now");
-                            _ = emailSvc.SendEmailAsync(u.Email, "New Product Alert!", htmlEmail);
+                            var htmlEmail = LeatherLane_Atelier.Services.EmailTemplateBuilder.BuildNewProductAlertEmail(
+                                u.Name, 
+                                productName, 
+                                productCode, 
+                                productCategory, 
+                                productPrice, 
+                                productThumbnail, 
+                                (productSizes != null && productSizes.Count > 0 ? string.Join(", ", productSizes) : null), 
+                                productId
+                            );
+                            _ = emailSvc.SendEmailAsync(u.Email, $"New Arrival: {productName} | LeatherLane Atelier", htmlEmail);
                         }
                         await db.SaveChangesAsync();
                     }
@@ -273,12 +313,37 @@ namespace LeatherLane_Atelier.Controllers
                 UserId = null // Admin
             });
 
-            // The IEmailService would normally be injected here, but to avoid changing constructor
-            // I will use HttpContext.RequestServices to get it directly
+            // Find user's latest order containing this product to get Order ID
+            var latestOrder = await _context.Transactions
+                .Include(t => t.Items)
+                .Where(t => t.UserId == userId && t.Items.Any(i => i.ProductId == id))
+                .OrderByDescending(t => t.CreatedAt)
+                .FirstOrDefaultAsync();
+
+            string orderIdDisplay = latestOrder?.OrderId ?? ("LLA-PROD-" + product.Id);
+
             var emailService = HttpContext.RequestServices.GetService(typeof(LeatherLane_Atelier.Services.IEmailService)) as LeatherLane_Atelier.Services.IEmailService;
+            var userObj = await _context.Users.FindAsync(userId);
+
             if (emailService != null)
             {
-                await LeatherLane_Atelier.Services.EmailServiceExtensions.NotifyAdminsAsync(emailService, _context, "New Product Review", $"A customer left a {dto.Rating}-star review for {product.Name}:\n\n{dto.Comment}");
+                var adminEmailHtml = LeatherLane_Atelier.Services.EmailTemplateBuilder.BuildAdminReviewAlertEmail(
+                    orderIdDisplay, 
+                    userObj?.Name ?? "Customer", 
+                    userObj?.Email ?? "customer@example.com", 
+                    product.Name, 
+                    product.ProductId, 
+                    product.Image, 
+                    dto.Rating, 
+                    dto.Comment
+                );
+
+                var adminEmails = await _context.Users.Where(u => u.Role == "Admin").Select(u => u.Email).ToListAsync();
+                adminEmails.Add("leatherlaneatelier@gmail.com");
+                foreach (var aEmail in adminEmails.Distinct(StringComparer.OrdinalIgnoreCase))
+                {
+                    _ = emailService.SendEmailAsync(aEmail, $"New Customer Review: {product.Name} (Order {orderIdDisplay})", adminEmailHtml);
+                }
             }
 
             if (userId > 0)
@@ -292,15 +357,18 @@ namespace LeatherLane_Atelier.Controllers
                     UserId = userId
                 });
                 
-                var userObj = await _context.Users.FindAsync(userId);
                 if (userObj != null && emailService != null)
                 {
-                    var details = new System.Collections.Generic.Dictionary<string, string> {
-                    { "Product", product.Name },
-                    { "Rating", $"{dto.Rating} Stars" }
-                };
-                var htmlEmail = LeatherLane_Atelier.Services.EmailTemplateBuilder.BuildStandardEmail("Thank You For Your Review!", userObj.Name, "We appreciate your review. Your feedback helps us maintain our timeless craftsmanship!", "/products", "Shop New Arrivals", details);
-                _ = emailService.SendEmailAsync(userObj.Email, "Thank You For Your Review!", htmlEmail);
+                    var htmlEmail = LeatherLane_Atelier.Services.EmailTemplateBuilder.BuildCustomerReviewConfirmationEmail(
+                        userObj.Name, 
+                        orderIdDisplay, 
+                        product.Name, 
+                        product.ProductId, 
+                        product.Image, 
+                        dto.Rating, 
+                        dto.Comment
+                    );
+                    _ = emailService.SendEmailAsync(userObj.Email, $"Thank You For Reviewing {product.Name} | LeatherLane Atelier", htmlEmail);
                 }
             }
 
@@ -310,23 +378,28 @@ namespace LeatherLane_Atelier.Controllers
         }
     
         [HttpPost("upload-images")]
-        public async Task<IActionResult> UploadImages([FromForm] List<IFormFile> images)
+        [DisableRequestSizeLimit]
+        public async Task<IActionResult> UploadImages()
         {
             var uploadedUrls = new List<string>();
-            if (images == null || images.Count == 0) return BadRequest("No images received.");
+            var files = Request.Form.Files;
+            if (files == null || files.Count == 0) return BadRequest(new { message = "No images received." });
             
             var currentDir = Directory.GetCurrentDirectory();
             var frontPath = currentDir.EndsWith("back", StringComparison.OrdinalIgnoreCase) 
                 ? Path.Combine(currentDir, "..", "front") 
                 : Path.Combine(currentDir, "front");
+            frontPath = Path.GetFullPath(frontPath);
             var uploadsFolder = Path.Combine(frontPath, "images", "products");
             Directory.CreateDirectory(uploadsFolder);
             
-            foreach (var file in images)
+            foreach (var file in files)
             {
                 if (file.Length > 0)
                 {
-                    var uniqueFileName = Guid.NewGuid().ToString() + "_" + file.FileName.Replace(" ", "_");
+                    var ext = Path.GetExtension(file.FileName);
+                    if (string.IsNullOrWhiteSpace(ext)) ext = ".jpg";
+                    var uniqueFileName = Guid.NewGuid().ToString("N") + ext.ToLowerInvariant();
                     var filePath = Path.Combine(uploadsFolder, uniqueFileName);
                     
                     using (var stream = new FileStream(filePath, FileMode.Create))

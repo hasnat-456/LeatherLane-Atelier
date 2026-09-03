@@ -51,6 +51,7 @@ builder.Services.AddOpenApi();
 builder.Services.AddScoped<LeatherLane_Atelier.Services.IEmailService, LeatherLane_Atelier.Services.EmailService>();
 builder.Services.Configure<LeatherLane_Atelier.Models.PayfastSettings>(builder.Configuration.GetSection("PayfastSettings"));
 builder.Services.AddScoped<LeatherLane_Atelier.Services.IPayfastService, LeatherLane_Atelier.Services.PayfastService>();
+builder.Services.AddHostedService<LeatherLane_Atelier.Services.ReviewReminderService>();
 
 builder.Services.AddCors(options =>
 {
@@ -95,7 +96,7 @@ if (Directory.Exists(frontPath))
         {
             var cleanPath = path.Substring(0, path.Length - 5);
             if (cleanPath.Equals("/index", StringComparison.OrdinalIgnoreCase))
-                cleanPath = "/home";
+                cleanPath = "/";
             
             var qs = context.Request.QueryString.HasValue ? context.Request.QueryString.Value : "";
             context.Response.Redirect(cleanPath + qs, permanent: true);
@@ -105,7 +106,7 @@ if (Directory.Exists(frontPath))
         // 2. Secretly append .html on the server side so static files work
         if (!string.IsNullOrEmpty(path) && !path.StartsWith("/api") && !path.StartsWith("/images") && !System.IO.Path.HasExtension(path))
         {
-            var htmlPath = (path == "/" ? "/home" : path) + ".html";
+            var htmlPath = (path == "/" || path.Equals("/splash", StringComparison.OrdinalIgnoreCase) || path.Equals("/index", StringComparison.OrdinalIgnoreCase) ? "/index" : path) + ".html";
             var physicalPath = System.IO.Path.Combine(frontPath, htmlPath.TrimStart('/'));
             if (System.IO.File.Exists(physicalPath))
             {
@@ -375,7 +376,8 @@ using (var scope = app.Services.CreateScope())
         var newProductColumns = new[]
         {
             "CategoryId INTEGER NULL",
-            "AvailabilityStatus TEXT NULL"
+            "AvailabilityStatus TEXT NULL",
+            "ProductId TEXT NULL"
         };
 
         foreach (var colDef in newProductColumns)
@@ -384,6 +386,30 @@ using (var scope = app.Services.CreateScope())
             {
                 using var cmd = conn.CreateCommand();
                 cmd.CommandText = $"ALTER TABLE Products ADD COLUMN {colDef};";
+                cmd.ExecuteNonQuery();
+            }
+            catch (System.Exception)
+            {
+                // Column probably already exists
+            }
+        }
+
+        var additionalTableColumns = new (string Table, string Column)[]
+        {
+            ("Transactions", "OrderId TEXT NULL"),
+            ("Transactions", "DeliveredAt TEXT NULL"),
+            ("Transactions", "ReviewReminderDay2Sent INTEGER NOT NULL DEFAULT 0"),
+            ("Transactions", "ReviewReminderDay4Sent INTEGER NOT NULL DEFAULT 0"),
+            ("ExchangeRequests", "ExchangeCode TEXT NULL"),
+            ("ReturnRequests", "ReturnCode TEXT NULL")
+        };
+
+        foreach (var (tbl, colDef) in additionalTableColumns)
+        {
+            try
+            {
+                using var cmd = conn.CreateCommand();
+                cmd.CommandText = $"ALTER TABLE {tbl} ADD COLUMN {colDef};";
                 cmd.ExecuteNonQuery();
             }
             catch (System.Exception)
@@ -400,6 +426,43 @@ using (var scope = app.Services.CreateScope())
             context.Database.ExecuteSqlRaw("UPDATE Products SET AvailabilityStatus = 'Available' WHERE AvailabilityStatus IS NULL;");
         }
         catch (System.Exception) { }
+
+        // Backfill Professional Identifiers
+        try
+        {
+            var unassignedProducts = context.Products.Where(p => string.IsNullOrEmpty(p.ProductId)).ToList();
+            foreach (var prod in unassignedProducts)
+            {
+                prod.ProductId = LeatherLane_Atelier.Services.IdGenerator.GenerateProductId(prod.Category);
+            }
+
+            var unassignedTransactions = context.Transactions.Where(t => string.IsNullOrEmpty(t.OrderId)).ToList();
+            foreach (var tx in unassignedTransactions)
+            {
+                tx.OrderId = LeatherLane_Atelier.Services.IdGenerator.GenerateOrderId(tx.CreatedAt);
+            }
+
+            var unassignedExchanges = context.ExchangeRequests.Where(e => string.IsNullOrEmpty(e.ExchangeCode)).ToList();
+            foreach (var ex in unassignedExchanges)
+            {
+                ex.ExchangeCode = LeatherLane_Atelier.Services.IdGenerator.GenerateExchangeId();
+            }
+
+            var unassignedReturns = context.ReturnRequests.Where(r => string.IsNullOrEmpty(r.ReturnCode)).ToList();
+            foreach (var ret in unassignedReturns)
+            {
+                ret.ReturnCode = LeatherLane_Atelier.Services.IdGenerator.GenerateReturnId();
+            }
+
+            if (unassignedProducts.Any() || unassignedTransactions.Any() || unassignedExchanges.Any() || unassignedReturns.Any())
+            {
+                context.SaveChanges();
+            }
+        }
+        catch (System.Exception ex)
+        {
+            System.Console.WriteLine($"Error backfilling professional IDs: {ex.Message}");
+        }
     }
 
     // Seed default categories for both Dev and Production
@@ -501,9 +564,16 @@ using (var scope = app.Services.CreateScope())
     {
         var adminList = new[]
         {
-            new { Email = "leatherlaneatelier@gmail.com", Name = "Muhammad Bilal" },
-            new { Email = "admin@leatherlaneatelier.store", Name = "Admin" }
+            new { Email = "leatherlaneatelier@gmail.com", Name = "Muhammad Bilal" }
         };
+
+        // Remove deprecated secondary admin account if present in DB
+        var oldAdmin = context.Users.FirstOrDefault(u => u.Email.ToLower() == "admin@leatherlaneatelier.store");
+        if (oldAdmin != null)
+        {
+            context.Users.Remove(oldAdmin);
+            context.SaveChanges();
+        }
 
         foreach (var adminInfo in adminList)
         {
@@ -535,9 +605,17 @@ using (var scope = app.Services.CreateScope())
 
     try
     {
-        if (!context.SiteSettings.Any())
+        var siteSetting = context.SiteSettings.FirstOrDefault();
+        if (siteSetting == null)
         {
             context.SiteSettings.Add(new SiteSettings());
+            context.SaveChanges();
+        }
+        else
+        {
+            if (siteSetting.FacebookUrl == "#") siteSetting.FacebookUrl = "";
+            if (siteSetting.TikTokUrl == "#") siteSetting.TikTokUrl = "";
+            if (siteSetting.WhatsAppUrl == "#") siteSetting.WhatsAppUrl = "03376306162";
             context.SaveChanges();
         }
     }
