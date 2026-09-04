@@ -125,9 +125,17 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    
+    // Auto-close mobile navigation menu when clicking outside
+    document.addEventListener('click', (e) => {
+        const navbar = document.querySelector('.navbar');
+        const navLinks = document.querySelector('.nav-links');
+        if (navLinks && navLinks.classList.contains('active')) {
+            if (navbar && !navbar.contains(e.target)) {
+                navLinks.classList.remove('active');
+            }
+        }
+    });
 
-    
     // Inject CSS to ensure it always applies
     const style = document.createElement('style');
     style.textContent = `
