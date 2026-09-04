@@ -27,7 +27,7 @@
     <link rel="canonical" href="https://leatherlaneatelier.store/admin">
 
     <title>Admin Dashboard | LeatherLane Atelier</title>
-    <link rel="stylesheet" href="css/global.css?v=1787222477335">
+    <link rel="stylesheet" href="css/global.css?v=1788528500">
     <style>
         body { 
             background-color: #F5EFE7; /* Matches light background of user site */
@@ -177,9 +177,23 @@
                 overflow-x: auto !important;
                 -webkit-overflow-scrolling: touch;
             }
-            .card table,
-            table {
+            /* Wide multi-column tables require horizontal scroll */
+            #orders table,
+            #productsList table,
+            #payment-verification table,
+            #deals table {
                 min-width: 1050px !important;
+            }
+            /* Compact tables (Categories, Newsletter Subscribers, etc.) fit screen naturally */
+            #categories table,
+            #categories .table,
+            #newsletter table,
+            #newsletter .admin-table,
+            .admin-table,
+            #categoryModal table {
+                min-width: 100% !important;
+                width: 100% !important;
+                max-width: 100% !important;
             }
 
             /* Ensure buttons don't bleed out */
@@ -483,7 +497,7 @@
             <div class="notification-wrapper" style="margin-left: 10px;">
                 <button onclick="toggleNotificationDropdown()" style="background:none; border:none; font-size:1.2rem; cursor:pointer;">&#x1F514;<span id="notifBadge" class="notification-badge"></span></button>
                 <div id="notifDropdown" class="notification-dropdown">
-                    <div class="notification-header">Admin Alerts <button onclick="markAllRead()" style="background:none;border:none;color:var(--primary-gold);cursor:pointer;font-size:0.8rem;">Mark all as read</button></div>
+                    <div class="notification-header">Admin Alerts <button onclick="event.stopPropagation(); markAllRead(event);" style="background:none;border:none;color:var(--primary-gold);cursor:pointer;font-size:0.8rem;">Mark all as read</button></div>
                     <div id="notifItems">
                         <div style="padding:1rem;text-align:center;color:#777;">Loading...</div>
                     </div>
@@ -822,17 +836,14 @@
                 <div class="card" style="padding: 1.5rem;">
                     <h3 style="color: var(--primary-gold); font-size: 1.1rem; margin-top: 0;">Subscribers List</h3>
                     <div style="max-height: 400px; overflow-y: auto;">
-                        <table class="admin-table">
+                        <table class="admin-table" style="width: 100%; border-collapse: collapse;">
                             <thead>
                                 <tr>
-                                    <th style="width: 100px;">
-                                        <label style="cursor: pointer; display: flex; align-items: center; gap: 5px; margin: 0;">
-                                            <input type="checkbox" id="selectAllSubs" onclick="toggleAllSubs(this)">
-                                            Select All
-                                        </label>
+                                    <th style="width: 40px; text-align: center; vertical-align: middle; padding: 10px 4px;">
+                                        <input type="checkbox" id="selectAllSubs" title="Select All" onclick="toggleAllSubs(this)" style="cursor: pointer; width: 16px; height: 16px; margin: 0; vertical-align: middle;">
                                     </th>
-                                    <th>Email</th>
-                                    <th>Subscribed At</th>
+                                    <th style="text-align: left; padding: 10px 8px;">Email</th>
+                                    <th style="width: 140px; text-align: left; padding: 10px 8px;">Subscribed At</th>
                                 </tr>
                             </thead>
                             <tbody id="subscribersTableBody">
@@ -1151,7 +1162,7 @@
             window.location.href = '/login';
         }
     </script>
-    <script src="js/admin.js?v=1788524000"></script>
+    <script src="js/admin.js?v=1788528500"></script>
 
     
     <footer style="margin-top: 4rem; padding: 2rem 1.5rem; text-align: center; color: #D8C7A6; font-size: 0.9rem; background-color: #4A1515; box-shadow: 0 -4px 15px rgba(0,0,0,0.1);">
@@ -1174,7 +1185,11 @@
             const adminNav = document.querySelector('.admin-nav');
             if (adminNav) {
                 adminNav.addEventListener('click', (e) => {
-                    // If they clicked a nav-item or a button inside the nav
+                    // Do not close mobile drawer if clicking inside notification wrapper or dropdown
+                    if (e.target.closest('.notification-wrapper') || e.target.closest('.notification-dropdown')) {
+                        return;
+                    }
+                    // If they clicked a nav-item or a link/button inside the nav
                     if (e.target.closest('.nav-item') || e.target.tagName.toLowerCase() === 'a' || e.target.tagName.toLowerCase() === 'button') {
                         // Don't close if they clicked the mobile-menu-btn itself
                         if (!e.target.closest('.mobile-menu-btn')) {

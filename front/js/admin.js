@@ -150,11 +150,16 @@ async function markRead(id) {
     loadNotifications();
 }
 
-async function markAllRead() {
+async function markAllRead(e) {
+    if (e && e.stopPropagation) e.stopPropagation();
     const token = localStorage.getItem('token');
     if (!token) return;
-    await fetch(`/api/notifications/read-all`, { method: 'PUT', headers: { 'Authorization': `Bearer ${token}` } });
-    loadNotifications();
+    try {
+        await fetch(`/api/notifications/read-all`, { method: 'PUT', headers: { 'Authorization': `Bearer ${token}` } });
+        loadNotifications();
+    } catch (err) {
+        console.error("Error marking all notifications as read:", err);
+    }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -309,10 +314,10 @@ function renderOrders(orders) {
         let itemsHtml = '';
         if (o.items && o.items.length > 0) {
             itemsHtml = o.items.map(item => `
-                <div style="margin-bottom: 6px; padding: 6px 10px; background: #faf8f5; border-radius: 4px; border-left: 3.5px solid var(--primary-gold); border-top: 1px solid #f0ebe4; border-right: 1px solid #f0ebe4; border-bottom: 1px solid #f0ebe4; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
-                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px;">
-                        <span style="font-weight: 600; color: #222; font-size: 0.88rem; line-height: 1.3;">${item.name}</span>
-                        <span style="background: #e2e8f0; color: #1a202c; font-weight: 700; padding: 2px 8px; border-radius: 4px; font-size: 0.82rem; white-space: nowrap; flex-shrink: 0; border: 1px solid #cbd5e1;">&times; ${item.quantity}</span>
+                <div style="margin-bottom: 8px; padding: 8px 10px; background: #faf8f5; border-radius: 4px; border-left: 3.5px solid var(--primary-gold); border-top: 1px solid #f0ebe4; border-right: 1px solid #f0ebe4; border-bottom: 1px solid #f0ebe4; box-shadow: 0 1px 3px rgba(0,0,0,0.02); box-sizing: border-box;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; min-width: 0;">
+                        <span style="font-weight: 600; color: #222; font-size: 0.88rem; line-height: 1.35; word-break: break-word; flex: 1; min-width: 0;">${item.name}</span>
+                        <span style="background: #e2e8f0; color: #1a202c; font-weight: 700; padding: 2px 8px; border-radius: 4px; font-size: 0.82rem; white-space: nowrap; flex-shrink: 0; border: 1px solid #cbd5e1; align-self: flex-start; margin-left: 4px;">&times; ${item.quantity}</span>
                     </div>
                     <div style="font-size: 0.78rem; color: #8C5E3C; font-family: monospace; font-weight: 700; margin-top: 4px;">Product ID: ${item.productId || 'N/A'}</div>
                 </div>
@@ -333,7 +338,7 @@ function renderOrders(orders) {
                 <td style="font-weight: 700; color: #8C5E3C; font-family: monospace; font-size: 0.95rem; white-space: nowrap; min-width: 140px;">${o.orderId || o.orderNumber || o.id}</td>
                 <td style="white-space: nowrap; min-width: 100px;">${dateStr}</td>
                 <td style="min-width: 130px; font-weight: 600;">${o.customer}</td>
-                <td style="min-width: 280px; max-width: 360px; vertical-align: top;">${itemsHtml}</td>
+                <td style="min-width: 300px; vertical-align: top;">${itemsHtml}</td>
                 <td style="white-space: nowrap; font-weight: 700; color: var(--primary-bg); font-size: 0.95rem; min-width: 120px;">Rs. ${o.amount.toFixed(2)}</td>
                 <td style="white-space: nowrap; min-width: 150px;"><span class="badge ${badgeClass}">${displayStatus}</span></td>
                 <td style="min-width: 200px;">
@@ -1667,9 +1672,11 @@ async function loadSubscribers() {
         if (tbody) {
             tbody.innerHTML = subs.map(s => `
                 <tr>
-                    <td><input type="checkbox" class="sub-checkbox" value="${s.email || s.Email}"></td>
-                    <td>${s.email || s.Email}</td>
-                    <td>${new Date(s.subscribedAt || s.SubscribedAt).toLocaleString()}</td>
+                    <td style="width: 40px; text-align: center; vertical-align: middle; padding: 8px 4px;">
+                        <input type="checkbox" class="sub-checkbox" value="${s.email || s.Email}" style="cursor: pointer; width: 16px; height: 16px; margin: 0; vertical-align: middle;">
+                    </td>
+                    <td style="word-break: break-all; vertical-align: middle; padding: 8px 8px; color: #333; font-size: 0.9rem;">${s.email || s.Email}</td>
+                    <td style="white-space: nowrap; vertical-align: middle; padding: 8px 8px; font-size: 0.85rem; color: #666;">${new Date(s.subscribedAt || s.SubscribedAt).toLocaleDateString()}</td>
                 </tr>
             `).join('');
         }
