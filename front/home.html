@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Handmade Peshawari Chappal & Leather Footwear Online | LeatherLane Atelier</title>
-    <link rel="stylesheet" href="css/global.css?v=1787222477335">
+    <link rel="stylesheet" href="css/global.css?v=1788528000">
     <style>
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
@@ -636,7 +636,6 @@
                 <!-- Dynamically populated -->
             </div>
         </div>
-    </section>
 
     <!-- Footer -->
     
@@ -711,7 +710,7 @@
         </div>
     </footer>
 
-    <script src="js/auth.js?v=1787392937"></script>
+    <script src="js/auth.js?v=1788528000"></script>
     <script>
         async function loadFeaturedProducts() {
             try {
@@ -734,7 +733,7 @@
                         <section class="products-section" style="padding: 4rem 2rem; background-color: #fff; border-bottom: 1px solid #eaeaea;">
                             <div class="section-header-row">
                                 <h3 class="section-header-title">New Arrivals</h3>
-                                ${allProducts.length > 4 ? `<a href="/products" class="section-view-all-link">Shop All New Arrivals &rarr;</a>` : ''}
+                                ${allProducts.length > 4 ? `<a href="/products" class="section-view-all-link">Shop All &rarr;</a>` : ''}
                             </div>
                             <div class="product-grid" style="margin-bottom: 2rem;">
                         `;
@@ -792,7 +791,7 @@
                         <section class="products-section" style="padding: 4rem 2rem; background-color: ${bgColor}; border-bottom: 1px solid #eaeaea;">
                             <div class="section-header-row">
                                 <h3 class="section-header-title">${categoryName}</h3>
-                                ${items.length > 4 ? `<a href="/products?category=${encodeURIComponent(categoryName)}" class="section-view-all-link">See More in ${categoryName} &rarr;</a>` : ''}
+                                ${items.length > 4 ? `<a href="/products?category=${encodeURIComponent(categoryName)}" class="section-view-all-link">See More &rarr;</a>` : ''}
                             </div>
                             <div class="product-grid" style="margin-bottom: 2rem;">
                         `;

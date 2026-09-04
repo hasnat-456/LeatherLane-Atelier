@@ -154,7 +154,7 @@ if (Directory.Exists(frontPath))
                             sb.Append("<section class='products-section' style='padding: 4rem 2rem; background-color: #fff; border-bottom: 1px solid #eaeaea;'>");
                             sb.Append("<div class='section-header-row'>");
                             sb.Append("<h3 class='section-header-title'>New Arrivals</h3>");
-                            if (allProducts.Count > 4) sb.Append("<a href='/products' class='section-view-all-link'>Shop All New Arrivals &rarr;</a>");
+                            if (allProducts.Count > 4) sb.Append("<a href='/products' class='section-view-all-link'>Shop All &rarr;</a>");
                             sb.Append("</div><div class='product-grid' style='margin-bottom: 2rem;'>");
                             
                             foreach(var p in allProducts.Take(4))
@@ -177,7 +177,7 @@ if (Directory.Exists(frontPath))
                             sb.Append($"<section class='products-section' style='padding: 4rem 2rem; background-color: {bgColor}; border-bottom: 1px solid #eaeaea;'>");
                             sb.Append("<div class='section-header-row'>");
                             sb.Append($"<h3 class='section-header-title'>{cat.Name}</h3>");
-                            if (items.Count > 4) sb.Append($"<a href='/products?category={System.Uri.EscapeDataString(cat.Name)}' class='section-view-all-link'>See More in {cat.Name} &rarr;</a>");
+                            if (items.Count > 4) sb.Append($"<a href='/products?category={System.Uri.EscapeDataString(cat.Name)}' class='section-view-all-link'>See More &rarr;</a>");
                             sb.Append("</div><div class='product-grid' style='margin-bottom: 2rem;'>");
                             
                             foreach(var p in items.Take(4))
@@ -211,7 +211,7 @@ if (Directory.Exists(frontPath))
                                 </div>");
                             }
                             
-                            var storyRegex = new System.Text.RegularExpressions.Regex(@"<div id=""dynamicJournalGrid""[^>]*>[sS]*?</div>");
+                            var storyRegex = new System.Text.RegularExpressions.Regex(@"<div id=""dynamicJournalGrid""[^>]*>[\s\S]*?</div>");
                             htmlContent = storyRegex.Replace(htmlContent, @"<div id=""dynamicJournalGrid"" style=""display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 2rem; max-width: 1200px; margin: 0 auto;"">" + storySb.ToString() + @"</div>");
                             
                             // Make sure the section is visible

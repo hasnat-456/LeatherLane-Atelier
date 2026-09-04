@@ -21,10 +21,13 @@ namespace LeatherLane_Atelier.Services
 
         private static string EnsureAbsoluteUrl(string? url)
         {
-            if (string.IsNullOrWhiteSpace(url)) return "https://via.placeholder.com/120?text=LeatherLane";
+            if (string.IsNullOrWhiteSpace(url)) return $"{SiteBaseUrl}/images/logo.png";
+            url = url.Trim();
             if (url.StartsWith("http://", StringComparison.OrdinalIgnoreCase) || url.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
                 return url;
-            return SiteBaseUrl + (url.StartsWith("/") ? "" : "/") + url;
+            
+            var cleanPath = url.TrimStart('/');
+            return $"{SiteBaseUrl}/{cleanPath}";
         }
 
         public static string FormatNonClickableText(string? text)

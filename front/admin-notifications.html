@@ -404,7 +404,11 @@
             const adminNav = document.querySelector('.admin-nav');
             if (adminNav) {
                 adminNav.addEventListener('click', (e) => {
-                    // If they clicked a nav-item or a button inside the nav
+                    // Do not close mobile drawer if clicking inside notification wrapper or dropdown
+                    if (e.target.closest('.notification-wrapper') || e.target.closest('.notification-dropdown')) {
+                        return;
+                    }
+                    // If they clicked a nav-item or a link/button inside the nav
                     if (e.target.closest('.nav-item') || e.target.tagName.toLowerCase() === 'a' || e.target.tagName.toLowerCase() === 'button') {
                         // Don't close if they clicked the mobile-menu-btn itself
                         if (!e.target.closest('.mobile-menu-btn')) {
