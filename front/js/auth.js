@@ -47,8 +47,8 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
         // Logged out
         authHtml = `
-            <a href="/login" style="color: #ddd; text-decoration: none;">Login</a>
-            <a href="/signup" class="btn-register" style="background-color: var(--primary-gold); color: #111; padding: 6px 16px; border-radius: 4px; font-weight: 600; text-decoration: none;">Register</a>
+            <a href="/login" style="color: #ddd; text-decoration: none; font-weight: 500;">Login</a>
+            <a href="/signup" class="btn-register" style="background-color: var(--primary-gold); color: #111; padding: 6px 16px; border-radius: 4px; font-weight: 600; text-decoration: none;">Sign Up</a>
         `;
     }
 
