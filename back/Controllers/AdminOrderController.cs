@@ -38,6 +38,16 @@ namespace LeatherLane_Atelier.Controllers
                 .FirstOrDefaultAsync(t => t.Id == id);
             if (order == null) return NotFound(new { message = "Order not found" });
 
+            if (order.Status == "Cancelled")
+            {
+                return BadRequest(new { message = "Cannot change the status of a cancelled order." });
+            }
+
+            if (order.Status == "Delivered")
+            {
+                return BadRequest(new { message = "Cannot change the status of an already delivered order." });
+            }
+
             if (dto.Status == "Cancelled")
             {
                 return BadRequest(new { message = "Admins are not permitted to manually cancel orders." });

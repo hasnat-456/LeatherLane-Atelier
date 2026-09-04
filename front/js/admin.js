@@ -321,6 +321,13 @@ function renderOrders(orders) {
             itemsHtml = '<span style="color: #999; font-size: 0.85rem;">No items recorded</span>';
         }
         
+        const isLocked = ['Cancelled', 'Payment Verification Pending', 'Payment Rejected', 'Delivered'].includes(o.status);
+        const lockTitle = o.status === 'Delivered' 
+            ? 'Delivered orders cannot be modified' 
+            : (['Payment Verification Pending', 'Payment Rejected'].includes(o.status) 
+                ? 'Please verify payment in the Payment Verification tab' 
+                : 'Cancelled orders cannot be modified');
+        
         html += `
             <tr>
                 <td style="font-weight: 700; color: #8C5E3C; font-family: monospace; font-size: 0.95rem; white-space: nowrap; min-width: 140px;">${o.orderId || o.orderNumber || o.id}</td>
@@ -330,7 +337,7 @@ function renderOrders(orders) {
                 <td style="white-space: nowrap; font-weight: 700; color: var(--primary-bg); font-size: 0.95rem; min-width: 120px;">Rs. ${o.amount.toFixed(2)}</td>
                 <td style="white-space: nowrap; min-width: 150px;"><span class="badge ${badgeClass}">${displayStatus}</span></td>
                 <td style="min-width: 200px;">
-                    <select class="status-select" onchange="updateOrderStatus('${o.id}', this.value)" ${['Cancelled', 'Payment Verification Pending', 'Payment Rejected'].includes(o.status) ? 'disabled style="background-color: #eaeaea; cursor: not-allowed;"' : ''}>
+                    <select class="status-select" onchange="updateOrderStatus('${o.id}', this.value)" ${isLocked ? `disabled style="background-color: #f1f3f5; color: #6c757d; border-color: #ced4da; cursor: not-allowed; opacity: 0.85;" title="${lockTitle}"` : ''}>
                         <option value="Payment Verification Pending" ${o.status === 'Payment Verification Pending' ? 'selected' : 'hidden'}>Payment Verification Pending</option>
                         <option value="Payment Rejected" ${o.status === 'Payment Rejected' ? 'selected' : 'hidden'}>Payment Rejected</option>
                         ${o.status === 'Cancelled' ? '<option value="Cancelled" selected hidden>Cancelled</option>' : ''}
