@@ -244,7 +244,7 @@ async function fetchDashboardStats() {
         if (res.ok) {
             const data = await res.json();
             document.getElementById('statOrders').innerText = data.totalOrders;
-            document.getElementById('statRevenue').innerText = '$' + data.totalRevenue.toFixed(2);
+            document.getElementById('statRevenue').innerText = 'Rs. ' + Number(data.totalRevenue).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
         }
     } catch (err) {
         console.error("Error fetching stats", err);

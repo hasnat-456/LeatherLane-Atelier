@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -210,6 +210,77 @@
             color: #666;
             margin-bottom: 3rem;
             font-size: 0.9rem;
+        }
+
+        /* Unified Section Header & See More Button */
+        .section-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 2rem;
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+            padding: 0 1rem;
+            box-sizing: border-box;
+        }
+        .section-header-title {
+            font-family: var(--font-heading);
+            color: var(--primary-bg);
+            font-size: 2.2rem;
+            text-transform: uppercase;
+            margin: 0;
+            border-bottom: 2px solid var(--primary-gold);
+            padding-bottom: 5px;
+            display: inline-block;
+            line-height: 1.2;
+        }
+        .section-view-all-link {
+            color: var(--primary-gold);
+            font-weight: 600;
+            text-decoration: none;
+            font-size: 0.95rem;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+            border-bottom: 2px solid transparent;
+            padding-bottom: 2px;
+            flex-shrink: 0;
+        }
+        .section-view-all-link:hover {
+            color: var(--primary-bg);
+            border-bottom-color: var(--primary-gold);
+        }
+
+        @media (max-width: 768px) {
+            .section-header-row {
+                flex-direction: row !important;
+                justify-content: space-between !important;
+                align-items: center !important;
+                margin-bottom: 1.5rem !important;
+                padding: 0 1rem !important;
+                gap: 8px !important;
+            }
+            .section-header-title {
+                font-size: 1.35rem !important;
+                padding-bottom: 3px !important;
+                border-bottom: 2px solid var(--primary-gold) !important;
+            }
+            .section-view-all-link {
+                font-size: 0.8rem !important;
+                padding: 5px 12px !important;
+                background: rgba(199, 154, 82, 0.12) !important;
+                border: 1px solid rgba(199, 154, 82, 0.35) !important;
+                border-radius: 20px !important;
+                color: #8C5E3C !important;
+                white-space: nowrap !important;
+            }
+            .section-header-subtitle {
+                display: none !important;
+            }
         }
 
         .product-grid {
@@ -554,12 +625,12 @@
         </div>
     </section>
         <div id="atelierJournalSection" style="background-color: #F8F5F2; padding: 4rem 3rem; text-align: left; display: none;">
-            <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 3rem; max-width: 1200px; margin-left: auto; margin-right: auto;">
+            <div class="section-header-row" style="margin-bottom: 3rem;">
                 <div>
-                    <h2 style="font-family: var(--font-heading); color: var(--primary-bg); font-size: 2.5rem; text-transform: uppercase; margin: 0;">The Atelier Journal</h2>
-                    <p style="color: #666; font-size: 1rem; margin-top: 0.5rem; max-width: 600px;">Explore the latest news, styling tips, and stories behind our timeless craftsmanship.</p>
+                    <h2 class="section-header-title" style="font-size: 2.5rem;">The Atelier Journal</h2>
+                    <p class="section-header-subtitle" style="color: #666; font-size: 1rem; margin-top: 0.5rem; max-width: 600px;">Explore the latest news, styling tips, and stories behind our timeless craftsmanship.</p>
                 </div>
-                <a href="/story" style="color: var(--primary-gold); font-weight: 600; text-decoration: none; font-size: 1rem; transition: opacity 0.2s; border-bottom: 2px solid transparent;" onmouseover="this.style.borderBottom='2px solid var(--primary-gold)'" onmouseout="this.style.borderBottom='2px solid transparent'">Read All Stories &rarr;</a>
+                <a href="/story" class="section-view-all-link">Read All Stories &rarr;</a>
             </div>
             <div id="dynamicJournalGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 2rem; max-width: 1200px; margin: 0 auto;">
                 <!-- Dynamically populated -->
@@ -661,9 +732,9 @@
                     if (allProducts && allProducts.length > 0) {
                         html += `
                         <section class="products-section" style="padding: 4rem 2rem; background-color: #fff; border-bottom: 1px solid #eaeaea;">
-                            <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; max-width: 1200px; margin-left: auto; margin-right: auto; padding: 0 1rem;">
-                                <h3 style="font-family: var(--font-heading); color: var(--primary-bg); font-size: 2.2rem; text-transform: uppercase; margin: 0; border-bottom: 2px solid var(--primary-gold); padding-bottom: 5px;">New Arrivals</h3>
-                                ${allProducts.length > 4 ? `<a href="/products" style="color: var(--primary-gold); font-weight: 600; text-decoration: none; font-size: 1rem; transition: opacity 0.2s;">Shop All New Arrivals &rarr;</a>` : ''}
+                            <div class="section-header-row">
+                                <h3 class="section-header-title">New Arrivals</h3>
+                                ${allProducts.length > 4 ? `<a href="/products" class="section-view-all-link">Shop All New Arrivals &rarr;</a>` : ''}
                             </div>
                             <div class="product-grid" style="margin-bottom: 2rem;">
                         `;
@@ -719,9 +790,9 @@
 
                         html += `
                         <section class="products-section" style="padding: 4rem 2rem; background-color: ${bgColor}; border-bottom: 1px solid #eaeaea;">
-                            <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; max-width: 1200px; margin-left: auto; margin-right: auto; padding: 0 1rem;">
-                                <h3 style="font-family: var(--font-heading); color: var(--primary-bg); font-size: 2.2rem; text-transform: uppercase; margin: 0; border-bottom: 2px solid var(--primary-gold); padding-bottom: 5px;">${categoryName}</h3>
-                                ${items.length > 4 ? `<a href="/products?category=${encodeURIComponent(categoryName)}" style="color: var(--primary-gold); font-weight: 600; text-decoration: none; font-size: 1rem; transition: opacity 0.2s;">See More in ${categoryName} &rarr;</a>` : ''}
+                            <div class="section-header-row">
+                                <h3 class="section-header-title">${categoryName}</h3>
+                                ${items.length > 4 ? `<a href="/products?category=${encodeURIComponent(categoryName)}" class="section-view-all-link">See More in ${categoryName} &rarr;</a>` : ''}
                             </div>
                             <div class="product-grid" style="margin-bottom: 2rem;">
                         `;
