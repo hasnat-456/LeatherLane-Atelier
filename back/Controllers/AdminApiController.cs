@@ -148,6 +148,11 @@ namespace LeatherLane_Atelier.Controllers
                 return BadRequest(new { message = "Cannot change the status of a cancelled order." });
             }
 
+            if (transaction.Status == "Delivered")
+            {
+                return BadRequest(new { message = "Cannot change the status of an already delivered order." });
+            }
+
             if (req.Status == "Cancelled")
             {
                 return BadRequest(new { message = "Admins are not permitted to manually cancel orders." });
