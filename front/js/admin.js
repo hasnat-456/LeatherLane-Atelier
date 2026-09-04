@@ -309,12 +309,12 @@ function renderOrders(orders) {
         let itemsHtml = '';
         if (o.items && o.items.length > 0) {
             itemsHtml = o.items.map(item => `
-                <div style="margin-bottom: 6px; padding: 4px 8px; background: #faf8f5; border-radius: 4px; border-left: 3px solid var(--primary-gold); border-top: 1px solid #f0ebe4; border-right: 1px solid #f0ebe4; border-bottom: 1px solid #f0ebe4;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
-                        <span style="font-weight: 600; color: #222; font-size: 0.88rem;">${item.name}</span>
-                        <span style="background: #e5e9ec; color: #222; font-weight: 700; padding: 1px 6px; border-radius: 3px; font-size: 0.8rem; white-space: nowrap;">&times; ${item.quantity}</span>
+                <div style="margin-bottom: 6px; padding: 6px 10px; background: #faf8f5; border-radius: 4px; border-left: 3.5px solid var(--primary-gold); border-top: 1px solid #f0ebe4; border-right: 1px solid #f0ebe4; border-bottom: 1px solid #f0ebe4; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+                        <span style="font-weight: 600; color: #222; font-size: 0.88rem; line-height: 1.3;">${item.name}</span>
+                        <span style="background: #e2e8f0; color: #1a202c; font-weight: 700; padding: 2px 8px; border-radius: 4px; font-size: 0.82rem; white-space: nowrap; flex-shrink: 0; border: 1px solid #cbd5e1;">&times; ${item.quantity}</span>
                     </div>
-                    <div style="font-size: 0.78rem; color: #8C5E3C; font-family: monospace; font-weight: 700; margin-top: 2px;">Product ID: ${item.productId}</div>
+                    <div style="font-size: 0.78rem; color: #8C5E3C; font-family: monospace; font-weight: 700; margin-top: 4px;">Product ID: ${item.productId || 'N/A'}</div>
                 </div>
             `).join('');
         } else {
@@ -323,13 +323,13 @@ function renderOrders(orders) {
         
         html += `
             <tr>
-                <td style="font-weight: 700; color: #8C5E3C; font-family: monospace; font-size: 0.95rem;">${o.orderId || o.orderNumber || o.id}</td>
-                <td>${dateStr}</td>
-                <td>${o.customer}</td>
-                <td style="min-width: 240px; max-width: 320px;">${itemsHtml}</td>
-                <td>Rs. ${o.amount.toFixed(2)}</td>
-                <td><span class="badge ${badgeClass}">${displayStatus}</span></td>
-                <td>
+                <td style="font-weight: 700; color: #8C5E3C; font-family: monospace; font-size: 0.95rem; white-space: nowrap; min-width: 140px;">${o.orderId || o.orderNumber || o.id}</td>
+                <td style="white-space: nowrap; min-width: 100px;">${dateStr}</td>
+                <td style="min-width: 130px; font-weight: 600;">${o.customer}</td>
+                <td style="min-width: 280px; max-width: 360px; vertical-align: top;">${itemsHtml}</td>
+                <td style="white-space: nowrap; font-weight: 700; color: var(--primary-bg); font-size: 0.95rem; min-width: 120px;">Rs. ${o.amount.toFixed(2)}</td>
+                <td style="white-space: nowrap; min-width: 150px;"><span class="badge ${badgeClass}">${displayStatus}</span></td>
+                <td style="min-width: 200px;">
                     <select class="status-select" onchange="updateOrderStatus('${o.id}', this.value)" ${['Cancelled', 'Payment Verification Pending', 'Payment Rejected'].includes(o.status) ? 'disabled style="background-color: #eaeaea; cursor: not-allowed;"' : ''}>
                         <option value="Payment Verification Pending" ${o.status === 'Payment Verification Pending' ? 'selected' : 'hidden'}>Payment Verification Pending</option>
                         <option value="Payment Rejected" ${o.status === 'Payment Rejected' ? 'selected' : 'hidden'}>Payment Rejected</option>
