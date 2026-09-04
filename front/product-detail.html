@@ -73,6 +73,173 @@
         .thumbnail { width: 80px; height: 80px; border-radius: 4px; object-fit: cover; cursor: pointer; opacity: 0.6; transition: all 0.2s; border: 2px solid transparent; }
         .thumbnail:hover, .thumbnail.active { opacity: 1; border-color: var(--primary-gold); }
 
+        /* Mobile Floating Zoom Button */
+        .mobile-zoom-btn {
+            position: absolute;
+            bottom: 15px;
+            right: 15px;
+            background: rgba(74, 21, 21, 0.88);
+            color: #ffffff;
+            border: 1.5px solid var(--primary-gold);
+            border-radius: 25px;
+            padding: 8px 16px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            backdrop-filter: blur(6px);
+            z-index: 10;
+            transition: transform 0.2s, background 0.2s;
+        }
+        .mobile-zoom-btn:active {
+            transform: scale(0.95);
+            background: var(--primary-bg);
+        }
+
+        /* Fullscreen HD Zoom Lightbox Modal */
+        .lightbox-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(10, 10, 10, 0.96);
+            z-index: 999999;
+            display: none;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            touch-action: none;
+            user-select: none;
+            padding: 20px 10px;
+            box-sizing: border-box;
+        }
+        .lightbox-modal.active {
+            display: flex;
+        }
+        .lightbox-top-bar {
+            width: 100%;
+            max-width: 1200px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 10px;
+            z-index: 1000001;
+        }
+        .lightbox-counter {
+            color: #C79A52;
+            font-weight: 600;
+            font-size: 0.95rem;
+            letter-spacing: 1px;
+        }
+        .lightbox-close-btn {
+            background: rgba(255, 255, 255, 0.15);
+            color: #fff;
+            border: 1px solid rgba(199, 154, 82, 0.4);
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.2s;
+            backdrop-filter: blur(5px);
+        }
+        .lightbox-close-btn:hover {
+            background: rgba(199, 154, 82, 0.3);
+        }
+        .lightbox-viewport {
+            position: relative;
+            flex: 1;
+            width: 100%;
+            max-width: 1200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            touch-action: none;
+        }
+        .lightbox-img {
+            max-width: 92%;
+            max-height: 80vh;
+            object-fit: contain;
+            transform-origin: center center;
+            transition: transform 0.15s ease-out;
+            will-change: transform;
+            cursor: grab;
+        }
+        .lightbox-img:active {
+            cursor: grabbing;
+        }
+        .lightbox-nav-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0, 0, 0, 0.6);
+            color: #C79A52;
+            border: 1px solid rgba(199, 154, 82, 0.3);
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            cursor: pointer;
+            z-index: 1000001;
+            transition: all 0.2s;
+        }
+        .lightbox-nav-btn.prev { left: 10px; }
+        .lightbox-nav-btn.next { right: 10px; }
+        .lightbox-nav-btn:hover { background: rgba(199, 154, 82, 0.3); color: #fff; }
+
+        .lightbox-bottom-bar {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            z-index: 1000001;
+            width: 100%;
+        }
+        .lightbox-hint {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.8rem;
+            letter-spacing: 0.5px;
+            text-align: center;
+        }
+        .lightbox-controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(25, 25, 25, 0.85);
+            padding: 6px 18px;
+            border-radius: 30px;
+            border: 1px solid rgba(199, 154, 82, 0.4);
+            backdrop-filter: blur(10px);
+        }
+        .lightbox-ctrl-btn {
+            background: none;
+            border: none;
+            color: #C79A52;
+            font-size: 15px;
+            font-weight: 600;
+            padding: 4px 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            border-radius: 4px;
+            transition: color 0.2s;
+        }
+        .lightbox-ctrl-btn:hover {
+            color: #ffffff;
+        }
+
         /* Product Info */
         .info-container { display: flex; flex-direction: column; background: var(--light-bg); padding: 2.5rem; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
         .product-category { color: var(--primary-gold); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 2px; font-weight: 600; margin-bottom: 0.5rem; }
@@ -373,9 +540,7 @@
             </a>
         </div>
         
-        <button class="mobile-menu-btn" onclick="document.querySelector('.nav-links').classList.toggle('active')" aria-label="Menu">
-            ?
-        </button>
+        <button class="mobile-menu-btn" onclick="document.querySelector('.nav-links').classList.toggle('active')" aria-label="Menu">&#9776;</button>
         <div class="nav-links">
             <a href="/home">HOME</a>
             <a href="/products">Shop</a>
@@ -535,14 +700,27 @@
             }
         }
 
-        function changeImage(src, element) {
+        let currentImageIndex = 0;
+        let lightboxScale = 1;
+        let lightboxTranslateX = 0;
+        let lightboxTranslateY = 0;
+        let isDraggingLightbox = false;
+        let startX = 0, startY = 0;
+        let initialPinchDistance = null;
+        let initialScale = 1;
+        let lastTapTime = 0;
+
+        function changeImage(src, element, index) {
             const mainImg = document.getElementById('mainImage');
-            mainImg.src = src;
+            if (mainImg) mainImg.src = src;
+            if (typeof index === 'number') currentImageIndex = index;
             
             // Setup Zoom Overlay
             const zoomOverlay = document.getElementById('zoomOverlay');
-            zoomOverlay.style.backgroundImage = `url('${src}')`;
-            zoomOverlay.style.backgroundSize = '200%';
+            if (zoomOverlay) {
+                zoomOverlay.style.backgroundImage = `url('${src}')`;
+                zoomOverlay.style.backgroundSize = '200%';
+            }
 
             document.querySelectorAll('.thumbnail').forEach(el => el.classList.remove('active'));
             if(element) element.classList.add('active');
@@ -551,13 +729,154 @@
         function handleZoom(e) {
             const wrapper = document.getElementById('imageWrapper');
             const overlay = document.getElementById('zoomOverlay');
+            if (!wrapper || !overlay) return;
             
             const { left, top, width, height } = wrapper.getBoundingClientRect();
-            const x = (e.clientX - left) / width * 100;
-            const y = (e.clientY - top) / height * 100;
+            let clientX = e.clientX;
+            let clientY = e.clientY;
+
+            if (e.touches && e.touches.length > 0) {
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+            }
+
+            const x = Math.max(0, Math.min(100, (clientX - left) / width * 100));
+            const y = Math.max(0, Math.min(100, (clientY - top) / height * 100));
             
             overlay.style.backgroundPosition = `${x}% ${y}%`;
         }
+
+        // --- Fullscreen HD Lightbox & Mobile Zoom ---
+        function openLightbox(index) {
+            if (!currentProduct || !currentProduct.images || currentProduct.images.length === 0) return;
+            if (typeof index === 'number') currentImageIndex = index;
+            
+            const modal = document.getElementById('lightboxModal');
+            const img = document.getElementById('lightboxImg');
+            const counter = document.getElementById('lightboxCounter');
+            
+            img.src = currentProduct.images[currentImageIndex] || currentProduct.thumbnail || '';
+            counter.innerText = `${currentImageIndex + 1} / ${currentProduct.images.length}`;
+            
+            resetLightboxZoom();
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeLightbox() {
+            const modal = document.getElementById('lightboxModal');
+            if (modal) modal.classList.remove('active');
+            document.body.style.overflow = '';
+            resetLightboxZoom();
+        }
+
+        function updateLightboxTransform() {
+            const img = document.getElementById('lightboxImg');
+            if (img) {
+                img.style.transform = `translate(${lightboxTranslateX}px, ${lightboxTranslateY}px) scale(${lightboxScale})`;
+            }
+        }
+
+        function resetLightboxZoom() {
+            lightboxScale = 1;
+            lightboxTranslateX = 0;
+            lightboxTranslateY = 0;
+            updateLightboxTransform();
+        }
+
+        function zoomInLightbox() {
+            lightboxScale = Math.min(4, lightboxScale + 0.5);
+            updateLightboxTransform();
+        }
+
+        function zoomOutLightbox() {
+            lightboxScale = Math.max(1, lightboxScale - 0.5);
+            if (lightboxScale === 1) {
+                lightboxTranslateX = 0;
+                lightboxTranslateY = 0;
+            }
+            updateLightboxTransform();
+        }
+
+        function prevLightboxImage() {
+            if (!currentProduct || !currentProduct.images || currentProduct.images.length <= 1) return;
+            currentImageIndex = (currentImageIndex - 1 + currentProduct.images.length) % currentProduct.images.length;
+            openLightbox(currentImageIndex);
+        }
+
+        function nextLightboxImage() {
+            if (!currentProduct || !currentProduct.images || currentProduct.images.length <= 1) return;
+            currentImageIndex = (currentImageIndex + 1) % currentProduct.images.length;
+            openLightbox(currentImageIndex);
+        }
+
+        // Setup Lightbox Touch & Gesture Handlers
+        document.addEventListener('DOMContentLoaded', () => {
+            const viewport = document.getElementById('lightboxViewport');
+            const img = document.getElementById('lightboxImg');
+            if (!viewport || !img) return;
+
+            // Double Tap to Zoom Toggle
+            viewport.addEventListener('touchend', (e) => {
+                if (e.touches.length > 0) return;
+                const now = Date.now();
+                if (now - lastTapTime < 300) {
+                    if (lightboxScale > 1) {
+                        resetLightboxZoom();
+                    } else {
+                        lightboxScale = 2.5;
+                        updateLightboxTransform();
+                    }
+                }
+                lastTapTime = now;
+            });
+
+            // Touch Start: Pinch or Pan
+            viewport.addEventListener('touchstart', (e) => {
+                if (e.touches.length === 2) {
+                    // Pinch gesture
+                    initialPinchDistance = Math.hypot(
+                        e.touches[0].clientX - e.touches[1].clientX,
+                        e.touches[0].clientY - e.touches[1].clientY
+                    );
+                    initialScale = lightboxScale;
+                } else if (e.touches.length === 1) {
+                    // Pan gesture
+                    isDraggingLightbox = true;
+                    startX = e.touches[0].clientX - lightboxTranslateX;
+                    startY = e.touches[0].clientY - lightboxTranslateY;
+                }
+            }, { passive: false });
+
+            // Touch Move
+            viewport.addEventListener('touchmove', (e) => {
+                if (e.touches.length === 2 && initialPinchDistance) {
+                    e.preventDefault();
+                    const currentDist = Math.hypot(
+                        e.touches[0].clientX - e.touches[1].clientX,
+                        e.touches[0].clientY - e.touches[1].clientY
+                    );
+                    const factor = currentDist / initialPinchDistance;
+                    lightboxScale = Math.min(4, Math.max(1, initialScale * factor));
+                    if (lightboxScale === 1) {
+                        lightboxTranslateX = 0;
+                        lightboxTranslateY = 0;
+                    }
+                    updateLightboxTransform();
+                } else if (e.touches.length === 1 && isDraggingLightbox && lightboxScale > 1) {
+                    e.preventDefault();
+                    lightboxTranslateX = e.touches[0].clientX - startX;
+                    lightboxTranslateY = e.touches[0].clientY - startY;
+                    updateLightboxTransform();
+                }
+            }, { passive: false });
+
+            // Touch End
+            viewport.addEventListener('touchend', () => {
+                initialPinchDistance = null;
+                isDraggingLightbox = false;
+            });
+        });
 
         function renderProduct() {
             const p = currentProduct;
@@ -578,7 +897,7 @@
             const mainDesc = isJsonDesc ? descObj.description : p.description;
 
             const thumbnailsHtml = images.map((img, idx) => `
-                <img src="${img}" class="thumbnail ${idx === 0 ? 'active' : ''}" onclick="changeImage(this.src, this)">
+                <img src="${img}" class="thumbnail ${idx === 0 ? 'active' : ''}" onclick="changeImage(this.src, this, ${idx})">
             `).join('');
 
             const sizesHtml = (p.sizes || []).map(size => `
@@ -637,9 +956,13 @@
 
             document.getElementById('productContainer').innerHTML = `
                 <div class="gallery-container">
-                    <div class="main-image-wrapper" id="imageWrapper" onmousemove="handleZoom(event)">
-                        <img src="${images[0] || 'https://via.placeholder.com/800'}" id="mainImage" class="main-image">
+                    <div class="main-image-wrapper" id="imageWrapper" onmousemove="handleZoom(event)" ontouchmove="handleZoom(event)" onclick="openLightbox()">
+                        <img src="${images[0] || 'https://via.placeholder.com/800'}" id="mainImage" class="main-image" alt="${p.name}">
                         <div class="zoom-overlay" id="zoomOverlay" style="background-image: url('${images[0]}'); background-size: 200%;"></div>
+                        <button type="button" class="mobile-zoom-btn" onclick="event.stopPropagation(); openLightbox();" aria-label="Zoom Product Picture">
+                            <svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="11" y1="8" x2="11" y2="14"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg>
+                            <span>Tap to Zoom</span>
+                        </button>
                     </div>
                     <div class="thumbnails">
                         ${thumbnailsHtml}
@@ -647,7 +970,10 @@
                 </div>
 
                 <div class="info-container">
-                    <div class="product-category">${p.category}</div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; flex-wrap: wrap; gap: 8px;">
+                        <div class="product-category" style="margin-bottom: 0;">${p.category}</div>
+                        ${p.productId ? `<div style="font-family: var(--font-heading); font-size: 0.85rem; font-weight: 600; color: #8C5E3C; letter-spacing: 0.5px; background: rgba(199, 154, 82, 0.12); padding: 3px 10px; border-radius: 4px; border: 1px solid rgba(199, 154, 82, 0.3);">Product ID: <span style="font-weight: 700; color: var(--primary-bg);">${p.productId}</span></div>` : ''}
+                    </div>
                     <h1 class="product-title">${p.name}</h1>
                     
                     <div class="product-rating">
@@ -753,6 +1079,38 @@
         }
     </script>
     <script src="js/auth.js?v=1787392937"></script>
+
+    <!-- Fullscreen HD Image Lightbox Modal for Mobile & Desktop -->
+    <div class="lightbox-modal" id="lightboxModal" onclick="closeLightbox()">
+        <div class="lightbox-top-bar" onclick="event.stopPropagation()">
+            <div class="lightbox-counter" id="lightboxCounter">1 / 1</div>
+            <button type="button" class="lightbox-close-btn" onclick="closeLightbox()" aria-label="Close Zoom">&times;</button>
+        </div>
+
+        <div class="lightbox-viewport" id="lightboxViewport" onclick="event.stopPropagation()">
+            <button type="button" class="lightbox-nav-btn prev" onclick="prevLightboxImage()" aria-label="Previous Image">&#10094;</button>
+            <img src="" id="lightboxImg" class="lightbox-img" alt="Product Zoomed Image">
+            <button type="button" class="lightbox-nav-btn next" onclick="nextLightboxImage()" aria-label="Next Image">&#10095;</button>
+        </div>
+
+        <div class="lightbox-bottom-bar" onclick="event.stopPropagation()">
+            <div class="lightbox-controls">
+                <button type="button" class="lightbox-ctrl-btn" onclick="zoomInLightbox()">
+                    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="11" y1="8" x2="11" y2="14"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg>
+                    <span>Zoom In</span>
+                </button>
+                <button type="button" class="lightbox-ctrl-btn" onclick="zoomOutLightbox()">
+                    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg>
+                    <span>Zoom Out</span>
+                </button>
+                <button type="button" class="lightbox-ctrl-btn" onclick="resetLightboxZoom()">
+                    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
+                    <span>Reset</span>
+                </button>
+            </div>
+            <div class="lightbox-hint">Pinch or double-tap to zoom &bull; Drag to inspect craftsmanship</div>
+        </div>
+    </div>
 
     <!-- Size Guide Modal -->
     <div class="size-modal-overlay" id="sizeModal" onclick="closeSizeGuide(event)">

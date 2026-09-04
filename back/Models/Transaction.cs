@@ -6,9 +6,10 @@ namespace LeatherLane_Atelier.Models
     public class Transaction
     {
         public int Id { get; set; }
+        public string? OrderId { get; set; }
 
         [System.ComponentModel.DataAnnotations.Schema.NotMapped]
-        public string OrderNumber => LeatherLane_Atelier.Services.OrderHelper.FormatOrderNumber(Id);
+        public string OrderNumber => !string.IsNullOrEmpty(OrderId) ? OrderId : LeatherLane_Atelier.Services.IdGenerator.FormatLegacyOrderNumber(Id);
         
         public int UserId { get; set; }
         public User User { get; set; } = null!;
@@ -34,6 +35,10 @@ namespace LeatherLane_Atelier.Models
         public string? SenderMobile { get; set; }
         public string? PaymentScreenshot { get; set; }
         public string? RejectionReason { get; set; }
+
+        public DateTime? DeliveredAt { get; set; }
+        public bool ReviewReminderDay2Sent { get; set; } = false;
+        public bool ReviewReminderDay4Sent { get; set; } = false;
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;

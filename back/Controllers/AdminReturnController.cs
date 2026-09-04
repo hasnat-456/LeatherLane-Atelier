@@ -54,7 +54,7 @@ namespace LeatherLane_Atelier.Controllers
         {
             if (!IsAdmin()) return Forbid();
 
-            var req = await _context.ReturnRequests.FindAsync(id);
+            var req = await _context.ReturnRequests.Include(r => r.Order).FirstOrDefaultAsync(r => r.ReturnId == id);
             if (req == null) return NotFound();
 
             req.Status = "Approved";
@@ -65,19 +65,21 @@ namespace LeatherLane_Atelier.Controllers
             var customer = await _context.Users.FindAsync(req.CustomerId);
             if (customer != null)
             {
+                string orderDisplay = req.Order?.OrderId ?? req.OrderId.ToString();
                 _context.Notifications.Add(new Notification
                 {
                     Title = "Return Approved",
-                    Message = $"Your return request for Order #{req.OrderId} has been approved. A pickup will be scheduled soon.",
-                    ActionUrl = "return-tracking.html?id=" + id,
+                    Message = $"Your return request ({req.ReturnCode}) for Order {orderDisplay} has been approved. A pickup will be scheduled soon.",
+                    ActionUrl = "return-tracking.html?id=" + req.ReturnCode,
                     UserId = customer.Id
                 });
                 var details = new System.Collections.Generic.Dictionary<string, string> {
-                    { "Order No.", LeatherLane_Atelier.Services.OrderHelper.FormatOrderNumber(req.OrderId) },
+                    { "Return ID", req.ReturnCode },
+                    { "Order ID", orderDisplay },
                     { "Status", "Return Approved" }
                 };
-                var htmlEmail = LeatherLane_Atelier.Services.EmailTemplateBuilder.BuildStandardEmail("Return Approved", customer.Name, "Your return request has been approved. A pickup will be scheduled soon.", $"/return-tracking?id={id}", "Track Return", details);
-                _ = _emailService.SendEmailAsync(customer.Email, "Return Approved", htmlEmail);
+                var htmlEmail = LeatherLane_Atelier.Services.EmailTemplateBuilder.BuildStandardEmail("Return Approved", customer.Name, "Your return request has been approved. A pickup will be scheduled soon.", $"/return-tracking.html?id={req.ReturnCode}", "Track Return", details);
+                _ = _emailService.SendEmailAsync(customer.Email, $"Return Approved ({req.ReturnCode})", htmlEmail);
             }
 
             await _context.SaveChangesAsync();
@@ -89,7 +91,7 @@ namespace LeatherLane_Atelier.Controllers
         {
             if (!IsAdmin()) return Forbid();
 
-            var req = await _context.ReturnRequests.FindAsync(id);
+            var req = await _context.ReturnRequests.Include(r => r.Order).FirstOrDefaultAsync(r => r.ReturnId == id);
             if (req == null) return NotFound();
 
             req.Status = "Rejected";
@@ -111,20 +113,22 @@ namespace LeatherLane_Atelier.Controllers
             var customer = await _context.Users.FindAsync(req.CustomerId);
             if (customer != null)
             {
+                string orderDisplay = req.Order?.OrderId ?? req.OrderId.ToString();
                 _context.Notifications.Add(new Notification
                 {
                     Title = "Return Rejected",
-                    Message = $"Your return request for Order #{req.OrderId} has been rejected. Reason: {dto.Reason}",
-                    ActionUrl = "return-tracking.html?id=" + id,
+                    Message = $"Your return request ({req.ReturnCode}) for Order {orderDisplay} has been rejected. Reason: {dto.Reason}",
+                    ActionUrl = "return-tracking.html?id=" + req.ReturnCode,
                     UserId = customer.Id
                 });
                 var details = new System.Collections.Generic.Dictionary<string, string> {
-                    { "Order No.", LeatherLane_Atelier.Services.OrderHelper.FormatOrderNumber(req.OrderId) },
+                    { "Return ID", req.ReturnCode },
+                    { "Order ID", orderDisplay },
                     { "Reason", dto.Reason },
                     { "Status", "Rejected" }
                 };
-                var htmlEmail = LeatherLane_Atelier.Services.EmailTemplateBuilder.BuildStandardEmail("Return Rejected", customer.Name, "Your return request has been rejected.", $"/return-tracking?id={id}", "Track Return", details);
-                _ = _emailService.SendEmailAsync(customer.Email, "Return Rejected", htmlEmail);
+                var htmlEmail = LeatherLane_Atelier.Services.EmailTemplateBuilder.BuildStandardEmail("Return Rejected", customer.Name, "Your return request has been rejected.", $"/return-tracking.html?id={req.ReturnCode}", "Track Return", details);
+                _ = _emailService.SendEmailAsync(customer.Email, $"Return Rejected ({req.ReturnCode})", htmlEmail);
             }
 
             await _context.SaveChangesAsync();
@@ -154,7 +158,7 @@ namespace LeatherLane_Atelier.Controllers
         {
             if (!IsAdmin()) return Forbid();
 
-            var req = await _context.ReturnRequests.FindAsync(id);
+            var req = await _context.ReturnRequests.Include(r => r.Order).FirstOrDefaultAsync(r => r.ReturnId == id);
             if (req == null || req.Status != "Pickup Scheduled") return BadRequest("Invalid state.");
 
             req.InspectionDate = DateTime.UtcNow;
@@ -188,20 +192,22 @@ namespace LeatherLane_Atelier.Controllers
                 var customer = await _context.Users.FindAsync(req.CustomerId);
                 if (customer != null)
                 {
+                    string orderDisplay = req.Order?.OrderId ?? req.OrderId.ToString();
                     _context.Notifications.Add(new Notification
                     {
                         Title = "Return Inspection Failed",
-                        Message = $"Your returned item for Order #{req.OrderId} failed inspection. Reason: {dto.Reason}",
-                        ActionUrl = "return-tracking.html?id=" + id,
+                        Message = $"Your returned item ({req.ReturnCode}) for Order {orderDisplay} failed inspection. Reason: {dto.Reason}",
+                        ActionUrl = "return-tracking.html?id=" + req.ReturnCode,
                         UserId = customer.Id
                     });
                     var details = new System.Collections.Generic.Dictionary<string, string> {
-                    { "Order No.", LeatherLane_Atelier.Services.OrderHelper.FormatOrderNumber(req.OrderId) },
-                    { "Reason", dto.Reason },
-                    { "Status", "Inspection Failed" }
-                };
-                var htmlEmail = LeatherLane_Atelier.Services.EmailTemplateBuilder.BuildStandardEmail("Return Inspection Failed", customer.Name, "Your returned item failed inspection.", $"/return-tracking?id={id}", "Track Return", details);
-                _ = _emailService.SendEmailAsync(customer.Email, "Return Inspection Failed", htmlEmail);
+                        { "Return ID", req.ReturnCode },
+                        { "Order ID", orderDisplay },
+                        { "Reason", dto.Reason },
+                        { "Status", "Inspection Failed" }
+                    };
+                    var htmlEmail = LeatherLane_Atelier.Services.EmailTemplateBuilder.BuildStandardEmail("Return Inspection Failed", customer.Name, "Your returned item failed inspection.", $"/return-tracking.html?id={req.ReturnCode}", "Track Return", details);
+                    _ = _emailService.SendEmailAsync(customer.Email, $"Return Inspection Failed ({req.ReturnCode})", htmlEmail);
                 }
             }
 
@@ -214,7 +220,7 @@ namespace LeatherLane_Atelier.Controllers
         {
             if (!IsAdmin()) return Forbid();
 
-            var req = await _context.ReturnRequests.FindAsync(id);
+            var req = await _context.ReturnRequests.Include(r => r.Order).FirstOrDefaultAsync(r => r.ReturnId == id);
             if (req == null || req.Status != "Refund Approved") return BadRequest("Invalid state.");
 
             req.Status = "Completed";
@@ -235,16 +241,17 @@ namespace LeatherLane_Atelier.Controllers
             var customer = await _context.Users.FindAsync(req.CustomerId);
             if (customer != null)
             {
+                string orderDisplay = req.Order?.OrderId ?? req.OrderId.ToString();
                 _context.Notifications.Add(new Notification
                 {
                     Title = "Refund Completed",
-                    Message = $"Your refund of ${req.RefundAmount} for Order #{req.OrderId} has been successfully processed.",
-                    ActionUrl = "return-tracking.html?id=" + id,
+                    Message = $"Your refund of Rs. {req.RefundAmount:N2} for Order {orderDisplay} (Return ID: {req.ReturnCode}) has been successfully processed.",
+                    ActionUrl = "return-tracking.html?id=" + req.ReturnCode,
                     UserId = customer.Id
                 });
-                var details = new System.Collections.Generic.Dictionary<string, string> { { "Order No.", LeatherLane_Atelier.Services.OrderHelper.FormatOrderNumber(req.OrderId) }, { "Refund Amount", $"Rs. {req.RefundAmount:N2}" }, { "Status", "Refund Processed" } };
-                var htmlEmail = LeatherLane_Atelier.Services.EmailTemplateBuilder.BuildStandardEmail("Refund Completed", customer.Name, "Your refund has been successfully processed.", $"/return-tracking?id={id}", "View Return Details", details);
-                _ = _emailService.SendEmailAsync(customer.Email, "Refund Completed", htmlEmail);
+                var details = new System.Collections.Generic.Dictionary<string, string> { { "Return ID", req.ReturnCode }, { "Order ID", orderDisplay }, { "Refund Amount", $"Rs. {req.RefundAmount:N2}" }, { "Status", "Refund Processed" } };
+                var htmlEmail = LeatherLane_Atelier.Services.EmailTemplateBuilder.BuildStandardEmail("Refund Completed", customer.Name, "Your refund has been successfully processed.", $"/return-tracking.html?id={req.ReturnCode}", "View Return Details", details);
+                _ = _emailService.SendEmailAsync(customer.Email, $"Refund Completed ({req.ReturnCode})", htmlEmail);
             }
 
             await _context.SaveChangesAsync();

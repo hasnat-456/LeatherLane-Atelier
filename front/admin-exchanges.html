@@ -388,7 +388,7 @@
             <div class="notification-wrapper" style="margin-left: 10px;">
                 <button onclick="window.location.href='/admin#dashboard'" style="background:none; border:none; font-size:1.2rem; cursor:pointer;">&#x1F514;</button>
             </div>
-            <a style="color: #ff6b6b; cursor: pointer; font-weight: bold; margin-left: 10px;" onclick="adminLogout()">Sign Out</a>
+            <a style="color: #ff6b6b; cursor: pointer; font-weight: bold; margin-left: 10px; white-space: nowrap; flex-shrink: 0;" onclick="adminLogout()">Sign Out</a>
         </div>
     </nav>
 <div style="width: 100%; padding: 0.6rem 2.5rem 0.8rem 2.5rem; box-sizing: border-box; text-align: left; background-color: var(--primary-bg);">
@@ -437,9 +437,9 @@
     <!-- Details Modal -->
     <div id="detailsModal" class="modal">
         <div class="modal-content">
-            <div class="modal-header">
-                <h3 style="margin: 0;">Exchange Details <span id="mExchangeId"></span></h3>
-                <button class="close-btn" onclick="closeModal()">�</button>
+            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 0.8rem; margin-bottom: 1rem;">
+                <h3 style="margin: 0; color: var(--primary-bg);">Exchange Details <span id="mExchangeId" style="color: #8C5E3C;"></span></h3>
+                <button class="close-btn" onclick="closeModal()" aria-label="Close" style="background: none; border: none; font-size: 1.8rem; font-weight: bold; cursor: pointer; color: #555; line-height: 1; padding: 0 6px; transition: color 0.2s;" onmouseover="this.style.color='#000'" onmouseout="this.style.color='#555'">&times;</button>
             </div>
             <div id="modalBody"></div>
             <div id="modalActions" class="action-area"></div>
@@ -454,6 +454,13 @@
     <script>
         const token = localStorage.getItem('token');
         if (!token) window.location.href = '/login';
+
+        function adminLogout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            sessionStorage.clear();
+            window.location.href = '/login';
+        }
 
         function setActive(element) {
             document.querySelectorAll('#sidebarMenu a').forEach(a => a.classList.remove('active'));
@@ -484,7 +491,7 @@
                     data.forEach(e => {
                         html += `
                             <tr>
-                                <td>#${e.exchangeId}</td>
+                                <td style="font-weight: 700; color: #8C5E3C; font-family: monospace;">${e.exchangeCode || 'EXC-' + e.exchangeId}</td>
                                 <td>${new Date(e.requestDate).toLocaleDateString()}</td>
                                 <td>${e.customerName}</td>
                                 <td>${e.originalProductName}</td>
@@ -505,12 +512,12 @@
             const res = await fetch(`/api/admin/exchanges/${id}`, { headers: { 'Authorization': `Bearer ${token}` } });
             const data = await res.json();
 
-            document.getElementById('mExchangeId').innerText = `#${data.exchangeId}`;
+            document.getElementById('mExchangeId').innerText = data.exchangeCode || ('EXC-' + data.exchangeId);
             
             let html = `
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
                     <div><strong>Customer:</strong> ${data.customer.name} (${data.customer.email})</div>
-                    <div><strong>Order ID:</strong> ${data.orderNumber || '#' + data.orderId}</div>
+                    <div><strong>Order ID:</strong> <span style="color: #8C5E3C; font-weight: bold;">${data.order?.orderId || data.orderNumber || data.orderId}</span></div>
                     <div><strong>Original Item:</strong> ${data.originalProduct.name}</div>
                     <div><strong>Requested Replacement:</strong> ${data.replacementProduct ? data.replacementProduct.name : 'N/A'}</div>
                     <div><strong>Reason:</strong> ${data.reason} ${data.otherReason ? `(${data.otherReason})` : ''}</div>
@@ -553,9 +560,20 @@
             } else if(data.status === 'Replacement Preparing') {
                 actionsHtml = `
                     <h4>Ship Replacement</h4>
-                    <div class="form-group"><input type="text" id="rcourier" class="form-control" placeholder="Courier Name"></div>
-                    <div class="form-group"><input type="text" id="rtracking" class="form-control" placeholder="Tracking Number"></div>
-                    <button class="btn-action" onclick="shipReplacement(${id})">Ship Replacement</button>
+                    <div class="form-group">
+                        <label style="display:block; margin-bottom:5px; font-weight:600; font-size:0.9rem;">Select Courier:</label>
+                        <select id="rcourier" class="form-control" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px; font-size:0.9rem;">
+                            <option value="TCS">TCS</option>
+                            <option value="M&P">M&amp;P (Muller &amp; Phipps)</option>
+                            <option value="Leopards Courier">Leopards Courier</option>
+                            <option value="PostEx">PostEx</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label style="display:block; margin-bottom:5px; font-weight:600; font-size:0.9rem;">Tracking / Consignment Number:</label>
+                        <input type="text" id="rtracking" class="form-control" placeholder="Enter Tracking Number" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px; font-size:0.9rem;">
+                    </div>
+                    <button class="btn-action" style="margin-top:10px;" onclick="shipReplacement(${id})">Ship Replacement</button>
                 `;
             } else if(data.status === 'Replacement Shipped') {
                 actionsHtml = `

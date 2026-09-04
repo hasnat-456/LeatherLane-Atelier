@@ -55,6 +55,7 @@ namespace LeatherLane_Atelier.Controllers
 
             var query = _context.ExchangeRequests
                 .Include(e => e.Customer)
+                .Include(e => e.Order)
                 .Include(e => e.OriginalProduct)
                 .Include(e => e.ReplacementProduct)
                 .AsQueryable();
@@ -67,7 +68,9 @@ namespace LeatherLane_Atelier.Controllers
             var exchanges = await query.OrderByDescending(e => e.CreatedAt).Select(e => new
             {
                 e.ExchangeId,
+                ExchangeCode = e.ExchangeCode,
                 e.OrderId,
+                OrderNumber = e.Order.OrderId,
                 CustomerName = e.Customer.Name,
                 OriginalProductName = e.OriginalProduct.Name,
                 ReplacementProductName = e.ReplacementProduct != null ? e.ReplacementProduct.Name : null,
@@ -103,7 +106,9 @@ namespace LeatherLane_Atelier.Controllers
         {
             if (!IsAdmin()) return Forbid();
 
-            var request = await _context.ExchangeRequests.FindAsync(id);
+            var request = await _context.ExchangeRequests
+                .Include(e => e.Order)
+                .FirstOrDefaultAsync(e => e.ExchangeId == id);
             if (request == null) return NotFound();
 
             if (request.Status != "Pending Review")
@@ -125,15 +130,37 @@ namespace LeatherLane_Atelier.Controllers
             var customer = await _context.Users.FindAsync(request.CustomerId);
             if (customer != null)
             {
+                string orderDisplay = request.Order?.OrderId ?? request.OrderId.ToString();
+                var origProd = await _context.Products.FindAsync(request.OriginalProductId);
+                var repProd = request.ReplacementProductId.HasValue ? await _context.Products.FindAsync(request.ReplacementProductId.Value) : null;
+
                 _context.Notifications.Add(new Notification
                 {
                     Title = "Exchange Approved",
-                    Message = $"Your exchange request for Order #{request.OrderId} has been approved. Please ship the item.",
-                    ActionUrl = $"exchange-tracking.html?id={id}",
+                    Message = $"Your exchange request ({request.ExchangeCode}) for Order {orderDisplay} has been approved. Please ship the item back via courier.",
+                    ActionUrl = $"exchange-tracking.html?id={request.ExchangeCode}",
                     UserId = customer.Id
                 });
-                var emailHtml = LeatherLane_Atelier.Services.EmailTemplateBuilder.BuildStandardEmail("✅ Exchange Approved", customer.Name, $"Your exchange request for Order #{request.OrderId} was approved.", "/transactions.html");
-                _ = _emailService.SendEmailAsync(customer.Email, "Exchange Approved (#" + request.OrderId + ")", emailHtml);
+
+                string approveMsg = $"Your exchange request <strong>{request.ExchangeCode}</strong> for Order <strong>{orderDisplay}</strong> has been approved. Please dispatch the original unworn product back to our workshop via any of our authorized couriers (<strong>TCS, M&amp;P, Leopards Courier, PostEx</strong>).";
+                var emailHtml = LeatherLane_Atelier.Services.EmailTemplateBuilder.BuildExchangeEmail(
+                    "Exchange Request Approved", 
+                    customer.Name, 
+                    request.ExchangeCode ?? ("EXC-" + request.ExchangeId),
+                    orderDisplay,
+                    "Approved - Ship Return",
+                    approveMsg,
+                    origProd?.Name ?? "Original Item",
+                    origProd?.ProductId,
+                    origProd?.Image,
+                    repProd?.Name ?? origProd?.Name ?? "Same Item",
+                    repProd?.ProductId ?? origProd?.ProductId,
+                    repProd?.Image ?? origProd?.Image,
+                    request.Reason,
+                    $"/exchange-tracking.html?id={request.ExchangeCode}",
+                    "Submit Return Tracking"
+                );
+                _ = _emailService.SendEmailAsync(customer.Email, $"Exchange Approved ({request.ExchangeCode}) | LeatherLane Atelier", emailHtml);
             }
 
             await _context.SaveChangesAsync();
@@ -145,16 +172,17 @@ namespace LeatherLane_Atelier.Controllers
         {
             if (!IsAdmin()) return Forbid();
 
-            var request = await _context.ExchangeRequests.FindAsync(id);
+            var request = await _context.ExchangeRequests
+                .Include(e => e.Order)
+                .Include(e => e.OriginalProduct)
+                .Include(e => e.ReplacementProduct)
+                .FirstOrDefaultAsync(e => e.ExchangeId == id);
+
             if (request == null) return NotFound();
 
             request.Status = "Rejected";
             request.RejectedReason = dto.Reason;
 
-            // Revert Order Item flags since it was rejected
-            var orderItem = await _context.CartItems.FirstOrDefaultAsync(i => i.Id == request.OrderItemId);
-            // Wait, we used TransactionItem, not CartItem. 
-            // We need to fetch via Transaction
             var order = await _context.Transactions.Include(t => t.Items).FirstOrDefaultAsync(t => t.Id == request.OrderId);
             if (order != null)
             {
@@ -166,20 +194,48 @@ namespace LeatherLane_Atelier.Controllers
                 }
             }
 
-            await AddTimelineEvent(id, "Inspection Failed", dto.Reason, null, null, null, true);
+            await AddTimelineEvent(id, "Exchange Rejected", dto.Reason, null, null, null, true);
 
             var customer = await _context.Users.FindAsync(request.CustomerId);
             if (customer != null)
             {
+                string orderDisplay = request.Order?.OrderId ?? ("#" + request.OrderId);
+                var exchangeCode = request.ExchangeCode ?? ("EXC-" + id);
+                var origProd = request.OriginalProduct ?? await _context.Products.FindAsync(request.OriginalProductId);
+                var repProd = request.ReplacementProduct ?? (request.ReplacementProductId.HasValue ? await _context.Products.FindAsync(request.ReplacementProductId.Value) : null);
+
                 _context.Notifications.Add(new Notification
                 {
                     Title = "Exchange Rejected",
-                    Message = $"Your exchange request for Order #{request.OrderId} has been rejected. Reason: {dto.Reason}",
-                    ActionUrl = $"exchange-tracking.html?id={id}",
+                    Message = $"Your exchange request for Order {orderDisplay} (Exchange {exchangeCode}) has been rejected. Reason: {dto.Reason}",
+                    ActionUrl = $"exchange-tracking.html?id={exchangeCode}",
                     UserId = customer.Id
                 });
-                var emailHtml = LeatherLane_Atelier.Services.EmailTemplateBuilder.BuildStandardEmail("❌ Exchange Request Update", customer.Name, $"Your exchange request for Order #{request.OrderId} was rejected. Reason: {dto.Reason}", "/transactions.html");
-                _ = _emailService.SendEmailAsync(customer.Email, "Exchange Rejected (#" + request.OrderId + ")", emailHtml);
+
+                string rejectMsg = $"We have reviewed your exchange request for Order <strong>{orderDisplay}</strong> (Exchange <strong>{exchangeCode}</strong>). Unfortunately, your request could not be approved due to the reason specified below.";
+
+                var emailHtml = LeatherLane_Atelier.Services.EmailTemplateBuilder.BuildExchangeEmail(
+                    "Exchange Request Rejected",
+                    customer.Name,
+                    exchangeCode,
+                    orderDisplay,
+                    "Rejected",
+                    rejectMsg,
+                    origProd?.Name ?? "Original Item",
+                    origProd?.ProductId,
+                    origProd?.Image,
+                    repProd?.Name ?? origProd?.Name ?? "Same Item",
+                    repProd?.ProductId ?? origProd?.ProductId,
+                    repProd?.Image ?? origProd?.Image,
+                    request.Reason,
+                    $"/exchange-tracking.html?id={exchangeCode}",
+                    "View Exchange Details",
+                    null,
+                    null,
+                    dto.Reason
+                );
+
+                _ = _emailService.SendEmailAsync(customer.Email, $"Exchange Rejected ({exchangeCode}) | LeatherLane Atelier", emailHtml);
             }
 
             await _context.SaveChangesAsync();
@@ -218,48 +274,83 @@ namespace LeatherLane_Atelier.Controllers
                 
                 if (customer != null)
                 {
+                    string orderDisplay = request.Order?.OrderId ?? request.OrderId.ToString();
+                    var origProd = await _context.Products.FindAsync(request.OriginalProductId);
+                    var repProd = request.ReplacementProductId.HasValue ? await _context.Products.FindAsync(request.ReplacementProductId.Value) : null;
+                    var exchangeCode = request.ExchangeCode ?? ("EXC-" + id);
+
                     _context.Notifications.Add(new Notification
                     {
                         Title = "Inspection Passed",
-                        Message = $"Your returned item for Exchange #{id} passed inspection. We are packing your replacement now.",
-                        ActionUrl = $"exchange-tracking.html?id={id}",
+                        Message = $"Your returned item for Exchange ({exchangeCode}) passed inspection. We are packaging your unfaulted replacement piece now.",
+                        ActionUrl = $"exchange-tracking.html?id={exchangeCode}",
                         UserId = customer.Id
                     });
-                    var details = new System.Collections.Generic.Dictionary<string, string> {
-                    { "Order No.", LeatherLane_Atelier.Services.OrderHelper.FormatOrderNumber(request.OrderId) },
-                    { "Status", "Inspection Passed" }
-                };
-                var htmlEmail = LeatherLane_Atelier.Services.EmailTemplateBuilder.BuildStandardEmail("Exchange Inspection Passed", customer.Name, "Good news! Your returned item has arrived and passed inspection. We are packing your replacement now.", $"/exchange-tracking?id={id}", "Track Replacement", details);
-                _ = _emailService.SendEmailAsync(customer.Email, "Exchange Inspection Passed", htmlEmail);
+
+                    string passMsg = $"Good news! Your returned product for Exchange <strong>{exchangeCode}</strong> has successfully passed our workshop inspection. We are packaging an unfaulted, brand-new piece of the same product and size for dispatch.";
+                    var htmlEmail = LeatherLane_Atelier.Services.EmailTemplateBuilder.BuildExchangeEmail(
+                        "Inspection Passed: Preparing Replacement",
+                        customer.Name,
+                        exchangeCode,
+                        orderDisplay,
+                        "Inspection Passed - Replacement Preparing",
+                        passMsg,
+                        origProd?.Name ?? "Original Item",
+                        origProd?.ProductId,
+                        origProd?.Image,
+                        repProd?.Name ?? origProd?.Name ?? "Same Item",
+                        repProd?.ProductId ?? origProd?.ProductId,
+                        repProd?.Image ?? origProd?.Image,
+                        request.Reason,
+                        $"/exchange-tracking.html?id={exchangeCode}",
+                        "Track Replacement Progress"
+                    );
+                    _ = _emailService.SendEmailAsync(customer.Email, $"Inspection Passed ({exchangeCode}) | LeatherLane Atelier", htmlEmail);
                 }
             }
             else
             {
                 request.Status = "Inspection Failed";
                 request.RejectedReason = dto.Reason;
-                
-                // We DO NOT revert the Order Item HasBeenExchanged flag yet, 
-                // because the workflow is still active until the original is shipped back.
-                // It will be reverted when the return is completed.
 
                 await AddTimelineEvent(id, "Inspection Failed", "Inspection failed: " + dto.Reason + ". Original product will be shipped back.", null, null, null, false);
 
                 if (customer != null)
                 {
+                    string orderDisplay = request.Order?.OrderId ?? request.OrderId.ToString();
+                    var origProd = await _context.Products.FindAsync(request.OriginalProductId);
+                    var exchangeCode = request.ExchangeCode ?? ("EXC-" + id);
+
                     _context.Notifications.Add(new Notification
                     {
                         Title = "Exchange Inspection Failed",
-                        Message = $"Your exchange item for Order #{request.OrderId} failed inspection. Reason: {dto.Reason}. It will be shipped back to you.",
-                        ActionUrl = $"exchange-tracking.html?id={id}",
+                        Message = $"Your returned item for Exchange ({exchangeCode}) did not pass inspection. Reason: {dto.Reason}. The original piece is being returned to you.",
+                        ActionUrl = $"exchange-tracking.html?id={exchangeCode}",
                         UserId = customer.Id
                     });
-                    var details = new System.Collections.Generic.Dictionary<string, string> {
-                    { "Order No.", LeatherLane_Atelier.Services.OrderHelper.FormatOrderNumber(request.OrderId) },
-                    { "Reason", dto.Reason },
-                    { "Status", "Inspection Failed" }
-                };
-                var htmlEmail = LeatherLane_Atelier.Services.EmailTemplateBuilder.BuildStandardEmail("Exchange Inspection Failed", customer.Name, "Your returned item was received but failed inspection.", $"/exchange-tracking?id={id}", "Track Status", details);
-                _ = _emailService.SendEmailAsync(customer.Email, "Exchange Inspection Failed", htmlEmail);
+
+                    string failMsg = $"Following physical inspection for Exchange <strong>{exchangeCode}</strong>, the exchange could not be approved due to the reason specified below. Your original item has been scheduled to ship back to your address.";
+                    var htmlEmail = LeatherLane_Atelier.Services.EmailTemplateBuilder.BuildExchangeEmail(
+                        "Exchange Inspection Failed",
+                        customer.Name,
+                        exchangeCode,
+                        orderDisplay,
+                        "Inspection Failed",
+                        failMsg,
+                        origProd?.Name ?? "Original Item",
+                        origProd?.ProductId,
+                        origProd?.Image,
+                        origProd?.Name ?? "Original Item",
+                        origProd?.ProductId,
+                        origProd?.Image,
+                        request.Reason,
+                        $"/exchange-tracking.html?id={exchangeCode}",
+                        "Track Exchange Portal",
+                        null,
+                        null,
+                        dto.Reason
+                    );
+                    _ = _emailService.SendEmailAsync(customer.Email, $"Inspection Update ({exchangeCode}) | LeatherLane Atelier", htmlEmail);
                 }
             }
 
@@ -277,7 +368,6 @@ namespace LeatherLane_Atelier.Controllers
 
             request.Status = "Replacement Shipped";
             request.ReplacementShipmentDate = DateTime.UtcNow;
-            // Update tracking
             request.CourierName = dto.CourierName;
             request.TrackingNumber = dto.TrackingNumber;
 
@@ -286,19 +376,40 @@ namespace LeatherLane_Atelier.Controllers
             var customer = await _context.Users.FindAsync(request.CustomerId);
             if (customer != null)
             {
+                string orderDisplay = request.Order?.OrderId ?? request.OrderId.ToString();
+                var origProd = await _context.Products.FindAsync(request.OriginalProductId);
+                var repProd = request.ReplacementProductId.HasValue ? await _context.Products.FindAsync(request.ReplacementProductId.Value) : null;
+                var exchangeCode = request.ExchangeCode ?? ("EXC-" + id);
+
                 _context.Notifications.Add(new Notification
                 {
                     Title = "Replacement Shipped",
-                    Message = $"Your replacement item for Exchange #{id} has been shipped.",
-                    ActionUrl = $"exchange-tracking.html?id={id}",
+                    Message = $"Your replacement item for Exchange ({exchangeCode}) has been shipped via {dto.CourierName} (Tracking: {dto.TrackingNumber}).",
+                    ActionUrl = $"exchange-tracking.html?id={exchangeCode}",
                     UserId = customer.Id
                 });
-                var details = new System.Collections.Generic.Dictionary<string, string> {
-                    { "Tracking Number", dto.TrackingNumber },
-                    { "Status", "Shipped" }
-                };
-                var htmlEmail = LeatherLane_Atelier.Services.EmailTemplateBuilder.BuildStandardEmail("Replacement Shipped", customer.Name, "Your replacement item has shipped.", $"/exchange-tracking?id={id}", "Track Package", details);
-                _ = _emailService.SendEmailAsync(customer.Email, "Replacement Shipped", htmlEmail);
+
+                string repShippedMsg = $"Your returned product for Exchange <strong>{exchangeCode}</strong> passed physical inspection. We have dispatched a pristine, brand-new piece of the same product in the same size via <strong>{dto.CourierName}</strong>.";
+                var htmlEmail = LeatherLane_Atelier.Services.EmailTemplateBuilder.BuildExchangeEmail(
+                    "Replacement Dispatched",
+                    customer.Name,
+                    exchangeCode,
+                    orderDisplay,
+                    "Replacement Dispatched",
+                    repShippedMsg,
+                    origProd?.Name ?? "Original Item",
+                    origProd?.ProductId,
+                    origProd?.Image,
+                    repProd?.Name ?? origProd?.Name ?? "Same Item",
+                    repProd?.ProductId ?? origProd?.ProductId,
+                    repProd?.Image ?? origProd?.Image,
+                    request.Reason,
+                    $"/exchange-tracking.html?id={exchangeCode}",
+                    "Track Replacement Parcel",
+                    dto.CourierName,
+                    dto.TrackingNumber
+                );
+                _ = _emailService.SendEmailAsync(customer.Email, $"Replacement Shipped ({exchangeCode}) | LeatherLane Atelier", htmlEmail);
             }
 
             await _context.SaveChangesAsync();
@@ -332,6 +443,45 @@ namespace LeatherLane_Atelier.Controllers
 
             await AddTimelineEvent(id, "Original Shipped Back", $"Original product shipped back via {dto.CourierName}. Tracking: {dto.TrackingNumber}", dto.CourierName, dto.TrackingNumber, null, true);
 
+            var customer = await _context.Users.FindAsync(request.CustomerId);
+            if (customer != null)
+            {
+                string orderDisplay = request.Order?.OrderId ?? request.OrderId.ToString();
+                var origProd = await _context.Products.FindAsync(request.OriginalProductId);
+                var exchangeCode = request.ExchangeCode ?? ("EXC-" + id);
+
+                _context.Notifications.Add(new Notification
+                {
+                    Title = "Original Item Returned",
+                    Message = $"Your original item for Exchange ({exchangeCode}) has been dispatched back to you via {dto.CourierName} (Tracking: {dto.TrackingNumber}).",
+                    ActionUrl = $"exchange-tracking.html?id={exchangeCode}",
+                    UserId = customer.Id
+                });
+
+                string origShippedMsg = $"Following physical inspection for Exchange <strong>{exchangeCode}</strong>, the exchange could not be approved due to the reason specified below. Your original item has been safely dispatched back to your address via <strong>{dto.CourierName}</strong>.";
+                var htmlEmail = LeatherLane_Atelier.Services.EmailTemplateBuilder.BuildExchangeEmail(
+                    "Original Item Returned",
+                    customer.Name,
+                    exchangeCode,
+                    orderDisplay,
+                    "Original Shipped Back",
+                    origShippedMsg,
+                    origProd?.Name ?? "Original Item",
+                    origProd?.ProductId,
+                    origProd?.Image,
+                    origProd?.Name ?? "Original Item",
+                    origProd?.ProductId,
+                    origProd?.Image,
+                    request.Reason,
+                    $"/exchange-tracking.html?id={exchangeCode}",
+                    "Track Parcel",
+                    dto.CourierName,
+                    dto.TrackingNumber,
+                    request.RejectedReason
+                );
+                _ = _emailService.SendEmailAsync(customer.Email, $"Original Item Dispatched Back ({exchangeCode}) | LeatherLane Atelier", htmlEmail);
+            }
+
             await _context.SaveChangesAsync();
             return Ok(new { message = "Original product shipped back." });
         }
@@ -362,19 +512,40 @@ namespace LeatherLane_Atelier.Controllers
             var customer = await _context.Users.FindAsync(request.CustomerId);
             if (customer != null)
             {
+                string orderDisplay = request.Order?.OrderId ?? request.OrderId.ToString();
+                var origProd = await _context.Products.FindAsync(request.OriginalProductId);
+                var repProd = request.ReplacementProductId.HasValue ? await _context.Products.FindAsync(request.ReplacementProductId.Value) : null;
+                var exchangeCode = request.ExchangeCode ?? ("EXC-" + id);
+
                 _context.Notifications.Add(new Notification
                 {
-                    Title = "Replacement Delivered",
-                    Message = $"Your replacement item for Exchange #{id} has been delivered. Enjoy!",
-                    ActionUrl = $"exchange-tracking.html?id={id}",
+                    Title = "Exchange Completed",
+                    Message = $"Your exchange request ({exchangeCode}) for Order {orderDisplay} is now successfully completed.",
+                    ActionUrl = $"exchange-tracking.html?id={exchangeCode}",
                     UserId = customer.Id
                 });
-                var details = new System.Collections.Generic.Dictionary<string, string> {
-                    { "Order No.", LeatherLane_Atelier.Services.OrderHelper.FormatOrderNumber(request.OrderId) },
-                    { "Status", "Delivered" }
-                };
-                var htmlEmail = LeatherLane_Atelier.Services.EmailTemplateBuilder.BuildStandardEmail("Replacement Delivered", customer.Name, "Your replacement item has been delivered. Thank you for your patience.", $"/exchange-tracking?id={id}", "View Details", details);
-                _ = _emailService.SendEmailAsync(customer.Email, "Replacement Delivered", htmlEmail);
+
+                string completeMsg = $"Your exchange request <strong>{exchangeCode}</strong> for Order <strong>{orderDisplay}</strong> is now successfully completed. Thank you for your continued trust in LeatherLane Atelier.";
+                var htmlEmail = LeatherLane_Atelier.Services.EmailTemplateBuilder.BuildExchangeEmail(
+                    "Exchange Completed",
+                    customer.Name,
+                    exchangeCode,
+                    orderDisplay,
+                    "Exchange Completed",
+                    completeMsg,
+                    origProd?.Name ?? "Original Item",
+                    origProd?.ProductId,
+                    origProd?.Image,
+                    repProd?.Name ?? origProd?.Name ?? "Same Item",
+                    repProd?.ProductId ?? origProd?.ProductId,
+                    repProd?.Image ?? origProd?.Image,
+                    request.Reason,
+                    $"/products.html",
+                    "Explore Atelier Collection",
+                    request.CourierName,
+                    request.TrackingNumber
+                );
+                _ = _emailService.SendEmailAsync(customer.Email, $"Exchange Completed ({exchangeCode}) | LeatherLane Atelier", htmlEmail);
             }
 
             await _context.SaveChangesAsync();

@@ -282,29 +282,44 @@ document.addEventListener('DOMContentLoaded', async function() {
         document.querySelectorAll('.dyn-hours').forEach(el => el.textContent = settings.businessHours || '');
     }
 
+    // Helper to check if a URL is valid (not empty, not '#' or placeholder)
+    const isValidSocialUrl = (url) => {
+        if (!url || typeof url !== 'string') return false;
+        const trimmed = url.trim();
+        return trimmed !== '' && trimmed !== '#' && trimmed !== 'null' && trimmed !== 'undefined';
+    };
+
     // 3. Helper function to update footer social icons
     const updateIcon = (title, url) => {
         document.querySelectorAll(`a[title='${title}']`).forEach(el => {
-            if (url && url.trim() !== '') {
-                el.href = url.trim();
+            if (isValidSocialUrl(url)) {
+                let finalUrl = url.trim();
+                if (!finalUrl.startsWith('http://') && !finalUrl.startsWith('https://') && !finalUrl.startsWith('//')) {
+                    finalUrl = 'https://' + finalUrl;
+                }
+                el.href = finalUrl;
                 el.target = '_blank';
                 el.style.display = 'inline-block';
             } else {
-                // If the admin didn't provide a link, we hide the icon so it doesn't show a dead link
+                // Hide icon if no valid link is provided by admin
                 el.style.display = 'none';
             }
         });
     };
 
-    // 4. Apply Facebook, Instagram, and TikTok links
-    updateIcon('Facebook', settings.facebookUrl);
-    updateIcon('Instagram', settings.instagramUrl);
-    updateIcon('TikTok', settings.tikTokUrl);
+    // 4. Apply Facebook, Instagram, and TikTok links (only shown if added by admin)
+    updateIcon('Facebook', settings ? settings.facebookUrl : null);
+    updateIcon('Instagram', settings ? settings.instagramUrl : null);
+    updateIcon('TikTok', settings ? settings.tikTokUrl : null);
 
-    // 5. Handle WhatsApp specifically (for both the footer icon and floating button)
-    let waNumber = '923376306162'; // default fallback
-    if (settings && settings.whatsAppUrl && settings.whatsAppUrl.trim() !== '') {
-        waNumber = settings.whatsAppUrl.trim();
+    // 5. Handle WhatsApp specifically (Always visible in footer and floating button)
+    let waNumber = '03376306162'; // default fallback
+    if (settings) {
+        if (isValidSocialUrl(settings.whatsAppUrl)) {
+            waNumber = settings.whatsAppUrl.trim();
+        } else if (settings.phone && settings.phone.trim() !== '') {
+            waNumber = settings.phone.trim();
+        }
     }
 
     let waMessage = '';
@@ -324,8 +339,12 @@ document.addEventListener('DOMContentLoaded', async function() {
         }
     }
 
-    // Apply the smart WhatsApp link to the footer icon
-    updateIcon('WhatsApp', waUrl);
+    // Apply the WhatsApp link to the footer icon (Always visible)
+    document.querySelectorAll(`a[title='WhatsApp']`).forEach(el => {
+        el.href = waUrl;
+        el.target = '_blank';
+        el.style.display = 'inline-block';
+    });
 
     // 6. Only create the floating button if we are NOT on the admin dashboard
     if (!document.getElementById('wa-floating-btn') && !window.location.href.includes('admin')) {

@@ -9,6 +9,7 @@ namespace LeatherLane_Atelier.Models
     {
         [Key]
         public int ExchangeId { get; set; }
+        public string? ExchangeCode { get; set; }
 
         public int OrderId { get; set; }
         public Transaction Order { get; set; } = null!;

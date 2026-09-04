@@ -12,10 +12,10 @@ namespace LeatherLane_Atelier.Models
         public string Phone { get; set; } = "03376306162";
         public string BusinessHours { get; set; } = "Mon-Sat: 10 AM - 7 PM";
         
-        public string FacebookUrl { get; set; } = "#";
+        public string FacebookUrl { get; set; } = "";
         public string InstagramUrl { get; set; } = "https://www.instagram.com/leatherlane_atelier";
-        public string WhatsAppUrl { get; set; } = "#";
-        public string TikTokUrl { get; set; } = "#";
+        public string WhatsAppUrl { get; set; } = "03376306162";
+        public string TikTokUrl { get; set; } = "";
         
         public string AboutUsText { get; set; } = "";
         

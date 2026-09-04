@@ -33,8 +33,15 @@ namespace LeatherLane_Atelier.Controllers
         {
             if (!IsAdmin()) return Forbid();
 
-            var order = await _context.Transactions.FindAsync(id);
+            var order = await _context.Transactions
+                .Include(t => t.Items)
+                .FirstOrDefaultAsync(t => t.Id == id);
             if (order == null) return NotFound(new { message = "Order not found" });
+
+            if (dto.Status == "Cancelled")
+            {
+                return BadRequest(new { message = "Admins are not permitted to manually cancel orders." });
+            }
 
             // Mark previous current events as not current
             var previousCurrent = await _context.TimelineEvents
@@ -68,44 +75,73 @@ namespace LeatherLane_Atelier.Controllers
 
             _context.TimelineEvents.Add(newEvent);
 
-            if (dto.Status == "Packed" || dto.Status == "Shipped" || dto.Status == "Delivered")
+            if (dto.Status == "Packed" || dto.Status == "Shipped" || dto.Status == "Handed to Courier" || dto.Status == "In Transit" || dto.Status == "Out for Delivery" || dto.Status == "Delivered")
             {
                 var customer = await _context.Users.FindAsync(order.UserId);
                 if (customer != null)
                 {
                     string message = "";
-                    if (dto.Status == "Packed") message = $"Your order #{id} has been packed and is ready to ship.";
-                    else if (dto.Status == "Shipped") message = $"Your order #{id} has been shipped via {dto.CourierName ?? "Courier"}. Tracking: {dto.TrackingNumber ?? "N/A"}";
-                    else if (dto.Status == "Delivered") message = $"Your order #{id} has been delivered! Enjoy your purchase.";
+                    if (dto.Status == "Packed") message = $"Your order {order.OrderId} has been packed with bespoke care and is ready to ship.";
+                    else if (dto.Status == "Shipped" || dto.Status == "Handed to Courier" || dto.Status == "In Transit") message = $"Your handcrafted order {order.OrderId} is on its way via {dto.CourierName ?? "Courier"}. Tracking Number: {dto.TrackingNumber ?? "In Transit"}";
+                    else if (dto.Status == "Out for Delivery") message = $"Your order {order.OrderId} is out for delivery today with our courier rider.";
+                    else if (dto.Status == "Delivered")
+                    {
+                        message = $"Your order {order.OrderId} has been delivered successfully. We hope your handcrafted leather items serve you with timeless elegance.";
+                        order.DeliveredAt = DateTime.UtcNow;
+                        order.ReviewReminderDay2Sent = false;
+                        order.ReviewReminderDay4Sent = false;
+                    }
 
                     _context.Notifications.Add(new Notification
                     {
                         Title = $"Order {dto.Status}",
                         Message = message,
-                        ActionUrl = $"transactions.html",
+                        ActionUrl = $"order-tracking.html?id={order.OrderId}",
                         UserId = customer.Id
                     });
 
-                    var details = new System.Collections.Generic.Dictionary<string, string> {
-                    { "Order No.", LeatherLane_Atelier.Services.OrderHelper.FormatOrderNumber(id) },
-                    { "Status", dto.Status }
-                };
-                var htmlEmail = LeatherLane_Atelier.Services.EmailTemplateBuilder.BuildStandardEmail($"Order {dto.Status}", customer.Name, message, $"/order-tracking?id={id}", "Track Order", details);
-                _ = _emailService.SendEmailAsync(customer.Email, $"Order {dto.Status}", htmlEmail);
-
-                    if (dto.Status == "Delivered")
+                    var orderItemInfos = new List<LeatherLane_Atelier.Services.OrderItemInfo>();
+                    foreach (var tItem in order.Items)
                     {
-                        string reviewMsg = $"How did we do? Please log in and leave a review for your items from Order #{id}. Your feedback helps us improve!";
-                        _context.Notifications.Add(new Notification
+                        var prod = tItem.ProductId.HasValue ? await _context.Products.FindAsync(tItem.ProductId.Value) : null;
+                        orderItemInfos.Add(new LeatherLane_Atelier.Services.OrderItemInfo
                         {
-                            Title = "Please Leave a Review",
-                            Message = reviewMsg,
-                            ActionUrl = $"transactions.html",
-                            UserId = customer.Id
+                            Name = tItem.Name,
+                            ProductId = prod?.ProductId ?? ("LLA-PRD-" + tItem.ProductId),
+                            Thumbnail = prod?.Image,
+                            Quantity = tItem.Quantity,
+                            Price = tItem.Price
                         });
-                        var reviewHtmlEmail = LeatherLane_Atelier.Services.EmailTemplateBuilder.BuildStandardEmail("We'd Love Your Review!", customer.Name, reviewMsg, "/transactions", "Write a Review");
-                        _ = _emailService.SendEmailAsync(customer.Email, "We'd Love Your Review!", reviewHtmlEmail);
                     }
+
+                    string emailOpeningText = dto.Status switch
+                    {
+                        "Packed" => $"Your order <strong>{order.OrderId}</strong> has been packed with bespoke care and is ready for dispatch.",
+                        "Shipped" or "Handed to Courier" or "In Transit" => $"Your bespoke order <strong>{order.OrderId}</strong> has been securely packed and handed over to <strong>{dto.CourierName ?? "our courier partner"}</strong>. Your tracking details are provided below.",
+                        "Out for Delivery" => $"Great news! Your LeatherLane Atelier parcel for Order <strong>{order.OrderId}</strong> is out for doorstep delivery today with our courier rider.",
+                        "Delivered" => $"Your order <strong>{order.OrderId}</strong> has been delivered. We hope your bespoke leather pieces serve you with timeless elegance and comfort.",
+                        _ => $"Your order <strong>{order.OrderId}</strong> status is now: <strong>{dto.Status}</strong>."
+                    };
+
+                    string actionButtonText = dto.Status == "Delivered" ? "Leave a Product Review" : "Track Your Order";
+                    string actionBtnUrl = dto.Status == "Delivered" ? $"/orders.html" : $"/order-tracking.html?id={order.OrderId}";
+
+                    var htmlEmail = LeatherLane_Atelier.Services.EmailTemplateBuilder.BuildOrderEmail(
+                        $"Order {dto.Status}",
+                        customer.Name,
+                        order.OrderId,
+                        emailOpeningText,
+                        orderItemInfos,
+                        0m,
+                        order.TotalAmount,
+                        dto.Status,
+                        order.PaymentMethod,
+                        actionBtnUrl,
+                        actionButtonText,
+                        dto.CourierName,
+                        dto.TrackingNumber
+                    );
+                    _ = _emailService.SendEmailAsync(customer.Email, $"Order {order.OrderId} - {dto.Status} | LeatherLane Atelier", htmlEmail);
                 }
             }
 

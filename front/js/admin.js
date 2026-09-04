@@ -244,24 +244,46 @@ async function fetchDashboardStats() {
         if (res.ok) {
             const data = await res.json();
             document.getElementById('statOrders').innerText = data.totalOrders;
-            document.getElementById('statRevenue').innerText = '$' + data.totalRevenue.toFixed(2);
+            document.getElementById('statRevenue').innerText = 'Rs. ' + Number(data.totalRevenue).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
         }
     } catch (err) {
         console.error("Error fetching stats", err);
     }
 }
 
-// Orders UI
+let allAdminOrders = [];
+let allAdminProducts = [];
+
 async function fetchOrders() {
     try {
         const res = await fetch('/api/adminapi/orders');
         if (res.ok) {
-            const orders = await res.json();
-            renderOrders(orders);
+            allAdminOrders = await res.json();
+            const searchVal = document.getElementById('adminOrderSearch')?.value || '';
+            filterAdminOrders(searchVal);
         }
     } catch (err) {
         console.error("Error fetching orders", err);
     }
+}
+
+function filterAdminOrders(term) {
+    if (!term || !term.trim()) {
+        renderOrders(allAdminOrders);
+        return;
+    }
+    const lower = term.trim().toLowerCase();
+    const filtered = allAdminOrders.filter(o => {
+        const orderIdStr = (o.orderId || o.orderNumber || o.id || '').toString().toLowerCase();
+        const custStr = (o.customer || '').toLowerCase();
+        const statusStr = (o.status || '').toLowerCase();
+        const itemsMatch = (o.items || []).some(item => 
+            (item.name || '').toLowerCase().includes(lower) || 
+            (item.productId || '').toLowerCase().includes(lower)
+        );
+        return orderIdStr.includes(lower) || custStr.includes(lower) || statusStr.includes(lower) || itemsMatch;
+    });
+    renderOrders(filtered);
 }
 
 function renderOrders(orders) {
@@ -284,17 +306,34 @@ function renderOrders(orders) {
         const badgeClass = statusClassMap[st] || 'badge-processing';
         const displayStatus = o.status;
         
+        let itemsHtml = '';
+        if (o.items && o.items.length > 0) {
+            itemsHtml = o.items.map(item => `
+                <div style="margin-bottom: 6px; padding: 4px 8px; background: #faf8f5; border-radius: 4px; border-left: 3px solid var(--primary-gold); border-top: 1px solid #f0ebe4; border-right: 1px solid #f0ebe4; border-bottom: 1px solid #f0ebe4;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+                        <span style="font-weight: 600; color: #222; font-size: 0.88rem;">${item.name}</span>
+                        <span style="background: #e5e9ec; color: #222; font-weight: 700; padding: 1px 6px; border-radius: 3px; font-size: 0.8rem; white-space: nowrap;">&times; ${item.quantity}</span>
+                    </div>
+                    <div style="font-size: 0.78rem; color: #8C5E3C; font-family: monospace; font-weight: 700; margin-top: 2px;">Product ID: ${item.productId}</div>
+                </div>
+            `).join('');
+        } else {
+            itemsHtml = '<span style="color: #999; font-size: 0.85rem;">No items recorded</span>';
+        }
+        
         html += `
             <tr>
-                <td style="font-weight: bold;">${o.id}</td>
+                <td style="font-weight: 700; color: #8C5E3C; font-family: monospace; font-size: 0.95rem;">${o.orderId || o.orderNumber || o.id}</td>
                 <td>${dateStr}</td>
                 <td>${o.customer}</td>
+                <td style="min-width: 240px; max-width: 320px;">${itemsHtml}</td>
                 <td>Rs. ${o.amount.toFixed(2)}</td>
                 <td><span class="badge ${badgeClass}">${displayStatus}</span></td>
                 <td>
-                    <select class="status-select" onchange="updateOrderStatus('${o.id}', this.value)" ${['Cancelled', 'Payment Verification Pending', 'Payment Rejected'].includes(o.status) ? 'disabled style="background-color: #eaeaea; cursor: not-allowed;" title="Please verify payment first"' : ''}>
+                    <select class="status-select" onchange="updateOrderStatus('${o.id}', this.value)" ${['Cancelled', 'Payment Verification Pending', 'Payment Rejected'].includes(o.status) ? 'disabled style="background-color: #eaeaea; cursor: not-allowed;"' : ''}>
                         <option value="Payment Verification Pending" ${o.status === 'Payment Verification Pending' ? 'selected' : 'hidden'}>Payment Verification Pending</option>
                         <option value="Payment Rejected" ${o.status === 'Payment Rejected' ? 'selected' : 'hidden'}>Payment Rejected</option>
+                        ${o.status === 'Cancelled' ? '<option value="Cancelled" selected hidden>Cancelled</option>' : ''}
                         <option value="Order Placed" ${o.status === 'Order Placed' ? 'selected' : ''}>Order Placed</option>
                         <option value="Order Confirmed" ${o.status === 'Order Confirmed' ? 'selected' : ''}>Order Confirmed</option>
                         <option value="Preparing Order" ${o.status === 'Preparing Order' ? 'selected' : ''}>Preparing Order</option>
@@ -303,7 +342,6 @@ function renderOrders(orders) {
                         <option value="In Transit" ${o.status === 'In Transit' ? 'selected' : ''}>In Transit</option>
                         <option value="Out for Delivery" ${o.status === 'Out for Delivery' ? 'selected' : ''}>Out for Delivery</option>
                         <option value="Delivered" ${o.status === 'Delivered' ? 'selected' : ''}>Delivered</option>
-                        <option value="Cancelled" ${o.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
                     </select>
                 </td>
             </tr>
@@ -341,12 +379,28 @@ async function fetchProducts() {
     try {
         const res = await fetch('/api/products');
         if (res.ok) {
-            const products = await res.json();
-            renderProducts(products);
+            allAdminProducts = await res.json();
+            const searchVal = document.getElementById('adminProductSearch')?.value || '';
+            filterAdminProducts(searchVal);
         }
     } catch (err) {
         console.error("Error fetching products", err);
     }
+}
+
+function filterAdminProducts(term) {
+    if (!term || !term.trim()) {
+        renderProducts(allAdminProducts);
+        return;
+    }
+    const lower = term.trim().toLowerCase();
+    const filtered = allAdminProducts.filter(p => {
+        const prodIdStr = (p.productId || '').toLowerCase();
+        const nameStr = (p.name || '').toLowerCase();
+        const catStr = (p.category || '').toLowerCase();
+        return prodIdStr.includes(lower) || nameStr.includes(lower) || catStr.includes(lower);
+    });
+    renderProducts(filtered);
 }
 
 function renderProducts(products) {
@@ -362,13 +416,16 @@ function renderProducts(products) {
         html += `
             <tr>
                 <td><img src="${p.thumbnail || 'https://via.placeholder.com/50'}" alt="${p.name}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;"></td>
+                <td style="font-weight: 700; color: #8C5E3C; font-family: monospace; font-size: 0.85rem;">${p.productId || 'N/A'}</td>
                 <td style="font-weight: 500;">${p.name}</td>
                 <td>${p.category}</td>
                 <td>Rs. ${p.price.toFixed(2)}</td>
                 <td><span style="background-color: ${badgeColor}; color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: 600;">${status}</span></td>
                 <td>
-                    <button class="btn-secondary" style="padding: 4px 10px; font-size: 0.8rem; width: auto; margin-right: 5px; color: var(--primary-bg); border-color: var(--primary-bg);" onclick="editProduct(${p.id})">Edit</button>
-                    <button class="btn-secondary" style="padding: 4px 10px; font-size: 0.8rem; width: auto;" onclick="deleteProduct(${p.id})">Delete</button>
+                    <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                        <button class="btn-secondary" style="padding: 4px 10px; font-size: 0.8rem; width: auto; color: var(--primary-bg); border-color: var(--primary-bg);" onclick="editProduct(${p.id})">Edit</button>
+                        <button class="btn-secondary" style="padding: 4px 10px; font-size: 0.8rem; width: auto;" onclick="deleteProduct(${p.id})">Delete</button>
+                    </div>
                 </td>
             </tr>
         `;
@@ -486,8 +543,9 @@ async function editProduct(id) {
 }
 
 async function saveProduct() {
-    const name = document.getElementById('pName').value;
-    const catId = parseInt(document.getElementById('pCategory').value) || null;
+    const name = document.getElementById('pName').value.trim();
+    const catVal = document.getElementById('pCategory').value;
+    const catId = parseInt(catVal) || null;
     const availabilityStatus = document.getElementById('pAvailabilityStatus').value;
     const price = parseFloat(document.getElementById('pPrice').value);
     
@@ -508,6 +566,13 @@ async function saveProduct() {
     const sizesArray = sizesInput.split(',').map(s => s.trim()).filter(s => s !== '');
 
     const fileInput = document.getElementById('pImage');
+    const submitBtn = document.querySelector('#addProductForm button[type="submit"]');
+    const origBtnText = submitBtn ? submitBtn.innerText : 'Publish Product';
+
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerText = 'Publishing...';
+    }
     
     let uploadedUrls = [];
     if (fileInput.files && fileInput.files.length > 0) {
@@ -518,35 +583,47 @@ async function saveProduct() {
         
         try {
             const token = localStorage.getItem('token');
+            const headers = {};
+            if (token) headers['Authorization'] = `Bearer ${token}`;
+
             const uploadRes = await fetch('/api/products/upload-images', {
                 method: 'POST',
-                headers: { 'Authorization': `Bearer ${token}` },
+                headers: headers,
                 body: formData
             });
             
             if (uploadRes.ok) {
                 uploadedUrls = await uploadRes.json();
             } else {
-                alert("Failed to upload images. Server may be rejecting large files.");
+                let errText = "Server rejected image upload.";
+                try {
+                    const errData = await uploadRes.json();
+                    if (errData && errData.message) errText = errData.message;
+                } catch(e) {}
+                alert("Image Upload Failed: " + errText);
+                if (submitBtn) { submitBtn.disabled = false; submitBtn.innerText = origBtnText; }
                 return;
             }
         } catch (e) {
-            console.error(e);
-            alert("Error uploading images.");
+            console.error("Upload Error:", e);
+            alert("Error connecting to server to upload images. Please ensure the backend is running.");
+            if (submitBtn) { submitBtn.disabled = false; submitBtn.innerText = origBtnText; }
             return;
         }
     } else if (!editingProductId) {
         alert("Please select at least one image");
+        if (submitBtn) { submitBtn.disabled = false; submitBtn.innerText = origBtnText; }
         return;
     }
 
     const payload = {
         name: name,
+        category: catVal,
         categoryId: catId,
         availabilityStatus: availabilityStatus,
         price: price,
         description: descJson,
-        slug: name.toLowerCase().replace(/ /g, '-'),
+        slug: name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
         sizes: sizesArray
     };
     
@@ -558,36 +635,66 @@ async function saveProduct() {
     try {
         const url = editingProductId ? `/api/products/${editingProductId}` : '/api/products';
         const method = editingProductId ? 'PUT' : 'POST';
+        const token = localStorage.getItem('token');
+        const headers = { 'Content-Type': 'application/json' };
+        if (token) headers['Authorization'] = `Bearer ${token}`;
 
         const res = await fetch(url, {
             method: method,
-            headers: { 'Content-Type': 'application/json' },
+            headers: headers,
             body: JSON.stringify(payload)
         });
         
         if (res.ok) {
+            alert(editingProductId ? "Product updated successfully!" : "Product published successfully!");
             hideAddProduct();
             fetchProducts();
         } else {
-            alert("Failed to save product");
+            let errMsg = "Failed to save product";
+            try {
+                const errData = await res.json();
+                if (errData && errData.message) errMsg = errData.message;
+            } catch(e) {}
+            alert("Error: " + errMsg);
         }
     } catch (err) {
-        alert("Error saving product");
+        console.error("Save Error:", err);
+        alert("Error connecting to server to save product.");
+    } finally {
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerText = origBtnText;
+        }
     }
 }
 
 async function deleteProduct(id) {
-    if(confirm('Are you sure you want to delete this product?')) {
+    if(!confirm('Are you sure you want to delete this product?')) return;
+    
+    try {
+        const token = localStorage.getItem('token');
+        const res = await fetch(`/api/adminapi/products/${id}`, { 
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        let data = {};
         try {
-            const res = await fetch(`/api/adminapi/products/${id}`, { method: 'DELETE' });
-            if (res.ok) {
-                fetchProducts();
-            } else {
-                alert('Failed to delete product');
-            }
-        } catch (err) {
-            alert('Error deleting product');
+            data = await res.json();
+        } catch(e) {
+            const txt = await res.text().catch(() => '');
+            data = { message: txt };
         }
+
+        if (res.ok) {
+            alert(data.message || 'Product deleted successfully.');
+            fetchProducts();
+        } else {
+            alert(data.message || 'Cannot delete product.');
+        }
+    } catch (err) {
+        console.error(err);
+        alert('Error communicating with server.');
     }
 }
 
@@ -644,7 +751,7 @@ function renderPendingPayments(payments) {
 
         html += `
             <tr>
-                <td style="font-weight: bold;">${p.orderNumber || '#' + p.id}</td>
+                <td style="font-weight: 700; color: #8C5E3C; font-family: monospace; font-size: 0.95rem;">${p.orderId || p.orderNumber || p.id}</td>
                 <td>${dateStr}</td>
                 <td>${p.customer}</td>
                 <td>Rs. ${p.amount.toFixed(2)}</td>
@@ -1056,22 +1163,30 @@ async function deleteCategory(id) {
             headers: { 'Authorization': `Bearer ${token}` }
         });
 
+        let data = {};
+        try {
+            data = await res.json();
+        } catch(e) {
+            const txt = await res.text().catch(() => '');
+            data = { message: txt };
+        }
+
         if (res.ok) {
             fetchCategoriesList();
             const msg = document.getElementById('categoryMsg');
             if (msg) {
                 msg.style.display = 'block';
                 msg.style.color = 'var(--success)';
-                msg.innerText = 'Category deleted successfully.';
+                msg.innerText = data.message || 'Category deleted successfully.';
                 setTimeout(() => { msg.style.display = 'none'; }, 3000);
             }
+            alert(data.message || 'Category deleted successfully.');
         } else {
-            const data = await res.json();
-            alert(data.message || 'Failed to delete category.');
+            alert(data.message || 'Cannot delete category.');
         }
     } catch (err) {
         console.error(err);
-        alert('Error deleting category.');
+        alert('Error communicating with server.');
     }
 }
 // DEALS MANAGEMENT

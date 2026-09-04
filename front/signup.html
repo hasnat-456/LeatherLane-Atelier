@@ -27,7 +27,7 @@
     <link rel="canonical" href="https://leatherlaneatelier.store/signup">
 
     <title>Create Account | LeatherLane Atelier</title>
-    <link rel="stylesheet" href="css/global.css?v=1787222477335">
+    <link rel="stylesheet" href="css/global.css?v=1788361743120">
     <style>
         .split-layout {
             display: flex;
@@ -53,12 +53,9 @@
             align-items: center;
             padding: 4rem;
             text-align: center;
-            background-color: var(--secondary-bg); /* Use a bag image if available, otherwise secondary bg */
+            background-color: var(--primary-bg);
             border-left: 1px solid rgba(199, 154, 82, 0.1);
             position: relative;
-            background-image: linear-gradient(rgba(43, 29, 23, 0.7), rgba(43, 29, 23, 0.7)), url('https://images.unsplash.com/photo-1547949007-535814e71520?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80');
-            background-size: cover;
-            background-position: center;
         }
 
         .hero-title {
@@ -140,6 +137,26 @@
             margin-right: 8px;
             margin-top: 3px;
             accent-color: var(--primary-gold);
+        }
+
+        /* Chrome / Safari / Edge Autofill Dark Theme Override */
+        input:-webkit-autofill,
+        input:-webkit-autofill:hover, 
+        input:-webkit-autofill:focus, 
+        input:-webkit-autofill:active {
+            -webkit-box-shadow: 0 0 0 1000px #3A271F inset !important;
+            box-shadow: 0 0 0 1000px #3A271F inset !important;
+            -webkit-text-fill-color: #F5EFE7 !important;
+            color: #F5EFE7 !important;
+            caret-color: #C79A52 !important;
+            border-color: rgba(199, 154, 82, 0.35) !important;
+            transition: background-color 5000s ease-in-out 0s !important;
+        }
+
+        input:-webkit-autofill:focus {
+            border-color: #C79A52 !important;
+            -webkit-box-shadow: 0 0 0 1000px #3A271F inset, 0 0 10px rgba(199, 154, 82, 0.2) !important;
+            box-shadow: 0 0 0 1000px #3A271F inset, 0 0 10px rgba(199, 154, 82, 0.2) !important;
         }
 
         @media (max-width: 900px) {
