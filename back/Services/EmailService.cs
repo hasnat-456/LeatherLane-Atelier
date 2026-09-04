@@ -54,8 +54,16 @@ namespace LeatherLane_Atelier.Services
                     From = new MailAddress(_smtpUser, "LeatherLane Atelier"),
                     Subject = subject,
                     Body = body,
-                    IsBodyHtml = true
+                    IsBodyHtml = true,
+                    BodyEncoding = System.Text.Encoding.UTF8,
+                    SubjectEncoding = System.Text.Encoding.UTF8,
+                    HeadersEncoding = System.Text.Encoding.UTF8,
+                    Priority = MailPriority.Normal
                 };
+
+                mailMessage.Headers.Add("X-Mailer", "LeatherLane-Atelier-Mailer/1.0");
+                mailMessage.Headers.Add("X-Entity-Ref-ID", Guid.NewGuid().ToString());
+                mailMessage.ReplyToList.Add(new MailAddress(_smtpUser, "LeatherLane Atelier Concierge"));
 
                 mailMessage.To.Add(toEmail);
 
