@@ -465,6 +465,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const isAdminPage = window.location.href.includes('admin');
 
     if (token && !hasSeenPrompt && !isAdminPage) {
+        if (document.getElementById('notifOptInPopup') || document.querySelector('.notif-popup-overlay')) return;
+
         // Inject CSS for Popup
         const style = document.createElement('style');
         style.innerHTML = `
@@ -623,7 +625,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 }
                 
-                popup.style.display = 'none';
+                document.querySelectorAll('.notif-popup-overlay').forEach(el => el.remove());
 
                 if (permission === 'granted') {
                     showNotificationToast('Notifications enabled! You are now subscribed to order updates and exclusive releases.', 'success');
@@ -646,7 +648,7 @@ document.addEventListener('DOMContentLoaded', function() {
             notNowBtn.addEventListener('click', function() {
                 localStorage.setItem('has_seen_notif_prompt', 'true');
                 localStorage.setItem('notifications_enabled', 'false');
-                popup.style.display = 'none';
+                document.querySelectorAll('.notif-popup-overlay').forEach(el => el.remove());
             });
         }
     }
