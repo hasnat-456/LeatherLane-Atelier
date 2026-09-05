@@ -92,32 +92,15 @@ namespace LeatherLane_Atelier.Controllers
             var uniqueFileName = Guid.NewGuid().ToString("N") + ".jpg";
             var filePath = Path.Combine(uploadsFolder, uniqueFileName);
 
-            try
+            // Fast stream directly to disk (client already pre-compresses)
+            using (var fileStream = new FileStream(filePath, FileMode.Create))
             {
-                using var stream = imageFile.OpenReadStream();
-                using var image = await SixLabors.ImageSharp.Image.LoadAsync(stream);
-                if (image.Width > 1200 || image.Height > 1200)
-                {
-                    image.Mutate(x => x.Resize(new ResizeOptions
-                    {
-                        Size = new SixLabors.ImageSharp.Size(1200, 1200),
-                        Mode = ResizeMode.Max
-                    }));
-                }
-                var encoder = new JpegEncoder { Quality = 82 };
-                await image.SaveAsync(filePath, encoder);
-                
-                if (syncToParent)
-                {
-                    try { System.IO.File.Copy(filePath, Path.Combine(parentUploads, uniqueFileName), true); } catch {}
-                }
+                await imageFile.CopyToAsync(fileStream);
             }
-            catch
+
+            if (syncToParent)
             {
-                using (var fileStream = new FileStream(filePath, FileMode.Create))
-                {
-                    await imageFile.CopyToAsync(fileStream);
-                }
+                try { System.IO.File.Copy(filePath, Path.Combine(parentUploads, uniqueFileName), true); } catch {}
             }
 
             var relativeUrl = "/uploads/blogs/" + uniqueFileName;

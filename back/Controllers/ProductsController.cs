@@ -456,8 +456,8 @@ namespace LeatherLane_Atelier.Controllers
         public async Task<IActionResult> UploadImages()
         {
             var uploadedUrls = new List<string>();
-            var files = Request.Form.Files;
-            if (files == null || files.Count == 0) return BadRequest(new { message = "No images received." });
+            var formFiles = Request.Form.Files;
+            if (formFiles == null || formFiles.Count == 0) return BadRequest(new { message = "No images received." });
             
             var currentDir = Directory.GetCurrentDirectory();
             var frontPath = currentDir.EndsWith("back", StringComparison.OrdinalIgnoreCase) 
@@ -467,65 +467,114 @@ namespace LeatherLane_Atelier.Controllers
             var uploadsFolder = Path.Combine(frontPath, "images", "products");
             Directory.CreateDirectory(uploadsFolder);
 
-            // Also check parent front folder on SmarterASP hosting
             var parentFront = Path.Combine(currentDir, "..", "front", "images", "products");
             bool syncToParent = Directory.Exists(Path.Combine(currentDir, "..", "front"));
             if (syncToParent) Directory.CreateDirectory(parentFront);
-            
-            foreach (var file in files)
-            {
-                if (file.Length > 0)
-                {
-                    var baseName = Guid.NewGuid().ToString("N");
-                    var hdFileName = baseName + ".jpg";
-                    var thumbFileName = "thumb_" + baseName + ".jpg";
-                    var hdPath = Path.Combine(uploadsFolder, hdFileName);
-                    var thumbPath = Path.Combine(uploadsFolder, thumbFileName);
 
-                    try
+            var hdFiles = formFiles.GetFiles("images");
+            var thumbFiles = formFiles.GetFiles("thumbnails");
+
+            // If files were sent with specific keys (images / thumbnails)
+            if (hdFiles.Count > 0)
+            {
+                for (int i = 0; i < hdFiles.Count; i++)
+                {
+                    var hdFile = hdFiles[i];
+                    if (hdFile.Length > 0)
                     {
-                        using var stream = file.OpenReadStream();
-                        using var image = await SixLabors.ImageSharp.Image.LoadAsync(stream);
-                        
-                        // 1. Process HD image (max 1200px, 82% quality)
-                        if (image.Width > 1200 || image.Height > 1200)
+                        var baseName = Guid.NewGuid().ToString("N");
+                        var hdFileName = baseName + ".jpg";
+                        var thumbFileName = "thumb_" + baseName + ".jpg";
+                        var hdPath = Path.Combine(uploadsFolder, hdFileName);
+                        var thumbPath = Path.Combine(uploadsFolder, thumbFileName);
+
+                        // 1. Save HD file directly
+                        using (var outStream = new FileStream(hdPath, FileMode.Create))
                         {
-                            image.Mutate(x => x.Resize(new ResizeOptions
-                            {
-                                Size = new SixLabors.ImageSharp.Size(1200, 1200),
-                                Mode = ResizeMode.Max
-                            }));
+                            await hdFile.CopyToAsync(outStream);
                         }
-                        var jpegEncoder = new JpegEncoder { Quality = 82 };
-                        await image.SaveAsync(hdPath, jpegEncoder);
-                        
-                        // 2. Process Micro-Thumbnail (180x180 square, ~5 KB)
-                        using var thumbImage = image.Clone(x => x.Resize(new ResizeOptions
+
+                        // 2. Save thumbnail file directly if provided, or generate fast fallback
+                        if (i < thumbFiles.Count && thumbFiles[i].Length > 0)
                         {
-                            Size = new SixLabors.ImageSharp.Size(180, 180),
-                            Mode = ResizeMode.Crop
-                        }));
-                        await thumbImage.SaveAsync(thumbPath, new JpegEncoder { Quality = 75 });
-                        
+                            using (var thumbOut = new FileStream(thumbPath, FileMode.Create))
+                            {
+                                await thumbFiles[i].CopyToAsync(thumbOut);
+                            }
+                        }
+                        else
+                        {
+                            try
+                            {
+                                using var stream = hdFile.OpenReadStream();
+                                using var image = await SixLabors.ImageSharp.Image.LoadAsync(stream);
+                                using var thumb = image.Clone(x => x.Resize(new ResizeOptions
+                                {
+                                    Size = new SixLabors.ImageSharp.Size(180, 180),
+                                    Mode = ResizeMode.Crop
+                                }));
+                                await thumb.SaveAsync(thumbPath, new JpegEncoder { Quality = 75 });
+                            }
+                            catch {}
+                        }
+
                         if (syncToParent)
                         {
                             try 
                             {
                                 System.IO.File.Copy(hdPath, Path.Combine(parentFront, hdFileName), true);
-                                System.IO.File.Copy(thumbPath, Path.Combine(parentFront, thumbFileName), true);
+                                if (System.IO.File.Exists(thumbPath))
+                                    System.IO.File.Copy(thumbPath, Path.Combine(parentFront, thumbFileName), true);
                             } catch {}
                         }
+
+                        uploadedUrls.Add("/images/products/" + hdFileName);
                     }
-                    catch
+                }
+            }
+            else
+            {
+                // Fallback for general multipart files
+                foreach (var file in formFiles)
+                {
+                    if (file.Length > 0)
                     {
-                        // Fallback simple copy
+                        var baseName = Guid.NewGuid().ToString("N");
+                        var hdFileName = baseName + ".jpg";
+                        var thumbFileName = "thumb_" + baseName + ".jpg";
+                        var hdPath = Path.Combine(uploadsFolder, hdFileName);
+                        var thumbPath = Path.Combine(uploadsFolder, thumbFileName);
+
                         using (var outStream = new FileStream(hdPath, FileMode.Create))
                         {
                             await file.CopyToAsync(outStream);
                         }
-                    }
 
-                    uploadedUrls.Add("/images/products/" + hdFileName);
+                        try
+                        {
+                            using var stream = file.OpenReadStream();
+                            using var image = await SixLabors.ImageSharp.Image.LoadAsync(stream);
+                            using var thumb = image.Clone(x => x.Resize(new ResizeOptions
+                            {
+                                Size = new SixLabors.ImageSharp.Size(180, 180),
+                                Mode = ResizeMode.Crop
+                            }));
+                            await thumb.SaveAsync(thumbPath, new JpegEncoder { Quality = 75 });
+                        }
+                        catch {}
+
+                        if (syncToParent)
+                        {
+                            try 
+                            {
+                                System.IO.File.Copy(hdPath, Path.Combine(parentFront, hdFileName), true);
+                                if (System.IO.File.Exists(thumbPath))
+                                    System.IO.File.Copy(thumbPath, Path.Combine(parentFront, thumbFileName), true);
+                            } catch {}
+                        }
+
+                        uploadedUrls.Add("/images/products/" + hdFileName);
+                    }
                 }
             }
             

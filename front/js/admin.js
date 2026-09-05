@@ -20,7 +20,7 @@ function initAboutUsQuill() {
 }
 
 // Utility: High-performance Client-side Image Compression
-async function compressImageFile(file, maxWidth = 1200, maxHeight = 1200, quality = 0.85) {
+async function compressImageFile(file, maxWidth = 1200, maxHeight = 1200, quality = 0.82) {
     if (!file || !file.type || !file.type.startsWith('image/')) return file;
     if (file.type === 'image/svg+xml' || file.type === 'image/gif') return file;
 
@@ -50,7 +50,7 @@ async function compressImageFile(file, maxWidth = 1200, maxHeight = 1200, qualit
 
                 const outputType = 'image/jpeg';
                 canvas.toBlob((blob) => {
-                    if (blob && blob.size < file.size) {
+                    if (blob) {
                         const newFileName = file.name.replace(/\.[^/.]+$/, "") + ".jpg";
                         const compressedFile = new File([blob], newFileName, {
                             type: outputType,
@@ -66,6 +66,61 @@ async function compressImageFile(file, maxWidth = 1200, maxHeight = 1200, qualit
             img.src = e.target.result;
         };
         reader.onerror = () => resolve(file);
+        reader.readAsDataURL(file);
+    });
+}
+
+// Generates both a 1200px HD file and a 180x180 5KB micro-thumbnail in a single pass
+async function generateProductImagePair(file) {
+    if (!file || !file.type || !file.type.startsWith('image/')) return { hd: file, thumb: null };
+
+    return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const img = new Image();
+            img.onload = () => {
+                // 1. Generate HD Image (max 1200px)
+                let hdW = img.width;
+                let hdH = img.height;
+                if (hdW > 1200 || hdH > 1200) {
+                    if (hdW > hdH) {
+                        hdH = Math.round((hdH * 1200) / hdW);
+                        hdW = 1200;
+                    } else {
+                        hdW = Math.round((hdW * 1200) / hdH);
+                        hdH = 1200;
+                    }
+                }
+                const hdCanvas = document.createElement('canvas');
+                hdCanvas.width = hdW;
+                hdCanvas.height = hdH;
+                const hdCtx = hdCanvas.getContext('2d');
+                hdCtx.drawImage(img, 0, 0, hdW, hdH);
+
+                // 2. Generate Micro-Thumbnail (180x180 square cropped, ~5 KB)
+                const thumbCanvas = document.createElement('canvas');
+                thumbCanvas.width = 180;
+                thumbCanvas.height = 180;
+                const thumbCtx = thumbCanvas.getContext('2d');
+                const minSide = Math.min(img.width, img.height);
+                const cropX = (img.width - minSide) / 2;
+                const cropY = (img.height - minSide) / 2;
+                thumbCtx.drawImage(img, cropX, cropY, minSide, minSide, 0, 0, 180, 180);
+
+                const baseName = (file.name || 'image').replace(/\.[^/.]+$/, "");
+                
+                hdCanvas.toBlob((hdBlob) => {
+                    thumbCanvas.toBlob((thumbBlob) => {
+                        const hdFile = hdBlob ? new File([hdBlob], baseName + ".jpg", { type: 'image/jpeg' }) : file;
+                        const thumbFile = thumbBlob ? new File([thumbBlob], "thumb_" + baseName + ".jpg", { type: 'image/jpeg' }) : null;
+                        resolve({ hd: hdFile, thumb: thumbFile });
+                    }, 'image/jpeg', 0.70);
+                }, 'image/jpeg', 0.80);
+            };
+            img.onerror = () => resolve({ hd: file, thumb: null });
+            img.src = e.target.result;
+        };
+        reader.onerror = () => resolve({ hd: file, thumb: null });
         reader.readAsDataURL(file);
     });
 }
@@ -469,20 +524,21 @@ function renderProducts(products) {
         if (status === 'Temporarily Unavailable') badgeColor = '#e0a800';
         else if (status === 'Discontinued') badgeColor = '#dc3545';
 
-        let imgUrl = p.thumbnail;
-        if (!imgUrl && p.images && p.images.length > 0) {
-            imgUrl = p.images[0];
+        let fullImg = p.thumbnail || (p.images && p.images[0]) || '';
+        if (fullImg && !fullImg.startsWith('http') && !fullImg.startsWith('/') && !fullImg.startsWith('data:')) {
+            fullImg = '/' + fullImg;
         }
-        if (imgUrl && !imgUrl.startsWith('http') && !imgUrl.startsWith('/') && !imgUrl.startsWith('data:')) {
-            imgUrl = '/' + imgUrl;
+        
+        let thumbUrl = fullImg;
+        if (fullImg && fullImg.includes('/images/products/') && !fullImg.includes('/thumb_')) {
+            thumbUrl = fullImg.replace('/images/products/', '/images/products/thumb_');
         }
-        if (!imgUrl) {
-            imgUrl = 'https://via.placeholder.com/50';
-        }
+        if (!thumbUrl) thumbUrl = 'https://via.placeholder.com/50';
+        if (!fullImg) fullImg = 'https://via.placeholder.com/50';
 
         html += `
             <tr>
-                <td><img src="${imgUrl}" alt="${p.name}" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='https://via.placeholder.com/50';" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;"></td>
+                <td><img src="${thumbUrl}" alt="${p.name}" loading="lazy" decoding="async" onerror="if(this.src !== '${fullImg}') { this.src='${fullImg}'; } else { this.onerror=null; this.src='https://via.placeholder.com/50'; }" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;"></td>
                 <td style="font-weight: 700; color: #8C5E3C; font-family: monospace; font-size: 0.85rem;">${p.productId || 'N/A'}</td>
                 <td style="font-weight: 500;">${p.name}</td>
                 <td>${p.category}</td>
@@ -658,34 +714,40 @@ async function saveProduct() {
     const submitBtn = document.querySelector('#addProductForm button[type="submit"]');
     const origBtnText = submitBtn ? submitBtn.innerText : 'Publish Product';
 
-    const hasNewFiles = fileInput.files && fileInput.files.length > 0;
+    const hasNewFiles = fileInput && fileInput.files && fileInput.files.length > 0;
     if (submitBtn) {
         submitBtn.disabled = true;
         submitBtn.innerText = hasNewFiles ? 'Optimizing & Uploading...' : 'Saving...';
     }
     
     let uploadedUrls = [];
-    if (fileInput.files && fileInput.files.length > 0) {
+    if (hasNewFiles) {
         try {
-            // Compress all images client-side before uploading (sub-second upload)
-            const compressedFiles = await Promise.all(
-                Array.from(fileInput.files).map(f => compressImageFile(f, 1200, 1200, 0.85))
+            // Compress all images client-side into HD and 5KB Thumbnails in parallel
+            const pairs = await Promise.all(
+                Array.from(fileInput.files).map(f => generateProductImagePair(f))
             );
 
             const formData = new FormData();
-            for (let i = 0; i < compressedFiles.length; i++) {
-                formData.append('images', compressedFiles[i]);
+            for (let i = 0; i < pairs.length; i++) {
+                if (pairs[i].hd) formData.append('images', pairs[i].hd);
+                if (pairs[i].thumb) formData.append('thumbnails', pairs[i].thumb);
             }
             
             const token = localStorage.getItem('token');
             const headers = {};
             if (token) headers['Authorization'] = `Bearer ${token}`;
 
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 20000); // 20s safety timeout
+
             const uploadRes = await fetch('/api/products/upload-images', {
                 method: 'POST',
                 headers: headers,
-                body: formData
+                body: formData,
+                signal: controller.signal
             });
+            clearTimeout(timeoutId);
             
             if (uploadRes.ok) {
                 uploadedUrls = await uploadRes.json();
@@ -701,7 +763,7 @@ async function saveProduct() {
             }
         } catch (e) {
             console.error("Upload Error:", e);
-            alert("Error connecting to server to upload images. Please ensure the backend is running.");
+            alert("Error uploading images. Please check your network or try smaller images.");
             if (submitBtn) { submitBtn.disabled = false; submitBtn.innerText = origBtnText; }
             return;
         }
@@ -1488,23 +1550,92 @@ async function saveStoreSettings() {
 // --- Stories Management ---
 
 let quillEditor = null;
+let allAdminStories = [];
 
 function initQuill() {
-    if (!quillEditor && typeof Quill !== 'undefined') {
+    if (!quillEditor && typeof Quill !== 'undefined' && document.getElementById('storyContentEditor')) {
         quillEditor = new Quill('#storyContentEditor', {
             theme: 'snow',
             modules: {
-                toolbar: [
-                    [{ 'header': [1, 2, 3, false] }],
-                    ['bold', 'italic', 'underline', 'strike'],
-                    ['blockquote', 'code-block'],
-                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                    [{ 'align': [] }],
-                    ['link', 'image', 'video'],
-                    ['clean']
-                ]
+                toolbar: {
+                    container: [
+                        [{ 'header': [1, 2, 3, false] }],
+                        ['bold', 'italic', 'underline', 'strike'],
+                        ['blockquote', 'code-block'],
+                        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                        [{ 'align': [] }],
+                        ['link', 'image', 'video'],
+                        ['clean']
+                    ],
+                    handlers: {
+                        image: quillImageHandler
+                    }
+                }
             }
         });
+
+        // Intercept clipboard pasted images and upload them directly as disk files
+        quillEditor.root.addEventListener('paste', handleQuillImagePaste);
+    }
+}
+
+function quillImageHandler() {
+    const input = document.createElement('input');
+    input.setAttribute('type', 'file');
+    input.setAttribute('accept', 'image/*');
+    input.click();
+    input.onchange = async () => {
+        const file = input.files[0];
+        if (!file) return;
+        await uploadAndInsertQuillImage(file, quillEditor);
+    };
+}
+
+async function uploadAndInsertQuillImage(file, editor) {
+    if (!file || !editor) return;
+    try {
+        const compressed = await compressImageFile(file, 1200, 1200, 0.82);
+        const formData = new FormData();
+        formData.append('imageFile', compressed);
+        
+        const token = localStorage.getItem('token');
+        const headers = {};
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+        
+        const res = await fetch('/api/blogs/upload-image', {
+            method: 'POST',
+            headers: headers,
+            body: formData
+        });
+        
+        if (res.ok) {
+            const data = await res.json();
+            const range = editor.getSelection(true) || { index: editor.getLength() };
+            editor.insertEmbed(range.index, 'image', data.url);
+            editor.setSelection(range.index + 1);
+        } else {
+            alert('Failed to upload image for story.');
+        }
+    } catch(e) {
+        console.error('Error inserting story image:', e);
+        alert('Error uploading story image.');
+    }
+}
+
+function handleQuillImagePaste(e) {
+    const clipboardData = e.clipboardData || window.clipboardData;
+    if (clipboardData && clipboardData.items) {
+        for (let i = 0; i < clipboardData.items.length; i++) {
+            const item = clipboardData.items[i];
+            if (item.type && item.type.indexOf('image') !== -1) {
+                e.preventDefault();
+                const file = item.getAsFile();
+                if (file) {
+                    uploadAndInsertQuillImage(file, quillEditor);
+                }
+                return;
+            }
+        }
     }
 }
 
@@ -1512,13 +1643,13 @@ async function fetchStories() {
     try {
         const res = await fetch('/api/blogs');
         if (!res.ok) throw new Error('Failed to fetch stories');
-        const data = await res.json();
+        allAdminStories = await res.json();
         
         const tbody = document.getElementById('storiesTableBody');
         if (!tbody) return;
         tbody.innerHTML = '';
         
-        data.forEach(story => {
+        allAdminStories.forEach(story => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td>${story.id}</td>
@@ -1544,6 +1675,10 @@ function openStoryModal() {
     document.getElementById('storyTitle').value = '';
     document.getElementById('storyCategory').value = '';
     document.getElementById('storyCoverImage').value = '';
+    const fileInput = document.getElementById('storyCoverImageFile');
+    if (fileInput) fileInput.value = '';
+    const preview = document.getElementById('storyCoverPreview');
+    if (preview) preview.style.display = 'none';
     document.getElementById('storyExcerpt').value = '';
     if (quillEditor) quillEditor.root.innerHTML = '';
     document.getElementById('storyModal').style.display = 'flex';
@@ -1553,49 +1688,73 @@ function closeStoryModal() {
     document.getElementById('storyModal').style.display = 'none';
 }
 
+function populateStoryModal(story) {
+    initQuill();
+    document.getElementById('storyModalTitle').textContent = 'Edit Story';
+    document.getElementById('storyId').value = story.id;
+    document.getElementById('storyTitle').value = story.title || '';
+    document.getElementById('storyCategory').value = story.category || '';
+    
+    document.getElementById('storyCoverImage').value = story.image || '';
+    const fileInput = document.getElementById('storyCoverImageFile');
+    if (fileInput) fileInput.value = '';
+
+    const preview = document.getElementById('storyCoverPreview');
+    if (preview) {
+        if (story.image) {
+            preview.src = story.image;
+            preview.style.display = 'block';
+        } else {
+            preview.style.display = 'none';
+        }
+    }
+
+    document.getElementById('storyExcerpt').value = story.excerpt || '';
+    if (quillEditor && story.content) quillEditor.root.innerHTML = story.content || '';
+    
+    document.getElementById('storyModal').style.display = 'flex';
+}
+
 async function editStory(id) {
+    // 1. Instant 0ms modal open from cached list
+    const cached = allAdminStories.find(s => s.id === id);
+    if (cached) {
+        populateStoryModal(cached);
+    }
+
+    // 2. Fetch full content in background
     try {
         const res = await fetch(`/api/blogs/${id}`);
-        if (!res.ok) throw new Error('Failed to fetch story details');
-        const story = await res.json();
-        
-        initQuill();
-        document.getElementById('storyModalTitle').textContent = 'Edit Story';
-        document.getElementById('storyId').value = story.id;
-        document.getElementById('storyTitle').value = story.title;
-        document.getElementById('storyCategory').value = story.category;
-        
-        document.getElementById('storyCoverImage').value = story.image || '';
-        const preview = document.getElementById('storyCoverPreview');
-        if (preview) {
-            if (story.image) {
-                preview.src = story.image;
-                preview.style.display = 'block';
-            } else {
-                preview.style.display = 'none';
-            }
+        if (res.ok) {
+            const story = await res.json();
+            populateStoryModal(story);
         }
-
-        document.getElementById('storyExcerpt').value = story.excerpt || '';
-        if (quillEditor) quillEditor.root.innerHTML = story.content || '';
-        
-        document.getElementById('storyModal').style.display = 'flex';
     } catch (error) {
-        console.error(error);
-        alert('Failed to load story');
+        if (!cached) {
+            console.error(error);
+            alert('Failed to load story');
+        }
     }
 }
 
 async function saveStory() {
     const id = document.getElementById('storyId').value;
-    const title = document.getElementById('storyTitle').value;
-    const category = document.getElementById('storyCategory').value;
+    const title = document.getElementById('storyTitle').value.trim();
+    const category = document.getElementById('storyCategory').value.trim();
     
     const fileInput = document.getElementById('storyCoverImageFile');
     let image = document.getElementById('storyCoverImage').value;
     
+    const submitBtn = document.querySelector('#storyModal button.btn-primary') || document.querySelector('#storyModal button[onclick="saveStory()"]');
+    const origBtnText = submitBtn ? submitBtn.innerText : 'Save Story';
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerText = 'Saving...';
+    }
+
     if (fileInput && fileInput.files.length > 0) {
-        const compressedFile = await compressImageFile(fileInput.files[0], 1200, 1200, 0.85);
+        if (submitBtn) submitBtn.innerText = 'Uploading Cover...';
+        const compressedFile = await compressImageFile(fileInput.files[0], 1200, 1200, 0.82);
         const formData = new FormData();
         formData.append('imageFile', compressedFile);
         
@@ -1610,11 +1769,13 @@ async function saveStory() {
                 image = uploadData.url;
             } else {
                 alert('Image upload failed');
+                if (submitBtn) { submitBtn.disabled = false; submitBtn.innerText = origBtnText; }
                 return;
             }
         } catch(e) {
             console.error(e);
             alert('Error uploading image');
+            if (submitBtn) { submitBtn.disabled = false; submitBtn.innerText = origBtnText; }
             return;
         }
     }
@@ -1624,6 +1785,7 @@ async function saveStory() {
     
     if (!title) {
         alert('Title is required');
+        if (submitBtn) { submitBtn.disabled = false; submitBtn.innerText = origBtnText; }
         return;
     }
     
@@ -1640,6 +1802,7 @@ async function saveStory() {
     const token = localStorage.getItem('token');
     
     try {
+        if (submitBtn) submitBtn.innerText = 'Saving...';
         const res = await fetch(url, {
             method,
             headers: {
@@ -1655,6 +1818,11 @@ async function saveStory() {
     } catch (error) {
         console.error(error);
         alert('Error saving story');
+    } finally {
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerText = origBtnText;
+        }
     }
 }
 
