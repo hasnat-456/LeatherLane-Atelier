@@ -596,27 +596,104 @@ document.addEventListener('DOMContentLoaded', function() {
         document.body.appendChild(popup);
         
         // Handle Interactions
-        document.getElementById('btnEnableNotif').addEventListener('click', function() {
-            localStorage.setItem('has_seen_notif_prompt', 'true');
-            localStorage.setItem('notifications_enabled', 'true');
-            
-            // Request native browser permission
-            if ('Notification' in window) {
-                Notification.requestPermission().then(permission => {
-                    console.log('Native Notification permission:', permission);
-                });
-            }
-            
-            popup.style.display = 'none';
-        });
+        const enableBtn = document.getElementById('btnEnableNotif');
+        if (enableBtn) {
+            enableBtn.addEventListener('click', async function() {
+                enableBtn.disabled = true;
+                enableBtn.innerText = 'Enabling...';
+                localStorage.setItem('has_seen_notif_prompt', 'true');
+                localStorage.setItem('notifications_enabled', 'true');
+                
+                let permission = 'unsupported';
+                if ('Notification' in window) {
+                    try {
+                        if (Notification.permission === 'granted') {
+                            permission = 'granted';
+                        } else {
+                            permission = await Notification.requestPermission();
+                        }
+                    } catch (e) {
+                        permission = await new Promise((resolve) => {
+                            try {
+                                Notification.requestPermission(p => resolve(p));
+                            } catch (err) {
+                                resolve('unsupported');
+                            }
+                        });
+                    }
+                }
+                
+                popup.style.display = 'none';
+
+                if (permission === 'granted') {
+                    showNotificationToast('Notifications enabled! You are now subscribed to order updates and exclusive releases.', 'success');
+                    try {
+                        new Notification('LeatherLane Atelier', {
+                            body: 'You are now subscribed to order updates and exclusive drops!',
+                            icon: '/upload/logo.svg'
+                        });
+                    } catch(e) {}
+                } else if (permission === 'denied') {
+                    showNotificationToast('Notifications are blocked in your browser settings. You can allow notifications by clicking the lock/site settings icon in your address bar.', 'warning');
+                } else {
+                    showNotificationToast('In-app notification preferences saved successfully!', 'success');
+                }
+            });
+        }
         
-        document.getElementById('btnNotNowNotif').addEventListener('click', function() {
-            localStorage.setItem('has_seen_notif_prompt', 'true');
-            localStorage.setItem('notifications_enabled', 'false');
-            popup.style.display = 'none';
-        });
+        const notNowBtn = document.getElementById('btnNotNowNotif');
+        if (notNowBtn) {
+            notNowBtn.addEventListener('click', function() {
+                localStorage.setItem('has_seen_notif_prompt', 'true');
+                localStorage.setItem('notifications_enabled', 'false');
+                popup.style.display = 'none';
+            });
+        }
     }
 });
+
+function showNotificationToast(message, type = 'success') {
+    const existing = document.getElementById('globalNotificationToast');
+    if (existing) existing.remove();
+
+    const toast = document.createElement('div');
+    toast.id = 'globalNotificationToast';
+    toast.style.cssText = `
+        position: fixed;
+        bottom: 30px;
+        left: 50%;
+        transform: translateX(-50%) translateY(30px);
+        background-color: ${type === 'success' ? '#2e6b4d' : (type === 'warning' ? '#b27a00' : '#4A1515')};
+        color: #fff;
+        padding: 14px 24px;
+        border-radius: 8px;
+        font-family: 'Poppins', sans-serif;
+        font-size: 0.9rem;
+        font-weight: 500;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+        z-index: 100000;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        opacity: 0;
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        max-width: 90%;
+        text-align: center;
+    `;
+    toast.innerHTML = `<span>${message}</span>`;
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+        toast.style.opacity = '1';
+        toast.style.transform = 'translateX(-50%) translateY(0)';
+    }, 10);
+
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(-50%) translateY(30px)';
+        setTimeout(() => toast.remove(), 400);
+    }, 5000);
+}
 
 
 // Newsletter Subscription Logic
