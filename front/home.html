@@ -743,7 +743,7 @@
                             html += `
                                 <div class="product-card">
                                     <a href="/product-detail?id=${product.id}" style="text-decoration: none; color: inherit;">
-                                        <img src="${product.thumbnail || 'https://via.placeholder.com/300x250'}" class="product-img" loading="lazy" decoding="async" style="width: 100%; height: 250px; object-fit: cover;">
+                                        <img src="${product.thumbnail || (product.images && product.images[0]) || 'https://via.placeholder.com/300x250'}" class="product-img" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='https://via.placeholder.com/300x250';" style="width: 100%; height: 250px; object-fit: cover;">
                                     </a>
                                     <div class="product-info">
                                         <div class="product-category">${product.category || ''}</div>
@@ -802,7 +802,7 @@
                             html += `
                                 <div class="product-card">
                                     <a href="/product-detail?id=${product.id}" style="text-decoration: none; color: inherit;">
-                                        <img src="${product.thumbnail || 'https://via.placeholder.com/300x250'}" class="product-img" loading="lazy" decoding="async" style="width: 100%; height: 250px; object-fit: cover;">
+                                        <img src="${product.thumbnail || (product.images && product.images[0]) || 'https://via.placeholder.com/300x250'}" class="product-img" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='https://via.placeholder.com/300x250';" style="width: 100%; height: 250px; object-fit: cover;">
                                     </a>
                                     <div class="product-info">
                                         <div class="product-category">${product.category || ''}</div>

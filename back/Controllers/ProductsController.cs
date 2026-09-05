@@ -5,6 +5,10 @@ using LeatherLane_Atelier.Models;
 using Microsoft.AspNetCore.Hosting;
 using System.IO;
 using System.Text.RegularExpressions;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Processing;
+using SixLabors.ImageSharp.Formats.Jpeg;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace LeatherLane_Atelier.Controllers
 {
@@ -14,11 +18,13 @@ namespace LeatherLane_Atelier.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly IWebHostEnvironment _env;
+        private readonly IMemoryCache _cache;
 
-        public ProductsController(ApplicationDbContext context, IWebHostEnvironment env)
+        public ProductsController(ApplicationDbContext context, IWebHostEnvironment env, IMemoryCache cache)
         {
             _context = context;
             _env = env;
+            _cache = cache;
         }
 
         [HttpGet]
@@ -37,8 +43,13 @@ namespace LeatherLane_Atelier.Controllers
 
             var productsEntities = await query.OrderByDescending(p => p.CreatedAt).ToListAsync();
             
-            var now = DateTime.Now;
-            var activeDeals = await _context.Deals.Where(d => d.StartTime <= now && d.EndTime >= now).ToListAsync();
+            // Cache active deals in memory for 30s to keep API responses under 2ms
+            var activeDeals = await _cache.GetOrCreateAsync("ActiveDealsCacheKey", async entry =>
+            {
+                entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(30);
+                var now = DateTime.Now;
+                return await _context.Deals.AsNoTracking().Where(d => d.StartTime <= now && d.EndTime >= now).ToListAsync();
+            }) ?? new List<Deal>();
             
             foreach(var p in productsEntities)
             {
@@ -152,6 +163,33 @@ namespace LeatherLane_Atelier.Controllers
                 product.ProductId = candidateId;
             }
 
+            var currentDir = Directory.GetCurrentDirectory();
+            var frontPath = currentDir.EndsWith("back", StringComparison.OrdinalIgnoreCase) 
+                ? Path.Combine(currentDir, "..", "front") 
+                : Path.Combine(currentDir, "front");
+            var uploadsFolder = Path.Combine(frontPath, "images", "products");
+            Directory.CreateDirectory(uploadsFolder);
+
+            // Clean any base64 images to real files
+            if (!string.IsNullOrEmpty(product.Thumbnail) && product.Thumbnail.StartsWith("data:image"))
+            {
+                product.Thumbnail = SaveBase64ToDisk(product.Thumbnail, uploadsFolder);
+            }
+            if (product.Images != null)
+            {
+                for (int i = 0; i < product.Images.Count; i++)
+                {
+                    if (!string.IsNullOrEmpty(product.Images[i]) && product.Images[i].StartsWith("data:image"))
+                    {
+                        product.Images[i] = SaveBase64ToDisk(product.Images[i], uploadsFolder);
+                    }
+                }
+            }
+            if (string.IsNullOrEmpty(product.Thumbnail) && product.Images != null && product.Images.Count > 0)
+            {
+                product.Thumbnail = product.Images[0];
+            }
+
             _context.Products.Add(product);
             await _context.SaveChangesAsync();
 
@@ -164,7 +202,7 @@ namespace LeatherLane_Atelier.Controllers
                 var productCode = product.ProductId;
                 var productCategory = product.Category ?? "Artisan Footwear";
                 var productPrice = product.Price;
-                var productThumbnail = product.Image;
+                var productThumbnail = product.Thumbnail;
                 var productSizes = product.Sizes;
 
                 _ = Task.Run(async () =>
@@ -211,6 +249,13 @@ namespace LeatherLane_Atelier.Controllers
             var existingProduct = await _context.Products.FindAsync(id);
             if (existingProduct == null) return NotFound();
 
+            var currentDir = Directory.GetCurrentDirectory();
+            var frontPath = currentDir.EndsWith("back", StringComparison.OrdinalIgnoreCase) 
+                ? Path.Combine(currentDir, "..", "front") 
+                : Path.Combine(currentDir, "front");
+            var uploadsFolder = Path.Combine(frontPath, "images", "products");
+            Directory.CreateDirectory(uploadsFolder);
+
             existingProduct.Name = product.Name;
             existingProduct.CategoryId = product.CategoryId;
             existingProduct.IsFeatured = product.IsFeatured;
@@ -251,8 +296,35 @@ namespace LeatherLane_Atelier.Controllers
             
             if (!string.IsNullOrEmpty(product.Thumbnail))
             {
-                existingProduct.Thumbnail = product.Thumbnail;
-                existingProduct.Images = product.Images;
+                if (product.Thumbnail.StartsWith("data:image"))
+                {
+                    existingProduct.Thumbnail = SaveBase64ToDisk(product.Thumbnail, uploadsFolder);
+                }
+                else
+                {
+                    existingProduct.Thumbnail = product.Thumbnail;
+                }
+            }
+
+            if (product.Images != null && product.Images.Count > 0)
+            {
+                var cleanedImages = new List<string>();
+                foreach(var img in product.Images)
+                {
+                    if (!string.IsNullOrEmpty(img) && img.StartsWith("data:image"))
+                    {
+                        cleanedImages.Add(SaveBase64ToDisk(img, uploadsFolder));
+                    }
+                    else if (!string.IsNullOrEmpty(img))
+                    {
+                        cleanedImages.Add(img);
+                    }
+                }
+                existingProduct.Images = cleanedImages;
+                if (string.IsNullOrEmpty(existingProduct.Thumbnail))
+                {
+                    existingProduct.Thumbnail = cleanedImages[0];
+                }
             }
 
             await _context.SaveChangesAsync();
@@ -394,21 +466,66 @@ namespace LeatherLane_Atelier.Controllers
             frontPath = Path.GetFullPath(frontPath);
             var uploadsFolder = Path.Combine(frontPath, "images", "products");
             Directory.CreateDirectory(uploadsFolder);
+
+            // Also check parent front folder on SmarterASP hosting
+            var parentFront = Path.Combine(currentDir, "..", "front", "images", "products");
+            bool syncToParent = Directory.Exists(Path.Combine(currentDir, "..", "front"));
+            if (syncToParent) Directory.CreateDirectory(parentFront);
             
             foreach (var file in files)
             {
                 if (file.Length > 0)
                 {
-                    var ext = Path.GetExtension(file.FileName);
-                    if (string.IsNullOrWhiteSpace(ext)) ext = ".jpg";
-                    var uniqueFileName = Guid.NewGuid().ToString("N") + ext.ToLowerInvariant();
-                    var filePath = Path.Combine(uploadsFolder, uniqueFileName);
-                    
-                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    var baseName = Guid.NewGuid().ToString("N");
+                    var hdFileName = baseName + ".jpg";
+                    var thumbFileName = "thumb_" + baseName + ".jpg";
+                    var hdPath = Path.Combine(uploadsFolder, hdFileName);
+                    var thumbPath = Path.Combine(uploadsFolder, thumbFileName);
+
+                    try
                     {
-                        await file.CopyToAsync(stream);
+                        using var stream = file.OpenReadStream();
+                        using var image = await SixLabors.ImageSharp.Image.LoadAsync(stream);
+                        
+                        // 1. Process HD image (max 1200px, 82% quality)
+                        if (image.Width > 1200 || image.Height > 1200)
+                        {
+                            image.Mutate(x => x.Resize(new ResizeOptions
+                            {
+                                Size = new SixLabors.ImageSharp.Size(1200, 1200),
+                                Mode = ResizeMode.Max
+                            }));
+                        }
+                        var jpegEncoder = new JpegEncoder { Quality = 82 };
+                        await image.SaveAsync(hdPath, jpegEncoder);
+                        
+                        // 2. Process Micro-Thumbnail (180x180 square, ~5 KB)
+                        using var thumbImage = image.Clone(x => x.Resize(new ResizeOptions
+                        {
+                            Size = new SixLabors.ImageSharp.Size(180, 180),
+                            Mode = ResizeMode.Crop
+                        }));
+                        await thumbImage.SaveAsync(thumbPath, new JpegEncoder { Quality = 75 });
+                        
+                        if (syncToParent)
+                        {
+                            try 
+                            {
+                                System.IO.File.Copy(hdPath, Path.Combine(parentFront, hdFileName), true);
+                                System.IO.File.Copy(thumbPath, Path.Combine(parentFront, thumbFileName), true);
+                            } catch {}
+                        }
                     }
-                    uploadedUrls.Add("/images/products/" + uniqueFileName);
+                    catch
+                    {
+                        // Fallback simple copy
+                        using (var outStream = new FileStream(hdPath, FileMode.Create))
+                        {
+                            await file.CopyToAsync(outStream);
+                        }
+                    }
+
+                    uploadedUrls.Add("/images/products/" + hdFileName);
                 }
             }
             
@@ -462,23 +579,43 @@ namespace LeatherLane_Atelier.Controllers
             return Ok(new { message = $"Successfully migrated {migratedCount} products." });
         }
         
-        private string SaveBase64ToDisk(string base64String, string uploadsFolder)
+        public static string SaveBase64ToDisk(string base64String, string uploadsFolder)
         {
             try 
             {
                 var match = Regex.Match(base64String, @"data:image/(?<type>.+?);base64,(?<data>.+)");
                 if (!match.Success) return base64String;
                 
-                string ext = match.Groups["type"].Value.Split(';')[0]; // handle cases like jpeg;charset=utf-8
-                if (ext == "jpeg") ext = "jpg";
-                
+                string ext = "jpg";
                 string base64Data = match.Groups["data"].Value;
                 byte[] bytes = Convert.FromBase64String(base64Data);
                 
-                string fileName = Guid.NewGuid().ToString() + "." + ext;
+                string baseName = Guid.NewGuid().ToString("N");
+                string fileName = baseName + "." + ext;
+                string thumbName = "thumb_" + baseName + "." + ext;
                 string filePath = Path.Combine(uploadsFolder, fileName);
+                string thumbPath = Path.Combine(uploadsFolder, thumbName);
                 
-                System.IO.File.WriteAllBytes(filePath, bytes);
+                using var ms = new MemoryStream(bytes);
+                using var image = SixLabors.ImageSharp.Image.Load(ms);
+                if (image.Width > 1200 || image.Height > 1200)
+                {
+                    image.Mutate(x => x.Resize(new ResizeOptions
+                    {
+                        Size = new SixLabors.ImageSharp.Size(1200, 1200),
+                        Mode = ResizeMode.Max
+                    }));
+                }
+                var encoder = new JpegEncoder { Quality = 82 };
+                image.Save(filePath, encoder);
+
+                using var thumb = image.Clone(x => x.Resize(new ResizeOptions
+                {
+                    Size = new SixLabors.ImageSharp.Size(180, 180),
+                    Mode = ResizeMode.Crop
+                }));
+                thumb.Save(thumbPath, new JpegEncoder { Quality = 75 });
+                
                 return "/images/products/" + fileName;
             } 
             catch 
