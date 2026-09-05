@@ -260,10 +260,14 @@ if (Directory.Exists(frontPath))
                                  path.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase) ||
                                  path.EndsWith(".png", StringComparison.OrdinalIgnoreCase) ||
                                  path.EndsWith(".webp", StringComparison.OrdinalIgnoreCase) ||
+                                 path.EndsWith(".svg", StringComparison.OrdinalIgnoreCase) ||
+                                 path.EndsWith(".gif", StringComparison.OrdinalIgnoreCase) ||
+                                 path.EndsWith(".avif", StringComparison.OrdinalIgnoreCase) ||
+                                 path.EndsWith(".ico", StringComparison.OrdinalIgnoreCase) ||
                                  path.EndsWith(".css", StringComparison.OrdinalIgnoreCase) ||
                                  path.EndsWith(".js", StringComparison.OrdinalIgnoreCase)))
             {
-                ctx.Context.Response.Headers.Append("Cache-Control", "public,max-age=604800"); // Cache for 7 days
+                ctx.Context.Response.Headers.Append("Cache-Control", "public, max-age=2592000, immutable"); // Cache for 30 days
             }
             else
             {

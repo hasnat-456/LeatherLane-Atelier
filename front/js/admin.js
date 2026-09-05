@@ -19,6 +19,57 @@ function initAboutUsQuill() {
     }
 }
 
+// Utility: High-performance Client-side Image Compression
+async function compressImageFile(file, maxWidth = 1200, maxHeight = 1200, quality = 0.85) {
+    if (!file || !file.type || !file.type.startsWith('image/')) return file;
+    if (file.type === 'image/svg+xml' || file.type === 'image/gif') return file;
+
+    return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const img = new Image();
+            img.onload = () => {
+                let width = img.width;
+                let height = img.height;
+
+                if (width > maxWidth || height > maxHeight) {
+                    if (width > height) {
+                        height = Math.round((height * maxWidth) / width);
+                        width = maxWidth;
+                    } else {
+                        width = Math.round((width * maxHeight) / height);
+                        height = maxHeight;
+                    }
+                }
+
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                const outputType = 'image/jpeg';
+                canvas.toBlob((blob) => {
+                    if (blob && blob.size < file.size) {
+                        const newFileName = file.name.replace(/\.[^/.]+$/, "") + ".jpg";
+                        const compressedFile = new File([blob], newFileName, {
+                            type: outputType,
+                            lastModified: Date.now()
+                        });
+                        resolve(compressedFile);
+                    } else {
+                        resolve(file);
+                    }
+                }, outputType, quality);
+            };
+            img.onerror = () => resolve(file);
+            img.src = e.target.result;
+        };
+        reader.onerror = () => resolve(file);
+        reader.readAsDataURL(file);
+    });
+}
+
 // Initialization
 let editingProductId = null;
 
@@ -216,10 +267,11 @@ async function uploadAboutImage() {
     
     msg.style.display = 'block';
     msg.style.color = '#333';
-    msg.innerText = 'Uploading...';
+    msg.innerText = 'Optimizing & Uploading...';
     
+    const compressedFile = await compressImageFile(fileInput.files[0], 1600, 1600, 0.85);
     const formData = new FormData();
-    formData.append('imageFile', fileInput.files[0]);
+    formData.append('imageFile', compressedFile);
     formData.append('target', 'about-image.jpg');
     
     try {
@@ -427,7 +479,7 @@ function renderProducts(products) {
 
         html += `
             <tr>
-                <td><img src="${p.thumbnail || 'https://via.placeholder.com/50'}" alt="${p.name}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;"></td>
+                <td><img src="${p.thumbnail || 'https://via.placeholder.com/50'}" alt="${p.name}" loading="lazy" decoding="async" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;"></td>
                 <td style="font-weight: 700; color: #8C5E3C; font-family: monospace; font-size: 0.85rem;">${p.productId || 'N/A'}</td>
                 <td style="font-weight: 500;">${p.name}</td>
                 <td>${p.category}</td>
@@ -478,79 +530,101 @@ function hideAddProduct() {
     document.getElementById('productsList').style.display = 'block';
 }
 
+function populateProductForm(product) {
+    editingProductId = product.id;
+    document.getElementById('formTitle').innerText = 'Edit Product';
+    
+    document.getElementById('pName').value = product.name || '';
+    
+    // Set category select value by categoryId or matching name fallback
+    if (product.categoryId) {
+        document.getElementById('pCategory').value = product.categoryId;
+    } else {
+        const catList = typeof adminAllCategories !== 'undefined' ? adminAllCategories : [];
+        const catObj = catList.find(c => c.name && c.name.toLowerCase() === (product.category || '').toLowerCase());
+        document.getElementById('pCategory').value = catObj ? catObj.id : (product.category || '');
+    }
+    
+    document.getElementById('pAvailabilityStatus').value = product.availabilityStatus || 'Available';
+    document.getElementById('pPrice').value = product.price != null ? product.price : '';
+    document.getElementById('pImage').value = ''; // Don't require re-uploading
+    
+    const previewContainer = document.getElementById('existingImagesPreview');
+    if (previewContainer) {
+        previewContainer.innerHTML = '';
+        if (product.images && product.images.length > 0) {
+            product.images.forEach(img => {
+                const imgEl = document.createElement('img');
+                imgEl.src = img;
+                imgEl.loading = 'lazy';
+                imgEl.decoding = 'async';
+                imgEl.style.height = '60px';
+                imgEl.style.borderRadius = '4px';
+                imgEl.style.border = '1px solid #ddd';
+                previewContainer.appendChild(imgEl);
+            });
+        } else if (product.thumbnail) {
+            const imgEl = document.createElement('img');
+            imgEl.src = product.thumbnail;
+            imgEl.loading = 'lazy';
+            imgEl.decoding = 'async';
+            imgEl.style.height = '60px';
+            imgEl.style.borderRadius = '4px';
+            imgEl.style.border = '1px solid #ddd';
+            previewContainer.appendChild(imgEl);
+        }
+    }
+    
+    document.getElementById('pDesc_Sizes').value = product.sizes ? (Array.isArray(product.sizes) ? product.sizes.join(', ') : product.sizes) : '';
+
+    // Parse description JSON if possible
+    let descObj = {};
+    try {
+        if (product.description && typeof product.description === 'string' && product.description.startsWith('{')) {
+            descObj = JSON.parse(product.description);
+        } else if (product.description && typeof product.description === 'object') {
+            descObj = product.description;
+        } else {
+            descObj.description = product.description;
+        }
+    } catch(e) {}
+    
+    document.getElementById('pDesc_Desc').value = descObj.description || '';
+    document.getElementById('pDesc_Features').value = descObj.features || '';
+    document.getElementById('pDesc_Material').value = descObj.material || '';
+    document.getElementById('pDesc_Fit').value = descObj.fit || '';
+    document.getElementById('pDesc_Sole').value = descObj.sole || '';
+    document.getElementById('pDesc_Craft').value = descObj.craftsmanship || '';
+    document.getElementById('pDesc_Care').value = descObj.care || '';
+    document.getElementById('pDesc_Warranty').value = descObj.warranty || '';
+    document.getElementById('pDesc_Shipping').value = descObj.shipping || '';
+
+    document.getElementById('productsList').style.display = 'none';
+    document.getElementById('addProductForm').style.display = 'block';
+}
+
 async function editProduct(id) {
+    // 1. Instant Open (0ms) from local memory
+    const productList = typeof allAdminProducts !== 'undefined' ? allAdminProducts : [];
+    const cachedProduct = productList.find(p => p.id === id);
+    if (cachedProduct) {
+        populateProductForm(cachedProduct);
+    }
+    
+    // 2. Fetch full specifications in background and update smoothly
     try {
         const res = await fetch(`/api/products/${id}`);
         if (res.ok) {
             const product = await res.json();
-            
-            editingProductId = product.id;
-            document.getElementById('formTitle').innerText = 'Edit Product';
-            
-            document.getElementById('pName').value = product.name;
-            
-            // Set category select value by categoryId or matching name fallback
-            if (product.categoryId) {
-                document.getElementById('pCategory').value = product.categoryId;
-            } else {
-                // Fallback matching category name
-                const catObj = adminAllCategories.find(c => c.name.toLowerCase() === (product.category || '').toLowerCase());
-                document.getElementById('pCategory').value = catObj ? catObj.id : '';
+            if (editingProductId === id) {
+                populateProductForm(product);
             }
-            
-            document.getElementById('pAvailabilityStatus').value = product.availabilityStatus || 'Available';
-            document.getElementById('pPrice').value = product.price;
-            document.getElementById('pImage').value = ''; // Don't require re-uploading
-            
-            const previewContainer = document.getElementById('existingImagesPreview');
-            if (previewContainer) {
-                previewContainer.innerHTML = '';
-                if (product.images && product.images.length > 0) {
-                    product.images.forEach(img => {
-                        const imgEl = document.createElement('img');
-                        imgEl.src = img;
-                        imgEl.style.height = '60px';
-                        imgEl.style.borderRadius = '4px';
-                        imgEl.style.border = '1px solid #ddd';
-                        previewContainer.appendChild(imgEl);
-                    });
-                } else if (product.thumbnail) {
-                    const imgEl = document.createElement('img');
-                    imgEl.src = product.thumbnail;
-                    imgEl.style.height = '60px';
-                    imgEl.style.borderRadius = '4px';
-                    imgEl.style.border = '1px solid #ddd';
-                    previewContainer.appendChild(imgEl);
-                }
-            }
-            
-            document.getElementById('pDesc_Sizes').value = product.sizes ? product.sizes.join(', ') : '';
-
-            // Parse description JSON if possible
-            let descObj = {};
-            try {
-                if (product.description && product.description.startsWith('{')) {
-                    descObj = JSON.parse(product.description);
-                } else {
-                    descObj.description = product.description; // fallback
-                }
-            } catch(e) {}
-            
-            document.getElementById('pDesc_Desc').value = descObj.description || '';
-            document.getElementById('pDesc_Features').value = descObj.features || '';
-            document.getElementById('pDesc_Material').value = descObj.material || '';
-            document.getElementById('pDesc_Fit').value = descObj.fit || '';
-            document.getElementById('pDesc_Sole').value = descObj.sole || '';
-            document.getElementById('pDesc_Craft').value = descObj.craftsmanship || '';
-            document.getElementById('pDesc_Care').value = descObj.care || '';
-            document.getElementById('pDesc_Warranty').value = descObj.warranty || '';
-            document.getElementById('pDesc_Shipping').value = descObj.shipping || '';
-
-            document.getElementById('productsList').style.display = 'none';
-            document.getElementById('addProductForm').style.display = 'block';
         }
     } catch (err) {
-        console.error("Error fetching product for edit", err);
+        if (!cachedProduct) {
+            console.error("Error fetching product for edit", err);
+            alert("Could not load product details.");
+        }
     }
 }
 
@@ -583,17 +657,22 @@ async function saveProduct() {
 
     if (submitBtn) {
         submitBtn.disabled = true;
-        submitBtn.innerText = 'Publishing...';
+        submitBtn.innerText = 'Optimizing & Uploading...';
     }
     
     let uploadedUrls = [];
     if (fileInput.files && fileInput.files.length > 0) {
-        const formData = new FormData();
-        for (let i = 0; i < fileInput.files.length; i++) {
-            formData.append('images', fileInput.files[i]);
-        }
-        
         try {
+            // Compress all images client-side before uploading (sub-second upload)
+            const compressedFiles = await Promise.all(
+                Array.from(fileInput.files).map(f => compressImageFile(f, 1200, 1200, 0.85))
+            );
+
+            const formData = new FormData();
+            for (let i = 0; i < compressedFiles.length; i++) {
+                formData.append('images', compressedFiles[i]);
+            }
+            
             const token = localStorage.getItem('token');
             const headers = {};
             if (token) headers['Authorization'] = `Bearer ${token}`;
@@ -626,6 +705,10 @@ async function saveProduct() {
         alert("Please select at least one image");
         if (submitBtn) { submitBtn.disabled = false; submitBtn.innerText = origBtnText; }
         return;
+    }
+
+    if (submitBtn) {
+        submitBtn.innerText = 'Saving...';
     }
 
     const payload = {
@@ -1508,8 +1591,9 @@ async function saveStory() {
     let image = document.getElementById('storyCoverImage').value;
     
     if (fileInput && fileInput.files.length > 0) {
+        const compressedFile = await compressImageFile(fileInput.files[0], 1200, 1200, 0.85);
         const formData = new FormData();
-        formData.append('imageFile', fileInput.files[0]);
+        formData.append('imageFile', compressedFile);
         
         try {
             const uploadRes = await fetch('/api/blogs/upload-image', {
@@ -1830,8 +1914,9 @@ async function uploadSliderImage(type) {
     
     for (let i = 0; i < files.length; i++) {
         const file = files[i];
+        const compressedFile = await compressImageFile(file, 1920, 1080, 0.85);
         const formData = new FormData();
-        formData.append('imageFile', file);
+        formData.append('imageFile', compressedFile);
         
         try {
             const res = await fetch('/api/adminapi/slider-image', {

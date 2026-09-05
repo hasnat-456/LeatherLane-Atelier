@@ -10,6 +10,7 @@
 back/bin/
 back/obj/
 publish_output/
+publish/
 
 # Database & SQLite files
 *.db

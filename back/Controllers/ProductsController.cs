@@ -57,6 +57,8 @@ namespace LeatherLane_Atelier.Controllers
                     AvailabilityStatus = p.AvailabilityStatus ?? "Available",
                     p.Subcategory,
                     p.Thumbnail,
+                    p.Images,
+                    p.Description,
                     p.Rating,
                     p.NumReviews,
                     p.IsNew,
