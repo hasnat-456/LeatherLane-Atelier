@@ -114,19 +114,11 @@ function switchTab(tabId) {
 
 document.addEventListener('DOMContentLoaded', () => {
     initAboutUsQuill();
-    fetchDashboardStats();
-    fetchOrders();
-    fetchProducts();
-    fetchPendingPayments();
-    fetchManualPaymentSettings();
-    fetchCategoriesList();
-    fetchStories();
+    loadNotifications();
 
-    // Check hash for direct navigation
-    if (window.location.hash) {
-        const tab = window.location.hash.substring(1);
-        switchTab(tab);
-    }
+    // Lazy Tab Loading: only load the currently active tab on page start
+    const initialTab = window.location.hash ? window.location.hash.substring(1) : 'dashboard';
+    switchTab(initialTab);
 });
 
 // Authentication
@@ -477,9 +469,20 @@ function renderProducts(products) {
         if (status === 'Temporarily Unavailable') badgeColor = '#e0a800';
         else if (status === 'Discontinued') badgeColor = '#dc3545';
 
+        let imgUrl = p.thumbnail;
+        if (!imgUrl && p.images && p.images.length > 0) {
+            imgUrl = p.images[0];
+        }
+        if (imgUrl && !imgUrl.startsWith('http') && !imgUrl.startsWith('/') && !imgUrl.startsWith('data:')) {
+            imgUrl = '/' + imgUrl;
+        }
+        if (!imgUrl) {
+            imgUrl = 'https://via.placeholder.com/50';
+        }
+
         html += `
             <tr>
-                <td><img src="${p.thumbnail || 'https://via.placeholder.com/50'}" alt="${p.name}" loading="lazy" decoding="async" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;"></td>
+                <td><img src="${imgUrl}" alt="${p.name}" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='https://via.placeholder.com/50';" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;"></td>
                 <td style="font-weight: 700; color: #8C5E3C; font-family: monospace; font-size: 0.85rem;">${p.productId || 'N/A'}</td>
                 <td style="font-weight: 500;">${p.name}</td>
                 <td>${p.category}</td>
@@ -655,9 +658,10 @@ async function saveProduct() {
     const submitBtn = document.querySelector('#addProductForm button[type="submit"]');
     const origBtnText = submitBtn ? submitBtn.innerText : 'Publish Product';
 
+    const hasNewFiles = fileInput.files && fileInput.files.length > 0;
     if (submitBtn) {
         submitBtn.disabled = true;
-        submitBtn.innerText = 'Optimizing & Uploading...';
+        submitBtn.innerText = hasNewFiles ? 'Optimizing & Uploading...' : 'Saving...';
     }
     
     let uploadedUrls = [];

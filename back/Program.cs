@@ -9,6 +9,9 @@ using System.IO;
 using System.Text;
 using LeatherLane_Atelier.Models;
 using System.Text.Json.Serialization;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Processing;
+using SixLabors.ImageSharp.Formats.Jpeg;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -80,10 +83,26 @@ var frontPath = currentDir.EndsWith("back", StringComparison.OrdinalIgnoreCase)
     : Path.Combine(currentDir, "front");
 frontPath = Path.GetFullPath(frontPath);
 
-// Only add static file serving if the folder exists to prevent crashes
+var fileProviders = new List<IFileProvider>();
 if (Directory.Exists(frontPath))
 {
-    var fileProvider = new PhysicalFileProvider(frontPath);
+    fileProviders.Add(new PhysicalFileProvider(frontPath));
+}
+var parentFront = Path.GetFullPath(Path.Combine(currentDir, "..", "front"));
+if (Directory.Exists(parentFront) && !parentFront.Equals(frontPath, StringComparison.OrdinalIgnoreCase))
+{
+    fileProviders.Add(new PhysicalFileProvider(parentFront));
+}
+
+IFileProvider fileProvider = fileProviders.Count switch
+{
+    0 => new PhysicalFileProvider(Directory.GetCurrentDirectory()),
+    1 => fileProviders[0],
+    _ => new CompositeFileProvider(fileProviders)
+};
+
+if (Directory.Exists(frontPath) || fileProviders.Any())
+{
 
     
     // Clean URL Rewrite Middleware (Strict)
@@ -633,6 +652,105 @@ catch (Exception ex)
 {
     Console.WriteLine($"STARTUP DB ERROR (app will still run): {ex.Message}");
 }
+
+// Background Startup Image Optimizer & Base64 Migration
+_ = Task.Run(async () =>
+{
+    try
+    {
+        await Task.Delay(3000); // Give app time to start listening
+        using var bgScope = app.Services.CreateScope();
+        var bgContext = bgScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var uploadsFolder = Path.Combine(frontPath, "images", "products");
+        Directory.CreateDirectory(uploadsFolder);
+        var blogUploads = Path.Combine(frontPath, "uploads", "blogs");
+        Directory.CreateDirectory(blogUploads);
+
+        // 1. Convert any base64 products to real physical images
+        var products = await bgContext.Products.ToListAsync();
+        bool dbChanged = false;
+        foreach (var p in products)
+        {
+            if (!string.IsNullOrEmpty(p.Thumbnail) && p.Thumbnail.StartsWith("data:image"))
+            {
+                p.Thumbnail = LeatherLane_Atelier.Controllers.ProductsController.SaveBase64ToDisk(p.Thumbnail, uploadsFolder);
+                dbChanged = true;
+            }
+            if (p.Images != null && p.Images.Count > 0)
+            {
+                for (int i = 0; i < p.Images.Count; i++)
+                {
+                    if (!string.IsNullOrEmpty(p.Images[i]) && p.Images[i].StartsWith("data:image"))
+                    {
+                        p.Images[i] = LeatherLane_Atelier.Controllers.ProductsController.SaveBase64ToDisk(p.Images[i], uploadsFolder);
+                        dbChanged = true;
+                    }
+                }
+            }
+            if (string.IsNullOrEmpty(p.Thumbnail) && p.Images != null && p.Images.Count > 0)
+            {
+                p.Thumbnail = p.Images[0];
+                dbChanged = true;
+            }
+        }
+
+        // 2. Convert any base64 blogs to real images
+        var blogs = await bgContext.Blogs.ToListAsync();
+        foreach (var b in blogs)
+        {
+            if (!string.IsNullOrEmpty(b.Image) && b.Image.StartsWith("data:image"))
+            {
+                b.Image = LeatherLane_Atelier.Controllers.BlogsController.SaveBase64Image(b.Image, blogUploads);
+                dbChanged = true;
+            }
+            if (!string.IsNullOrEmpty(b.Content) && b.Content.Contains("data:image"))
+            {
+                b.Content = LeatherLane_Atelier.Controllers.BlogsController.CleanBlogContentBase64(b.Content, blogUploads);
+                dbChanged = true;
+            }
+        }
+
+        if (dbChanged)
+        {
+            await bgContext.SaveChangesAsync();
+        }
+
+        // 3. Generate 5KB micro-thumbnails for any product images missing thumb_
+        if (Directory.Exists(uploadsFolder))
+        {
+            var files = Directory.GetFiles(uploadsFolder, "*.jpg")
+                .Concat(Directory.GetFiles(uploadsFolder, "*.jpeg"))
+                .Concat(Directory.GetFiles(uploadsFolder, "*.png"))
+                .Where(f => !Path.GetFileName(f).StartsWith("thumb_"))
+                .ToList();
+
+            foreach (var file in files)
+            {
+                var dir = Path.GetDirectoryName(file)!;
+                var fname = Path.GetFileName(file);
+                var thumbPath = Path.Combine(dir, "thumb_" + fname);
+                if (!System.IO.File.Exists(thumbPath))
+                {
+                    try
+                    {
+                        using var img = await SixLabors.ImageSharp.Image.LoadAsync(file);
+                        using var thumb = img.Clone(x => x.Resize(new SixLabors.ImageSharp.Processing.ResizeOptions
+                        {
+                            Size = new SixLabors.ImageSharp.Size(180, 180),
+                            Mode = SixLabors.ImageSharp.Processing.ResizeMode.Crop
+                        }));
+                        await thumb.SaveAsync(thumbPath, new SixLabors.ImageSharp.Formats.Jpeg.JpegEncoder { Quality = 75 });
+                    }
+                    catch {}
+                }
+            }
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Background image optimizer non-fatal error: {ex.Message}");
+    }
+});
 
 app.Run();
 
