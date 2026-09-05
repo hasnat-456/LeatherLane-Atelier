@@ -716,32 +716,42 @@ _ = Task.Run(async () =>
         }
 
         // 3. Generate 5KB micro-thumbnails for any product images missing thumb_
-        if (Directory.Exists(uploadsFolder))
+        var foldersToScan = new List<string> { uploadsFolder };
+        var parentUploadsFolder = Path.Combine(currentDir, "..", "front", "images", "products");
+        if (Directory.Exists(parentUploadsFolder) && !foldersToScan.Contains(parentUploadsFolder, StringComparer.OrdinalIgnoreCase))
         {
-            var files = Directory.GetFiles(uploadsFolder, "*.jpg")
-                .Concat(Directory.GetFiles(uploadsFolder, "*.jpeg"))
-                .Concat(Directory.GetFiles(uploadsFolder, "*.png"))
-                .Where(f => !Path.GetFileName(f).StartsWith("thumb_"))
-                .ToList();
+            foldersToScan.Add(parentUploadsFolder);
+        }
 
-            foreach (var file in files)
+        foreach (var folder in foldersToScan)
+        {
+            if (Directory.Exists(folder))
             {
-                var dir = Path.GetDirectoryName(file)!;
-                var fname = Path.GetFileName(file);
-                var thumbPath = Path.Combine(dir, "thumb_" + fname);
-                if (!System.IO.File.Exists(thumbPath))
+                var files = Directory.GetFiles(folder, "*.jpg")
+                    .Concat(Directory.GetFiles(folder, "*.jpeg"))
+                    .Concat(Directory.GetFiles(folder, "*.png"))
+                    .Where(f => !Path.GetFileName(f).StartsWith("thumb_"))
+                    .ToList();
+
+                foreach (var file in files)
                 {
-                    try
+                    var dir = Path.GetDirectoryName(file)!;
+                    var fname = Path.GetFileName(file);
+                    var thumbPath = Path.Combine(dir, "thumb_" + fname);
+                    if (!System.IO.File.Exists(thumbPath))
                     {
-                        using var img = await SixLabors.ImageSharp.Image.LoadAsync(file);
-                        using var thumb = img.Clone(x => x.Resize(new SixLabors.ImageSharp.Processing.ResizeOptions
+                        try
                         {
-                            Size = new SixLabors.ImageSharp.Size(180, 180),
-                            Mode = SixLabors.ImageSharp.Processing.ResizeMode.Crop
-                        }));
-                        await thumb.SaveAsync(thumbPath, new SixLabors.ImageSharp.Formats.Jpeg.JpegEncoder { Quality = 75 });
+                            using var img = await SixLabors.ImageSharp.Image.LoadAsync(file);
+                            using var thumb = img.Clone(x => x.Resize(new SixLabors.ImageSharp.Processing.ResizeOptions
+                            {
+                                Size = new SixLabors.ImageSharp.Size(180, 180),
+                                Mode = SixLabors.ImageSharp.Processing.ResizeMode.Crop
+                            }));
+                            await thumb.SaveAsync(thumbPath, new SixLabors.ImageSharp.Formats.Jpeg.JpegEncoder { Quality = 75 });
+                        }
+                        catch {}
                     }
-                    catch {}
                 }
             }
         }
