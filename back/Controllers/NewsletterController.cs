@@ -36,20 +36,19 @@ namespace LeatherLane_Atelier.Controllers
                 _context.NewsletterSubscribers.Add(new NewsletterSubscriber { Email = req.Email });
                 await _context.SaveChangesAsync();
                 
-                // Send early subscription offer / welcome email
-                string subject = "Welcome to LeatherLane Atelier - Exclusive Offers Inside!";
+                // Send welcome email upon newsletter subscription (no discounts)
+                string subject = "Welcome to LeatherLane Atelier!";
                 string body = @"
                     <div style='font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eaeaea; border-radius: 8px;'>
-                        <h2 style='color: #470C0E; text-align: center;'>Welcome to the LeatherLane Family!</h2>
-                        <p>Thank you for subscribing to our newsletter. You're now on the VIP list to receive our latest updates, early access to new collections, and exclusive subscriber-only offers.</p>
-                        <div style='background-color: #F5EFE7; padding: 15px; border-radius: 6px; text-align: center; margin: 20px 0;'>
-                            <h3 style='margin-top: 0; color: #C79A52;'>Your Early Subscription Offer</h3>
-                            <p style='font-size: 1.1rem; font-weight: bold;'>Enjoy 10% off your first purchase!</p>
-                            <p>Use code: <strong>WELCOME10</strong> at checkout.</p>
+                        <h2 style='color: #4A1515; text-align: center;'>Welcome to the LeatherLane Family!</h2>
+                        <p>Thank you for subscribing to our newsletter. You are now part of our exclusive circle to receive updates on bespoke handcrafted collections, artisan journal stories, and new releases.</p>
+                        <div style='background-color: #F5EFE7; padding: 18px; border-radius: 6px; text-align: center; margin: 20px 0; border-left: 3.5px solid #C79A52;'>
+                            <h3 style='margin-top: 0; color: #4A1515; font-size: 1.15rem;'>Bespoke Craftsmanship & Lifetime Quality</h3>
+                            <p style='margin: 0; color: #555; font-size: 0.95rem; line-height: 1.5;'>Every pair of footwear and leather accessory is meticulously handcrafted with pure, genuine leather by master artisans.</p>
                         </div>
-                        <p>We craft our leather goods with passion, precision, and the finest materials. We can't wait for you to experience our timeless craftsmanship.</p>
+                        <p>We invite you to explore our handcrafted collections and experience timeless elegance.</p>
                         <br>
-                        <p>Best regards,<br><strong>LeatherLane Atelier Team</strong></p>
+                        <p>Warm regards,<br><strong>LeatherLane Atelier Team</strong></p>
                     </div>";
                 var htmlEmail = LeatherLane_Atelier.Services.EmailTemplateBuilder.BuildStandardEmail(subject, "", body, "/products", "Shop Now");
                 await _emailService.SendEmailAsync(req.Email, subject, htmlEmail);
