@@ -162,6 +162,9 @@ function switchTab(tabId) {
         fetchOrders();
     } else if (tabId === 'products') {
         fetchProducts();
+        if (!adminAllCategories || adminAllCategories.length === 0) {
+            fetchCategoriesList();
+        }
     } else if (tabId === 'stories') {
         fetchStories();
     }
@@ -170,6 +173,7 @@ function switchTab(tabId) {
 document.addEventListener('DOMContentLoaded', () => {
     initAboutUsQuill();
     loadNotifications();
+    fetchCategoriesList(); // Immediately fetch and cache categories on load
 
     // Lazy Tab Loading: only load the currently active tab on page start
     const initialTab = window.location.hash ? window.location.hash.substring(1) : 'dashboard';
@@ -556,10 +560,17 @@ function renderProducts(products) {
     tbody.innerHTML = html;
 }
 
-function showAddProduct() {
+async function showAddProduct() {
     editingProductId = null;
     document.getElementById('formTitle').innerText = 'Add New Product';
     
+    // Ensure category dropdown options are ready
+    if (!adminAllCategories || adminAllCategories.length === 0) {
+        await fetchCategoriesList();
+    } else {
+        populateCategorySelect('');
+    }
+
     // Clear form
     document.getElementById('pName').value = '';
     document.getElementById('pCategory').value = '';
@@ -596,13 +607,15 @@ function populateProductForm(product) {
     document.getElementById('pName').value = product.name || '';
     
     // Set category select value by categoryId or matching name fallback
+    let targetCatVal = '';
     if (product.categoryId) {
-        document.getElementById('pCategory').value = product.categoryId;
+        targetCatVal = String(product.categoryId);
     } else {
         const catList = typeof adminAllCategories !== 'undefined' ? adminAllCategories : [];
         const catObj = catList.find(c => c.name && c.name.toLowerCase() === (product.category || '').toLowerCase());
-        document.getElementById('pCategory').value = catObj ? catObj.id : (product.category || '');
+        targetCatVal = catObj ? String(catObj.id) : (product.category || '');
     }
+    populateCategorySelect(targetCatVal);
     
     document.getElementById('pAvailabilityStatus').value = product.availabilityStatus || 'Available';
     document.getElementById('pPrice').value = product.price != null ? product.price : '';
@@ -663,6 +676,9 @@ function populateProductForm(product) {
 }
 
 async function editProduct(id) {
+    if (!adminAllCategories || adminAllCategories.length === 0) {
+        await fetchCategoriesList();
+    }
     // 1. Instant Open (0ms) from local memory
     const productList = typeof allAdminProducts !== 'undefined' ? allAdminProducts : [];
     const cachedProduct = productList.find(p => p.id === id);
@@ -777,9 +793,12 @@ async function saveProduct() {
         submitBtn.innerText = 'Saving...';
     }
 
+    const selectedCatObj = (adminAllCategories || []).find(c => c.id == catId);
+    const categoryName = selectedCatObj ? selectedCatObj.name : catVal;
+
     const payload = {
         name: name,
-        category: catVal,
+        category: categoryName,
         categoryId: catId,
         availabilityStatus: availabilityStatus,
         price: price,
@@ -1165,6 +1184,29 @@ async function savePaymentSettings() {
 // Categories CRUD Management
 let adminAllCategories = [];
 
+function populateCategorySelect(selectedVal) {
+    const select = document.getElementById('pCategory');
+    if (!select) return;
+    const currentVal = (selectedVal !== undefined && selectedVal !== null && selectedVal !== '')
+        ? String(selectedVal)
+        : select.value;
+    
+    select.innerHTML = '<option value="">Select Category</option>';
+    if (adminAllCategories && adminAllCategories.length > 0) {
+        adminAllCategories.forEach(c => {
+            if (c.isActive) {
+                const opt = document.createElement('option');
+                opt.value = c.id;
+                opt.textContent = c.name;
+                select.appendChild(opt);
+            }
+        });
+    }
+    if (currentVal) {
+        select.value = currentVal;
+    }
+}
+
 async function fetchCategoriesList() {
     try {
         const token = localStorage.getItem('token');
@@ -1175,22 +1217,7 @@ async function fetchCategoriesList() {
             adminAllCategories = await res.json() || [];
             
             // Populate category select element in product add/edit form
-            const select = document.getElementById('pCategory');
-            if (select) {
-                const currentVal = select.value;
-                select.innerHTML = '<option value="">Select Category</option>';
-                adminAllCategories.forEach(c => {
-                    if (c.isActive) {
-                        const opt = document.createElement('option');
-                        opt.value = c.id;
-                        opt.textContent = c.name;
-                        select.appendChild(opt);
-                    }
-                });
-                if (currentVal) {
-                    select.value = currentVal;
-                }
-            }
+            populateCategorySelect();
             
             renderAdminCategoriesTable();
         }
