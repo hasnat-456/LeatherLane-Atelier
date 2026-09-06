@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -193,6 +193,86 @@
         }
     </style>
 
+    <!-- Luxury Resubmission UI Styles -->
+    <style>
+        .resubmit-luxury-card {
+            border-left: 5px solid #842029 !important;
+            background-color: #fff9f9 !important;
+            color: #333 !important;
+            padding: 1.75rem !important;
+            border-radius: var(--radius) !important;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.06) !important;
+            border: 1px solid #f1d2d5 !important;
+            border-left-width: 5px !important;
+        }
+        .luxury-input {
+            width: 100% !important;
+            padding: 12px 16px !important;
+            border: 1.5px solid #d4c8b8 !important;
+            border-radius: 8px !important;
+            background-color: #ffffff !important;
+            color: #333333 !important;
+            font-size: 0.95rem !important;
+            font-family: var(--font-body) !important;
+            transition: all 0.25s ease !important;
+            box-sizing: border-box !important;
+        }
+        .luxury-input:focus {
+            outline: none !important;
+            border-color: var(--primary-gold) !important;
+            box-shadow: 0 0 0 3px rgba(199, 154, 82, 0.25) !important;
+        }
+        .resubmit-dropzone {
+            border: 2px dashed #C79A52 !important;
+            border-radius: 10px !important;
+            background: #FAF6F0 !important;
+            padding: 22px 16px !important;
+            text-align: center !important;
+            cursor: pointer !important;
+            transition: all 0.3s ease !important;
+        }
+        .resubmit-dropzone:hover {
+            background: #F3ECE0 !important;
+            border-color: #A87834 !important;
+        }
+        .btn-resubmit-luxury {
+            width: 100% !important;
+            padding: 15px 28px !important;
+            background: linear-gradient(135deg, #470C0E 0%, #6E181B 100%) !important;
+            color: #ffffff !important;
+            border: 1px solid #C79A52 !important;
+            border-radius: 8px !important;
+            font-family: var(--font-heading) !important;
+            font-size: 1rem !important;
+            font-weight: 700 !important;
+            letter-spacing: 1.2px !important;
+            text-transform: uppercase !important;
+            cursor: pointer !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 10px !important;
+            box-shadow: 0 4px 15px rgba(71, 12, 14, 0.28) !important;
+            transition: all 0.3s ease !important;
+        }
+        .btn-resubmit-luxury:hover:not(:disabled) {
+            background: linear-gradient(135deg, #5C1215 0%, #851F23 100%) !important;
+            box-shadow: 0 6px 20px rgba(199, 154, 82, 0.4) !important;
+            transform: translateY(-2px) !important;
+        }
+        .btn-resubmit-luxury:disabled {
+            opacity: 0.7 !important;
+            cursor: not-allowed !important;
+            transform: none !important;
+        }
+        @media (max-width: 650px) {
+            .resubmit-grid {
+                grid-template-columns: 1fr !important;
+                gap: 1rem !important;
+            }
+        }
+    </style>
+
     <link rel="canonical" href="https://leatherlaneatelier.store/order-tracking">
 </head>
 <body>
@@ -312,6 +392,8 @@
     <script>
         const urlParams = new URLSearchParams(window.location.search);
         const orderId = urlParams.get('id');
+        let currentLoadedOrderNumber = '';
+        let currentLoadedInternalId = '';
 
         function getIconForStatus(status) {
             const s = status.toLowerCase();
@@ -338,12 +420,14 @@
             }
 
             try {
-                const res = await fetch(`/api/tracking/order/${orderId}`, {
+                const res = await fetch(`/api/tracking/order/${encodeURIComponent(orderId)}`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
 
                 if (res.ok) {
                     const data = await res.json();
+                    currentLoadedOrderNumber = data.orderNumber || data.orderId || orderId;
+                    currentLoadedInternalId = data.orderId || '';
                     
                     const detailsHtml = `
                         <div class="details-col">
@@ -351,7 +435,7 @@
                             <div><span class="details-label">Order Date:</span> ${new Date(data.orderDate).toLocaleDateString()}</div>
                         </div>
                         <div class="details-col">
-                            <div><span class="details-label">Payment Method:</span> ${data.paymentMethod.toUpperCase()}</div>
+                            <div><span class="details-label">Payment Method:</span> ${(data.paymentMethod || 'MANUAL').toUpperCase()}</div>
                             <div><span class="details-label">Status:</span> <strong style="color: var(--primary-gold);">${data.paymentStatus}</strong></div>
                         </div>
                     `;
@@ -372,7 +456,7 @@
                                 <h3 style="color: var(--primary-bg); font-family: var(--font-body); font-size: 1.1rem; margin-bottom: 8px;">Payment Status: <span style="font-size:0.9rem; padding:4px 10px; background:#fff3cd; color:#856404; border:1px solid #ffeeba; border-radius:4px; font-weight:bold;">Pending Verification</span></h3>
                                 <p style="font-size: 0.95rem; color: #555; line-height:1.6;">
                                     Your payment proof has been submitted successfully.<br>
-                                    Our team will verify your payment.<br>
+                                    Our team is verifying your payment.<br>
                                     Once verified, your order will automatically move to Order Confirmed.
                                 </p>
                             </div>
@@ -381,37 +465,93 @@
                         if (timelineContainer) timelineContainer.style.display = 'none';
                     } else if (isRejected) {
                         payCardContent = `
-                            <div class="card" style="border-left: 5px solid var(--error); background-color: #fdf2f2; color: #333; padding: 1.5rem; border-radius: var(--radius); box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
-                                <h3 style="color: var(--primary-bg); font-family: var(--font-body); font-size: 1.1rem; margin-bottom: 8px;">Payment Status: <span style="font-size:0.9rem; padding:4px 10px; background:#f8d7da; color:#721c24; border:1px solid #f5c6cb; border-radius:4px; font-weight:bold;">Payment Rejected</span></h3>
-                                <p style="font-size: 0.95rem; color: #555; margin-bottom: 12px; line-height:1.6;">
-                                    <b>Reason for rejection:</b> <span style="color: var(--error); font-weight: 600;">${data.rejectionReason || 'Invalid details'}</span>
+                            <div class="resubmit-luxury-card" id="resubmitCard">
+                                <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 1.2rem; border-bottom: 1px solid rgba(114, 28, 36, 0.15); padding-bottom: 12px;">
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <span style="display: inline-flex; align-items: center; justify-content: center; width: 38px; height: 38px; border-radius: 50%; background: #f8d7da; color: #721c24; font-size: 1.1rem; flex-shrink: 0;">
+                                            <i class="fas fa-exclamation-triangle"></i>
+                                        </span>
+                                        <div>
+                                            <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: #842029; font-weight: 700;">Payment Verification</div>
+                                            <div style="font-family: var(--font-heading); font-size: 1.15rem; font-weight: 700; color: #470C0E;">Action Required: Payment Rejected</div>
+                                        </div>
+                                    </div>
+                                    <span style="font-size: 0.85rem; padding: 5px 14px; background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; border-radius: 20px; font-weight: 700; letter-spacing: 0.5px;">
+                                        <i class="fas fa-times-circle" style="margin-right: 5px;"></i>Payment Rejected
+                                    </span>
+                                </div>
+
+                                <div style="background: #ffffff; border-left: 4px solid #842029; border-radius: 6px; padding: 14px 16px; margin-bottom: 1.25rem; box-shadow: 0 2px 6px rgba(0,0,0,0.04);">
+                                    <div style="font-size: 0.8rem; font-weight: 700; color: #842029; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.5px;">
+                                        <i class="fas fa-comment-dots" style="margin-right: 6px;"></i>Rejection Reason from Atelier Admin:
+                                    </div>
+                                    <div style="color: #222; font-size: 0.95rem; line-height: 1.5; font-weight: 500;">
+                                        "${data.rejectionReason || 'The payment verification details could not be verified against bank records.'}"
+                                    </div>
+                                </div>
+
+                                <p style="font-size: 0.95rem; color: #555; line-height: 1.6; margin-bottom: 1.25rem;">
+                                    Please review the admin note above, rectify the payment information, and upload an updated proof of payment receipt below. Our team will review your resubmission promptly.
                                 </p>
-                                <p style="font-size: 0.95rem; color: #555; margin-bottom: 15px;">
-                                    Please review the reason above and upload a new payment proof.
-                                </p>
-                                <button class="btn-shopping" onclick="toggleResubmitForm()" style="width: auto; padding: 10px 24px; margin-top: 0; background-color: var(--primary-bg); color:#fff; border-radius:6px; font-weight:600; cursor:pointer; border:none;">Upload New Payment Proof</button>
-                                
-                                <div id="resubmitFormContainer" style="display: none; margin-top: 1.5rem; border-top: 1px solid #ddd; padding-top: 1.5rem;">
-                                    <h4 style="color: var(--primary-bg); margin-bottom: 1rem; font-family: var(--font-body);">Resubmit Payment Details</h4>
-                                    
-                                    <div class="form-group">
-                                        <label style="color:#555;">Transaction / Reference ID *</label>
-                                        <input type="text" id="newPaymentRefId" class="form-control" value="${data.paymentRefId || ''}" placeholder="Enter new Reference ID" required style="color:#333; background-color:#fff; border:1px solid #ccc;">
+
+                                <div id="resubmitFormContainer" style="border-top: 1px solid #ead3d5; padding-top: 1.5rem; margin-top: 0.5rem;">
+                                    <h4 style="color: var(--primary-bg); margin-bottom: 1.2rem; font-family: var(--font-heading); font-size: 1.1rem; display: flex; align-items: center; gap: 8px;">
+                                        <i class="fas fa-file-invoice-dollar" style="color: var(--primary-gold);"></i>
+                                        Resubmit Payment Proof & Details
+                                    </h4>
+
+                                    <div class="form-group" style="margin-bottom: 1.25rem;">
+                                        <label style="display: block; font-weight: 600; color: #333; margin-bottom: 6px; font-size: 0.9rem;">
+                                            <i class="fas fa-hashtag" style="color: var(--primary-gold); margin-right: 6px;"></i>Transaction / Reference ID <span style="color: #b02a37;">*</span>
+                                        </label>
+                                        <input type="text" id="newPaymentRefId" class="luxury-input" value="${data.paymentRefId || ''}" placeholder="Enter new Transaction Reference ID" required>
                                     </div>
-                                    <div class="form-group">
-                                        <label style="color:#555;">Sender Name *</label>
-                                        <input type="text" id="newSenderName" class="form-control" value="${data.senderName || ''}" placeholder="Enter Sender Name" required style="color:#333; background-color:#fff; border:1px solid #ccc;">
+
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem;" class="resubmit-grid">
+                                        <div class="form-group" style="margin-bottom: 0;">
+                                            <label style="display: block; font-weight: 600; color: #333; margin-bottom: 6px; font-size: 0.9rem;">
+                                                <i class="fas fa-user" style="color: var(--primary-gold); margin-right: 6px;"></i>Sender Account Name <span style="color: #b02a37;">*</span>
+                                            </label>
+                                            <input type="text" id="newSenderName" class="luxury-input" value="${data.senderName || ''}" placeholder="Account holder name" required>
+                                        </div>
+                                        <div class="form-group" style="margin-bottom: 0;">
+                                            <label style="display: block; font-weight: 600; color: #333; margin-bottom: 6px; font-size: 0.9rem;">
+                                                <i class="fas fa-phone-alt" style="color: var(--primary-gold); margin-right: 6px;"></i>Sender Mobile / Account Number <span style="color: #b02a37;">*</span>
+                                            </label>
+                                            <input type="tel" id="newSenderMobile" class="luxury-input" value="${data.senderMobile || ''}" placeholder="03XXXXXXXXX" required>
+                                        </div>
                                     </div>
-                                    <div class="form-group">
-                                        <label style="color:#555;">Sender Mobile Number *</label>
-                                        <input type="tel" id="newSenderMobile" class="form-control" value="${data.senderMobile || ''}" placeholder="03XXXXXXXXX" required style="color:#333; background-color:#fff; border:1px solid #ccc;">
+
+                                    <div class="form-group" style="margin-bottom: 1.5rem;">
+                                        <label style="display: block; font-weight: 600; color: #333; margin-bottom: 6px; font-size: 0.9rem;">
+                                            <i class="fas fa-camera" style="color: var(--primary-gold); margin-right: 6px;"></i>Upload Payment Screenshot / Receipt <span style="color: #b02a37;">*</span>
+                                        </label>
+                                        <div class="resubmit-dropzone" id="dropzoneContainer" onclick="document.getElementById('newPaymentScreenshot').click()">
+                                            <input type="file" id="newPaymentScreenshot" accept=".jpg,.jpeg,.png,.pdf" style="display: none;" onchange="handleFileSelected(event)">
+                                            <div id="dropzonePrompt">
+                                                <i class="fas fa-cloud-upload-alt" style="font-size: 2.2rem; color: #C79A52; margin-bottom: 8px; display: block;"></i>
+                                                <div style="font-weight: 600; color: #470C0E; font-size: 0.95rem;">Click to select or drag & drop payment screenshot</div>
+                                                <div style="font-size: 0.8rem; color: #777; margin-top: 4px;">Supported formats: JPG, JPEG, PNG, PDF (Max 5MB)</div>
+                                            </div>
+                                            <div id="dropzonePreview" style="display: none; align-items: center; justify-content: center; gap: 12px;">
+                                                <i class="fas fa-check-circle" style="font-size: 1.8rem; color: #2E6B4D;"></i>
+                                                <div style="text-align: left;">
+                                                    <div id="previewFileName" style="font-weight: 600; color: #333; font-size: 0.95rem; word-break: break-all;"></div>
+                                                    <div id="previewFileSize" style="font-size: 0.8rem; color: #666;"></div>
+                                                </div>
+                                                <button type="button" onclick="clearSelectedFile(event)" style="background: none; border: none; color: #b02a37; font-size: 1.1rem; cursor: pointer; padding: 6px 10px; margin-left: auto;" title="Remove selected file">
+                                                    <i class="fas fa-trash-alt"></i>
+                                                </button>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div class="form-group">
-                                        <label style="color:#555;">Upload Payment Screenshot *</label>
-                                        <input type="file" id="newPaymentScreenshot" class="form-control" accept=".jpg,.jpeg,.png,.pdf" required style="padding: 9px; color:#333; background-color:#fff; border:1px solid #ccc;">
-                                        <span style="font-size: 0.8rem; color: #666; margin-top: 4px; display: block;">Accepted types: JPG, JPEG, PNG, PDF</span>
-                                    </div>
-                                    <button class="btn-shopping" id="btnResubmit" onclick="resubmitPaymentDetails()" style="width: 100%; margin-top: 10px;">Submit Updated Details</button>
+
+                                    <div id="resubmitAlertBox" style="display: none; margin-bottom: 1.25rem; padding: 12px 16px; border-radius: 6px; font-size: 0.95rem; line-height: 1.5;"></div>
+
+                                    <button class="btn-resubmit-luxury" id="btnResubmit" onclick="resubmitPaymentDetails()">
+                                        <i class="fas fa-paper-plane"></i>
+                                        <span>Submit Updated Details</span>
+                                    </button>
                                 </div>
                             </div>
                         `;
@@ -430,6 +570,16 @@
                         if (timelineContainer) timelineContainer.style.display = 'block';
                     }
                     payCard.innerHTML = payCardContent;
+
+                    if (isRejected) {
+                        setupDropzone();
+                        if (window.location.hash === '#resubmit') {
+                            setTimeout(() => {
+                                const target = document.getElementById('resubmitFormContainer') || document.getElementById('resubmitCard');
+                                if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                            }, 300);
+                        }
+                    }
 
                     let timelineHtml = '';
                     let latestTracking = null;
@@ -465,25 +615,6 @@
                     }
                     document.getElementById('timeline').innerHTML = timelineHtml;
 
-        function getCourierTrackUrl(courierName, trackingNumber) {
-            if (!courierName) return '#';
-            const c = courierName.toLowerCase();
-            const t = (trackingNumber || '').trim();
-            if (c.includes('tcs')) {
-                return t ? `https://www.tcsexpress.com/tracking?trackNo=${encodeURIComponent(t)}` : 'https://www.tcsexpress.com';
-            }
-            if (c.includes('m&p') || c.includes('m and p') || c.includes('m & p') || c.includes('mulphi')) {
-                return t ? `https://track.mulphilog.com/index.php?tracking_no=${encodeURIComponent(t)}` : 'https://mulphilog.com';
-            }
-            if (c.includes('leopard')) {
-                return t ? `https://www.leopardscourier.com/tracking?trackNo=${encodeURIComponent(t)}` : 'https://www.leopardscourier.com';
-            }
-            if (c.includes('postex')) {
-                return t ? `https://postex.pk/tracking?cn=${encodeURIComponent(t)}` : 'https://postex.pk';
-            }
-            return t ? `https://www.google.com/search?q=${encodeURIComponent(courierName + ' tracking ' + t)}` : '#';
-        }
-
                     if (latestTracking && latestTracking.trackingNumber) {
                         const trackUrl = getCourierTrackUrl(latestTracking.courierName, latestTracking.trackingNumber);
                         document.getElementById('trackingInfoCard').innerHTML = `
@@ -509,35 +640,155 @@
             }
         }
 
-        function toggleResubmitForm() {
-            const form = document.getElementById('resubmitFormContainer');
-            if (form) {
-                form.style.display = form.style.display === 'none' ? 'block' : 'none';
+        function getCourierTrackUrl(courierName, trackingNumber) {
+            if (!courierName) return '#';
+            const c = courierName.toLowerCase();
+            const t = (trackingNumber || '').trim();
+            if (c.includes('tcs')) {
+                return t ? `https://www.tcsexpress.com/tracking?trackNo=${encodeURIComponent(t)}` : 'https://www.tcsexpress.com';
+            }
+            if (c.includes('m&p') || c.includes('m and p') || c.includes('m & p') || c.includes('mulphi')) {
+                return t ? `https://track.mulphilog.com/index.php?tracking_no=${encodeURIComponent(t)}` : 'https://mulphilog.com';
+            }
+            if (c.includes('leopard')) {
+                return t ? `https://www.leopardscourier.com/tracking?trackNo=${encodeURIComponent(t)}` : 'https://www.leopardscourier.com';
+            }
+            if (c.includes('postex')) {
+                return t ? `https://postex.pk/tracking?cn=${encodeURIComponent(t)}` : 'https://postex.pk';
+            }
+            return t ? `https://www.google.com/search?q=${encodeURIComponent(courierName + ' tracking ' + t)}` : '#';
+        }
+
+        function handleFileSelected(e) {
+            const file = e.target.files && e.target.files[0];
+            if (!file) return;
+
+            const promptEl = document.getElementById('dropzonePrompt');
+            const previewEl = document.getElementById('dropzonePreview');
+            const fileNameEl = document.getElementById('previewFileName');
+            const fileSizeEl = document.getElementById('previewFileSize');
+
+            if (promptEl && previewEl && fileNameEl && fileSizeEl) {
+                promptEl.style.display = 'none';
+                previewEl.style.display = 'flex';
+                fileNameEl.textContent = file.name;
+                const sizeKb = (file.size / 1024).toFixed(1);
+                fileSizeEl.textContent = sizeKb > 1024 ? `${(sizeKb / 1024).toFixed(2)} MB` : `${sizeKb} KB`;
+            }
+        }
+
+        function clearSelectedFile(e) {
+            if (e) e.stopPropagation();
+            const input = document.getElementById('newPaymentScreenshot');
+            if (input) input.value = '';
+            const promptEl = document.getElementById('dropzonePrompt');
+            const previewEl = document.getElementById('dropzonePreview');
+            if (promptEl && previewEl) {
+                promptEl.style.display = 'block';
+                previewEl.style.display = 'none';
+            }
+        }
+
+        function setupDropzone() {
+            const dropzone = document.getElementById('dropzoneContainer');
+            if (!dropzone) return;
+            
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropzone.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }, false);
+            });
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropzone.addEventListener(eventName, () => {
+                    dropzone.style.background = '#F3ECE0';
+                    dropzone.style.borderColor = '#A87834';
+                }, false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropzone.addEventListener(eventName, () => {
+                    dropzone.style.background = '#FAF6F0';
+                    dropzone.style.borderColor = '#C79A52';
+                }, false);
+            });
+
+            dropzone.addEventListener('drop', (e) => {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                if (files && files.length > 0) {
+                    const fileInput = document.getElementById('newPaymentScreenshot');
+                    if (fileInput) {
+                        fileInput.files = files;
+                        handleFileSelected({ target: fileInput });
+                    }
+                }
+            }, false);
+        }
+
+        function showResubmitMessage(msg, isSuccess = false) {
+            const alertBox = document.getElementById('resubmitAlertBox');
+            if (!alertBox) {
+                alert(msg);
+                return;
+            }
+            alertBox.style.display = 'block';
+            if (isSuccess) {
+                alertBox.style.background = '#d4edda';
+                alertBox.style.color = '#155724';
+                alertBox.style.border = '1px solid #c3e6cb';
+                alertBox.innerHTML = `<i class="fas fa-check-circle" style="margin-right: 8px;"></i>${msg}`;
+            } else {
+                alertBox.style.background = '#f8d7da';
+                alertBox.style.color = '#721c24';
+                alertBox.style.border = '1px solid #f5c6cb';
+                alertBox.innerHTML = `<i class="fas fa-exclamation-triangle" style="margin-right: 8px;"></i>${msg}`;
             }
         }
 
         async function resubmitPaymentDetails() {
-            const refId = document.getElementById('newPaymentRefId').value.trim();
-            const name = document.getElementById('newSenderName').value.trim();
-            const mobile = document.getElementById('newSenderMobile').value.trim();
+            const refIdInput = document.getElementById('newPaymentRefId');
+            const nameInput = document.getElementById('newSenderName');
+            const mobileInput = document.getElementById('newSenderMobile');
             const fileInput = document.getElementById('newPaymentScreenshot');
-            
-            if (!refId || !name || !mobile) {
-                alert("Please fill out all fields.");
+
+            const refId = refIdInput ? refIdInput.value.trim() : '';
+            const name = nameInput ? nameInput.value.trim() : '';
+            const mobile = mobileInput ? mobileInput.value.trim() : '';
+
+            if (!refId) {
+                showResubmitMessage("Please enter the Transaction / Reference ID.");
+                if (refIdInput) refIdInput.focus();
                 return;
             }
-            
-            if (!fileInput.files || fileInput.files.length === 0) {
-                alert("Please select a screenshot file.");
+
+            if (!name) {
+                showResubmitMessage("Please enter the sender account name.");
+                if (nameInput) nameInput.focus();
                 return;
             }
-            
+
+            if (!mobile) {
+                showResubmitMessage("Please enter the sender mobile / account number.");
+                if (mobileInput) mobileInput.focus();
+                return;
+            }
+
+            if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+                showResubmitMessage("Please select and upload a payment receipt screenshot.");
+                return;
+            }
+
             const btn = document.getElementById('btnResubmit');
-            btn.disabled = true;
-            btn.innerText = 'Uploading screenshot...';
-            
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Uploading Screenshot...</span>';
+            }
+
             const token = localStorage.getItem('token');
             try {
+                // Step 1: Upload Screenshot
                 const formData = new FormData();
                 formData.append('imageFile', fileInput.files[0]);
 
@@ -548,19 +799,29 @@
                 });
 
                 if (!uploadRes.ok) {
-                    const errData = await uploadRes.json();
-                    alert(errData.message || 'Failed to upload screenshot.');
-                    btn.disabled = false;
-                    btn.innerText = 'Submit Updated Details';
+                    let uploadErr = 'Failed to upload screenshot.';
+                    try {
+                        const errData = await uploadRes.json();
+                        uploadErr = errData.message || (errData.errors ? Object.values(errData.errors).flat().join(' ') : uploadErr);
+                    } catch (e) {}
+                    showResubmitMessage(uploadErr);
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="fas fa-paper-plane"></i><span>Submit Updated Details</span>';
+                    }
                     return;
                 }
 
                 const uploadData = await uploadRes.json();
                 const screenshotUrl = uploadData.url;
-                
-                btn.innerText = 'Submitting updated details...';
-                
-                const res = await fetch(`/api/transactions/${orderId}/resubmit-payment`, {
+
+                // Step 2: Resubmit Payment
+                if (btn) {
+                    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Submitting Updated Details...</span>';
+                }
+
+                const targetId = encodeURIComponent((currentLoadedOrderNumber || orderId || currentLoadedInternalId || '').toString().trim());
+                const res = await fetch(`/api/transactions/${targetId}/resubmit-payment`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -573,20 +834,31 @@
                         paymentScreenshot: screenshotUrl
                     })
                 });
-                
+
                 if (res.ok) {
-                    alert("Your updated payment proof has been submitted successfully.\nOur team will verify your payment.");
-                    loadTracking();
+                    showResubmitMessage("Your updated payment proof has been submitted successfully! Our team will verify your payment.", true);
+                    setTimeout(() => {
+                        loadTracking();
+                    }, 1500);
                 } else {
-                    const errData = await res.json();
-                    alert(errData.message || 'Resubmission failed.');
+                    let errMsg = 'Resubmission failed. Please verify your details.';
+                    try {
+                        const errData = await res.json();
+                        errMsg = errData.message || (errData.errors ? Object.values(errData.errors).flat().join(' ') : errMsg);
+                    } catch (e) {}
+                    showResubmitMessage(errMsg);
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="fas fa-paper-plane"></i><span>Submit Updated Details</span>';
+                    }
                 }
             } catch (err) {
                 console.error(err);
-                alert("Error connecting to server.");
-            } finally {
-                btn.disabled = false;
-                btn.innerText = 'Submit Updated Details';
+                showResubmitMessage("Connection error. Please check your internet and try again.");
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-paper-plane"></i><span>Submit Updated Details</span>';
+                }
             }
         }
 

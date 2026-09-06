@@ -106,21 +106,23 @@ namespace LeatherLane_Atelier.Controllers
             orderItem.HasBeenReturned = true;
             orderItem.ReturnRequestId = returnRequest.ReturnId;
 
+            string orderDisplay = LeatherLane_Atelier.Services.IdGenerator.ResolveOrderDisplay(order.OrderId, order.Id);
+
             // Notification for Admin
             _context.Notifications.Add(new Notification
             {
                 Title = "New Return Request",
-                Message = $"Customer requested a return for Order {order.OrderId} (Return ID: {returnRequest.ReturnCode}).",
+                Message = $"Customer requested a return for Order {orderDisplay} (Return ID: {returnRequest.ReturnCode}).",
                 ActionUrl = $"admin-return.html",
                 UserId = null // Admin
             });
-            await LeatherLane_Atelier.Services.EmailServiceExtensions.NotifyAdminsAsync(_emailService, _context, "New Return Request", $"A new return request ({returnRequest.ReturnCode}) was submitted for Order {order.OrderId}.");
+            await LeatherLane_Atelier.Services.EmailServiceExtensions.NotifyAdminsAsync(_emailService, _context, "New Return Request", $"A new return request ({returnRequest.ReturnCode}) was submitted for Order {orderDisplay}.");
 
             // Notification for Customer
             _context.Notifications.Add(new Notification
             {
                 Title = "Return Request Submitted",
-                Message = $"Your return request ({returnRequest.ReturnCode}) for Order {order.OrderId} has been successfully submitted.",
+                Message = $"Your return request ({returnRequest.ReturnCode}) for Order {orderDisplay} has been successfully submitted.",
                 ActionUrl = "orders.html",
                 UserId = userId
             });
@@ -129,10 +131,10 @@ namespace LeatherLane_Atelier.Controllers
             {
                 var details = new System.Collections.Generic.Dictionary<string, string> {
                     { "Return ID", returnRequest.ReturnCode },
-                    { "Order ID", order.OrderId },
+                    { "Order ID", orderDisplay },
                     { "Refund Amount", $"Rs. {returnRequest.RefundAmount:N2}" }
                 };
-                var emailHtml = LeatherLane_Atelier.Services.EmailTemplateBuilder.BuildStandardEmail("🔄 Return Request Received", userObj.Name, $"We have received your return request ({returnRequest.ReturnCode}) for Order {order.OrderId}. Our team will review it shortly.", "/transactions.html", "View Orders", details);
+                var emailHtml = LeatherLane_Atelier.Services.EmailTemplateBuilder.BuildStandardEmail("🔄 Return Request Received", userObj.Name, $"We have received your return request ({returnRequest.ReturnCode}) for Order {orderDisplay}. Our team will review it shortly.", "/transactions.html", "View Orders", details);
                 _ = _emailService.SendEmailAsync(userObj.Email, $"Return Request Submitted ({returnRequest.ReturnCode})", emailHtml);
             }
 

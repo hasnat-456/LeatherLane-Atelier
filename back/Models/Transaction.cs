@@ -9,7 +9,7 @@ namespace LeatherLane_Atelier.Models
         public string? OrderId { get; set; }
 
         [System.ComponentModel.DataAnnotations.Schema.NotMapped]
-        public string OrderNumber => !string.IsNullOrEmpty(OrderId) ? OrderId : LeatherLane_Atelier.Services.IdGenerator.FormatLegacyOrderNumber(Id);
+        public string OrderNumber => LeatherLane_Atelier.Services.IdGenerator.ResolveOrderDisplay(OrderId, Id);
         
         public int UserId { get; set; }
         public User User { get; set; } = null!;

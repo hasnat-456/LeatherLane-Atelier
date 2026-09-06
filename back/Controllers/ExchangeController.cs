@@ -256,15 +256,16 @@ namespace LeatherLane_Atelier.Controllers
             var origProd = await _context.Products.FindAsync(exchangeRequest.OriginalProductId);
             var repProd = exchangeRequest.ReplacementProductId.HasValue ? await _context.Products.FindAsync(exchangeRequest.ReplacementProductId.Value) : null;
             var userObj = await _context.Users.FindAsync(userId);
+            string orderDisplay = LeatherLane_Atelier.Services.IdGenerator.ResolveOrderDisplay(order.OrderId, order.Id);
 
             var adminEmailHtml = LeatherLane_Atelier.Services.EmailTemplateBuilder.BuildAdminExchangeEmail(
                 "New Exchange Request",
                 exchangeRequest.ExchangeCode ?? ("EXC-" + exchangeRequest.ExchangeId),
-                order.OrderId ?? ("#" + order.Id),
+                orderDisplay,
                 userObj?.Name ?? "Valued Customer",
                 userObj?.Email ?? "N/A",
                 "Pending Review",
-                $"A new exchange request (<strong>{exchangeRequest.ExchangeCode}</strong>) has been submitted for Order <strong>{order.OrderId}</strong>. Please review the item to return and the requested replacement below.",
+                $"A new exchange request (<strong>{exchangeRequest.ExchangeCode}</strong>) has been submitted for Order <strong>{orderDisplay}</strong>. Please review the item to return and the requested replacement below.",
                 origProd?.Name ?? "Original Item",
                 origProd?.ProductId,
                 origProd?.Image,
@@ -287,18 +288,18 @@ namespace LeatherLane_Atelier.Controllers
             _context.Notifications.Add(new Notification
             {
                 Title = "Exchange Request Submitted",
-                Message = $"Your exchange request ({exchangeRequest.ExchangeCode}) for Order {order.OrderId} has been successfully submitted.",
+                Message = $"Your exchange request ({exchangeRequest.ExchangeCode}) for Order {orderDisplay} has been successfully submitted.",
                 ActionUrl = "orders.html",
                 UserId = userId
             });
             if (userObj != null)
             {
-                string exchangeMsg = $"We have received your exchange request for Order <strong>{order.OrderId}</strong> (Exchange <strong>{exchangeRequest.ExchangeCode}</strong>). Our team will review the details within 24 hours.";
+                string exchangeMsg = $"We have received your exchange request for Order <strong>{orderDisplay}</strong> (Exchange <strong>{exchangeRequest.ExchangeCode}</strong>). Our team will review the details within 24 hours.";
                 var htmlEmail = LeatherLane_Atelier.Services.EmailTemplateBuilder.BuildExchangeEmail(
                     "Exchange Request Received", 
                     userObj.Name, 
                     exchangeRequest.ExchangeCode ?? ("EXC-" + exchangeRequest.ExchangeId),
-                    order.OrderId,
+                    orderDisplay,
                     "Pending Review",
                     exchangeMsg,
                     origProd?.Name ?? "Original Item",
@@ -380,11 +381,12 @@ namespace LeatherLane_Atelier.Controllers
             var userObj = await _context.Users.FindAsync(userId);
             var origProd = request.OriginalProduct;
             var repProd = request.ReplacementProduct;
+            string orderDisplay = LeatherLane_Atelier.Services.IdGenerator.ResolveOrderDisplay(request.Order?.OrderId, request.OrderId);
 
             var adminTrackingEmailHtml = LeatherLane_Atelier.Services.EmailTemplateBuilder.BuildAdminExchangeEmail(
                 "Exchange Return Shipped",
                 request.ExchangeCode ?? ("EXC-" + request.ExchangeId),
-                request.Order?.OrderId ?? ("#" + request.OrderId),
+                orderDisplay,
                 userObj?.Name ?? "Valued Customer",
                 userObj?.Email ?? "N/A",
                 "Return Shipped by Customer",
@@ -420,7 +422,7 @@ namespace LeatherLane_Atelier.Controllers
                 });
                 var details = new System.Collections.Generic.Dictionary<string, string> {
                     { "Exchange ID", request.ExchangeCode ?? ("EXC-" + request.ExchangeId) },
-                    { "Order ID", request.Order?.OrderId ?? request.OrderId.ToString() },
+                    { "Order ID", orderDisplay },
                     { "Courier", dto.CourierName },
                     { "Tracking Number", dto.TrackingNumber },
                     { "Status", "Return Shipped by Customer" }

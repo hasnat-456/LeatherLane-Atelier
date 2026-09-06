@@ -130,7 +130,7 @@ namespace LeatherLane_Atelier.Controllers
             var customer = await _context.Users.FindAsync(request.CustomerId);
             if (customer != null)
             {
-                string orderDisplay = request.Order?.OrderId ?? request.OrderId.ToString();
+                string orderDisplay = LeatherLane_Atelier.Services.IdGenerator.ResolveOrderDisplay(request.Order?.OrderId, request.OrderId);
                 var origProd = await _context.Products.FindAsync(request.OriginalProductId);
                 var repProd = request.ReplacementProductId.HasValue ? await _context.Products.FindAsync(request.ReplacementProductId.Value) : null;
 
@@ -199,7 +199,7 @@ namespace LeatherLane_Atelier.Controllers
             var customer = await _context.Users.FindAsync(request.CustomerId);
             if (customer != null)
             {
-                string orderDisplay = request.Order?.OrderId ?? ("#" + request.OrderId);
+                string orderDisplay = LeatherLane_Atelier.Services.IdGenerator.ResolveOrderDisplay(request.Order?.OrderId, request.OrderId);
                 var exchangeCode = request.ExchangeCode ?? ("EXC-" + id);
                 var origProd = request.OriginalProduct ?? await _context.Products.FindAsync(request.OriginalProductId);
                 var repProd = request.ReplacementProduct ?? (request.ReplacementProductId.HasValue ? await _context.Products.FindAsync(request.ReplacementProductId.Value) : null);
@@ -249,7 +249,9 @@ namespace LeatherLane_Atelier.Controllers
         {
             if (!IsAdmin()) return Forbid();
 
-            var request = await _context.ExchangeRequests.FindAsync(id);
+            var request = await _context.ExchangeRequests
+                .Include(e => e.Order)
+                .FirstOrDefaultAsync(e => e.ExchangeId == id);
             if (request == null || request.Status != "Return Shipped by Customer") return BadRequest("Invalid state.");
 
             request.InspectionDate = DateTime.UtcNow;
@@ -274,7 +276,7 @@ namespace LeatherLane_Atelier.Controllers
                 
                 if (customer != null)
                 {
-                    string orderDisplay = request.Order?.OrderId ?? request.OrderId.ToString();
+                    string orderDisplay = LeatherLane_Atelier.Services.IdGenerator.ResolveOrderDisplay(request.Order?.OrderId, request.OrderId);
                     var origProd = await _context.Products.FindAsync(request.OriginalProductId);
                     var repProd = request.ReplacementProductId.HasValue ? await _context.Products.FindAsync(request.ReplacementProductId.Value) : null;
                     var exchangeCode = request.ExchangeCode ?? ("EXC-" + id);
@@ -317,7 +319,7 @@ namespace LeatherLane_Atelier.Controllers
 
                 if (customer != null)
                 {
-                    string orderDisplay = request.Order?.OrderId ?? request.OrderId.ToString();
+                    string orderDisplay = LeatherLane_Atelier.Services.IdGenerator.ResolveOrderDisplay(request.Order?.OrderId, request.OrderId);
                     var origProd = await _context.Products.FindAsync(request.OriginalProductId);
                     var exchangeCode = request.ExchangeCode ?? ("EXC-" + id);
 
@@ -363,7 +365,9 @@ namespace LeatherLane_Atelier.Controllers
         {
             if (!IsAdmin()) return Forbid();
 
-            var request = await _context.ExchangeRequests.FindAsync(id);
+            var request = await _context.ExchangeRequests
+                .Include(e => e.Order)
+                .FirstOrDefaultAsync(e => e.ExchangeId == id);
             if (request == null || request.Status != "Replacement Preparing") return BadRequest("Invalid state.");
 
             request.Status = "Replacement Shipped";
@@ -376,7 +380,7 @@ namespace LeatherLane_Atelier.Controllers
             var customer = await _context.Users.FindAsync(request.CustomerId);
             if (customer != null)
             {
-                string orderDisplay = request.Order?.OrderId ?? request.OrderId.ToString();
+                string orderDisplay = LeatherLane_Atelier.Services.IdGenerator.ResolveOrderDisplay(request.Order?.OrderId, request.OrderId);
                 var origProd = await _context.Products.FindAsync(request.OriginalProductId);
                 var repProd = request.ReplacementProductId.HasValue ? await _context.Products.FindAsync(request.ReplacementProductId.Value) : null;
                 var exchangeCode = request.ExchangeCode ?? ("EXC-" + id);
@@ -421,7 +425,9 @@ namespace LeatherLane_Atelier.Controllers
         {
             if (!IsAdmin()) return Forbid();
 
-            var request = await _context.ExchangeRequests.FindAsync(id);
+            var request = await _context.ExchangeRequests
+                .Include(e => e.Order)
+                .FirstOrDefaultAsync(e => e.ExchangeId == id);
             if (request == null || request.Status != "Inspection Failed") return BadRequest("Invalid state.");
 
             request.Status = "Original Shipped Back";
@@ -446,7 +452,7 @@ namespace LeatherLane_Atelier.Controllers
             var customer = await _context.Users.FindAsync(request.CustomerId);
             if (customer != null)
             {
-                string orderDisplay = request.Order?.OrderId ?? request.OrderId.ToString();
+                string orderDisplay = LeatherLane_Atelier.Services.IdGenerator.ResolveOrderDisplay(request.Order?.OrderId, request.OrderId);
                 var origProd = await _context.Products.FindAsync(request.OriginalProductId);
                 var exchangeCode = request.ExchangeCode ?? ("EXC-" + id);
 
@@ -491,7 +497,9 @@ namespace LeatherLane_Atelier.Controllers
         {
             if (!IsAdmin()) return Forbid();
 
-            var request = await _context.ExchangeRequests.FindAsync(id);
+            var request = await _context.ExchangeRequests
+                .Include(e => e.Order)
+                .FirstOrDefaultAsync(e => e.ExchangeId == id);
             if (request == null || request.Status != "Replacement Shipped") return BadRequest("Invalid state.");
 
             request.Status = "Completed";
@@ -512,7 +520,7 @@ namespace LeatherLane_Atelier.Controllers
             var customer = await _context.Users.FindAsync(request.CustomerId);
             if (customer != null)
             {
-                string orderDisplay = request.Order?.OrderId ?? request.OrderId.ToString();
+                string orderDisplay = LeatherLane_Atelier.Services.IdGenerator.ResolveOrderDisplay(request.Order?.OrderId, request.OrderId);
                 var origProd = await _context.Products.FindAsync(request.OriginalProductId);
                 var repProd = request.ReplacementProductId.HasValue ? await _context.Products.FindAsync(request.ReplacementProductId.Value) : null;
                 var exchangeCode = request.ExchangeCode ?? ("EXC-" + id);

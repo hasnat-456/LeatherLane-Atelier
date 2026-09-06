@@ -14,6 +14,9 @@ namespace LeatherLane_Atelier.Models
         public int OrderId { get; set; }
         public Transaction Order { get; set; } = null!;
 
+        [NotMapped]
+        public string FormattedOrderNumber => LeatherLane_Atelier.Services.IdGenerator.ResolveOrderDisplay(Order?.OrderId, OrderId);
+
         public int CustomerId { get; set; }
         public User Customer { get; set; } = null!;
 

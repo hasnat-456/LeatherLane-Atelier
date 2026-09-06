@@ -177,6 +177,7 @@ namespace LeatherLane_Atelier.Services
             string? trackingNumber = null,
             string? rejectionReason = null)
         {
+            orderNumber = IdGenerator.ResolveOrderDisplay(orderNumber);
             var sb = new StringBuilder();
 
             // Order ID ON TOP Prominent Badge Bar
@@ -225,6 +226,9 @@ namespace LeatherLane_Atelier.Services
                         <td>
                             <div style=""font-size: 11px; color: #721C24; text-transform: uppercase; letter-spacing: 1.5px; font-weight: bold; margin-bottom: 5px;"">REASON FOR REJECTION</div>
                             <div style=""font-size: 14px; color: #721C24; line-height: 1.5;"">{rejectionReason}</div>
+                            <div style=""margin-top: 12px; padding-top: 10px; border-top: 1px dashed #F5C6CB; font-size: 12px; color: #8C5E3C; line-height: 1.4;"">
+                                <strong>Action Required:</strong> Please re-upload a clear receipt screenshot using the button below or by visiting your orders list.
+                            </div>
                         </td>
                     </tr>
                 </table>");
@@ -548,6 +552,7 @@ namespace LeatherLane_Atelier.Services
             int dayNumber, 
             List<OrderItemInfo> items)
         {
+            orderNumber = IdGenerator.ResolveOrderDisplay(orderNumber);
             var sb = new StringBuilder();
 
             // Order ID on top banner
@@ -629,6 +634,7 @@ namespace LeatherLane_Atelier.Services
             string? trackingNumber = null, 
             string? rejectedReason = null)
         {
+            orderNumber = IdGenerator.ResolveOrderDisplay(orderNumber);
             var sb = new StringBuilder();
 
             // Order ID & Exchange ID ON TOP
@@ -748,6 +754,23 @@ namespace LeatherLane_Atelier.Services
             Dictionary<string, string>? details = null, 
             string detailsTitle = "Transaction Details")
         {
+            if (details != null && details.Count > 0)
+            {
+                var sanitizedDetails = new Dictionary<string, string>();
+                foreach (var kvp in details)
+                {
+                    if (kvp.Key.Equals("Order ID", StringComparison.OrdinalIgnoreCase) || kvp.Key.Equals("Order Number", StringComparison.OrdinalIgnoreCase))
+                    {
+                        sanitizedDetails[kvp.Key] = IdGenerator.ResolveOrderDisplay(kvp.Value);
+                    }
+                    else
+                    {
+                        sanitizedDetails[kvp.Key] = kvp.Value;
+                    }
+                }
+                details = sanitizedDetails;
+            }
+
             string detailsHtml = "";
             if (details != null && details.Count > 0)
             {
@@ -852,6 +875,7 @@ namespace LeatherLane_Atelier.Services
             string? courierName = null,
             string? trackingNumber = null)
         {
+            orderNumber = IdGenerator.ResolveOrderDisplay(orderNumber);
             var sb = new StringBuilder();
 
             // Top Banner: Order ID, Exchange ID, Status

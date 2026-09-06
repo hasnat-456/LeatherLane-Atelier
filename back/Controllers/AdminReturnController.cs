@@ -65,7 +65,7 @@ namespace LeatherLane_Atelier.Controllers
             var customer = await _context.Users.FindAsync(req.CustomerId);
             if (customer != null)
             {
-                string orderDisplay = req.Order?.OrderId ?? req.OrderId.ToString();
+                string orderDisplay = LeatherLane_Atelier.Services.IdGenerator.ResolveOrderDisplay(req.Order?.OrderId, req.OrderId);
                 _context.Notifications.Add(new Notification
                 {
                     Title = "Return Approved",
@@ -113,7 +113,7 @@ namespace LeatherLane_Atelier.Controllers
             var customer = await _context.Users.FindAsync(req.CustomerId);
             if (customer != null)
             {
-                string orderDisplay = req.Order?.OrderId ?? req.OrderId.ToString();
+                string orderDisplay = LeatherLane_Atelier.Services.IdGenerator.ResolveOrderDisplay(req.Order?.OrderId, req.OrderId);
                 _context.Notifications.Add(new Notification
                 {
                     Title = "Return Rejected",
@@ -192,7 +192,7 @@ namespace LeatherLane_Atelier.Controllers
                 var customer = await _context.Users.FindAsync(req.CustomerId);
                 if (customer != null)
                 {
-                    string orderDisplay = req.Order?.OrderId ?? req.OrderId.ToString();
+                    string orderDisplay = LeatherLane_Atelier.Services.IdGenerator.ResolveOrderDisplay(req.Order?.OrderId, req.OrderId);
                     _context.Notifications.Add(new Notification
                     {
                         Title = "Return Inspection Failed",
@@ -241,7 +241,7 @@ namespace LeatherLane_Atelier.Controllers
             var customer = await _context.Users.FindAsync(req.CustomerId);
             if (customer != null)
             {
-                string orderDisplay = req.Order?.OrderId ?? req.OrderId.ToString();
+                string orderDisplay = LeatherLane_Atelier.Services.IdGenerator.ResolveOrderDisplay(req.Order?.OrderId, req.OrderId);
                 _context.Notifications.Add(new Notification
                 {
                     Title = "Refund Completed",

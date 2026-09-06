@@ -617,24 +617,35 @@ namespace LeatherLane_Atelier.Controllers
                         });
                     }
 
-                    string rejectMsg = $"We were unable to verify your payment proof for Order <strong>{transaction.OrderId}</strong>. Please review the reason below and submit a clear payment receipt.";
+                    string formattedOrderId = LeatherLane_Atelier.Services.IdGenerator.ResolveOrderDisplay(transaction.OrderId, transaction.Id);
+                    string rejectMsg = $"We were unable to verify your payment proof for Order <strong>{formattedOrderId}</strong>. Please review the rejection reason detailed below.<br><br>" +
+                        "<div style=\"background-color: #FDFBF8; border: 1px solid #EAE2D5; border-radius: 6px; padding: 15px 18px; margin: 15px 0;\">" +
+                        "<strong style=\"color: #4A1515; font-size: 13px; text-transform: uppercase; letter-spacing: 1px;\">How to Resubmit Your Payment Details:</strong>" +
+                        "<ul style=\"margin: 8px 0 0 0; padding-left: 20px; font-size: 14px; color: #444; line-height: 1.6;\">" +
+                        "<li>Click the <strong>'Re-upload Payment Proof'</strong> button below, or visit your <a href=\"https://leatherlaneatelier.store/transactions.html\" style=\"color: #8C5E3C; font-weight: bold; text-decoration: underline;\">My Orders</a> page and click <strong>'Re-upload Payment Proof'</strong> on your order card.</li>" +
+                        "<li>Verify or enter your correct <strong>Transaction / Reference ID</strong>, <strong>Sender Name</strong>, and <strong>Mobile Number</strong>.</li>" +
+                        "<li>Upload a fresh, legible photo or screenshot of your transfer receipt and click <strong>'Submit Updated Details'</strong>.</li>" +
+                        "</ul>" +
+                        "</div>" +
+                        "Our atelier verification team will promptly review your updated receipt upon submission.";
+
                     var emailHtml = LeatherLane_Atelier.Services.EmailTemplateBuilder.BuildOrderEmail(
                         "Payment Proof Rejected",
                         customer.Name,
-                        transaction.OrderId,
+                        formattedOrderId,
                         rejectMsg,
                         rejectItemInfos,
                         0m,
                         transaction.TotalAmount,
                         "Payment Rejected",
                         transaction.PaymentMethod,
-                        $"/order-tracking.html?id={transaction.OrderId}",
+                        $"/order-tracking.html?id={formattedOrderId}",
                         "Re-upload Payment Proof",
                         null,
                         null,
                         transaction.RejectionReason
                     );
-                    _ = emailSvc.SendEmailAsync(customer.Email, $"Payment Proof Update - Order {transaction.OrderId} | LeatherLane Atelier", emailHtml);
+                    _ = emailSvc.SendEmailAsync(customer.Email, $"Payment Proof Update - Order {formattedOrderId} | LeatherLane Atelier", emailHtml);
                 }
             }
 

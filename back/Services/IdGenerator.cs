@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -134,6 +134,24 @@ namespace LeatherLane_Atelier.Services
         {
             if (id <= 0) return "LLA-0000";
             return $"LLA-{id:D5}";
+        }
+
+        /// <summary>
+        /// Resolves an Order ID into proper branded format (e.g. LLA-0209-X7B92K1 or LLA-00003).
+        /// Guarantees that raw numeric database IDs (e.g. "1", "2", "3") are never displayed directly.
+        /// </summary>
+        public static string ResolveOrderDisplay(string? orderId, int fallbackId = 0)
+        {
+            if (!string.IsNullOrWhiteSpace(orderId))
+            {
+                var trimmed = orderId.Trim();
+                if (int.TryParse(trimmed.TrimStart('#'), out int parsedNum))
+                {
+                    return FormatLegacyOrderNumber(parsedNum > 0 ? parsedNum : fallbackId);
+                }
+                return trimmed;
+            }
+            return FormatLegacyOrderNumber(fallbackId);
         }
     }
 }

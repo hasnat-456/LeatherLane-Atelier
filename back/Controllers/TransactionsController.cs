@@ -754,33 +754,60 @@ namespace LeatherLane_Atelier.Controllers
         }
 
         [HttpPost("{id}/resubmit-payment")]
-        public async Task<IActionResult> ResubmitPayment(int id, [FromBody] ResubmitPaymentRequest req)
+        public async Task<IActionResult> ResubmitPayment(string id, [FromBody] ResubmitPaymentRequest req)
         {
             var userId = GetUserId();
             var user = await _context.Users.FindAsync(userId);
             if (user == null) return BadRequest(new { message = "User not found." });
 
+            if (string.IsNullOrWhiteSpace(id))
+            {
+                return BadRequest(new { message = "Invalid order identifier." });
+            }
+
+            var cleanId = id.Trim();
+            int.TryParse(cleanId.TrimStart('#'), out var numericId);
+
             var transaction = await _context.Transactions
-                .FirstOrDefaultAsync(t => t.Id == id && t.UserId == userId);
+                .Include(t => t.Items)
+                .FirstOrDefaultAsync(t => (t.OrderId == cleanId || (t.OrderId != null && t.OrderId.ToLower() == cleanId.ToLower()) || (numericId > 0 && t.Id == numericId)) && t.UserId == userId);
 
             if (transaction == null)
             {
                 return NotFound(new { message = "Order not found." });
             }
 
-            if (transaction.Status != "Payment Rejected")
+            if (transaction.Status != "Payment Rejected" && transaction.Status != "Rejected")
             {
                 return BadRequest(new { message = "Payment can only be resubmitted for rejected orders." });
             }
 
+            if (req == null || string.IsNullOrWhiteSpace(req.PaymentRefId) || string.IsNullOrWhiteSpace(req.SenderName) || string.IsNullOrWhiteSpace(req.SenderMobile) || string.IsNullOrWhiteSpace(req.PaymentScreenshot))
+            {
+                return BadRequest(new { message = "Reference ID, sender name, sender mobile number, and payment screenshot are strictly required." });
+            }
+
             // Update details
-            transaction.PaymentRefId = req.PaymentRefId;
-            transaction.SenderName = req.SenderName;
-            transaction.SenderMobile = req.SenderMobile;
-            transaction.PaymentScreenshot = req.PaymentScreenshot;
+            transaction.PaymentRefId = req.PaymentRefId.Trim();
+            transaction.SenderName = req.SenderName.Trim();
+            transaction.SenderMobile = req.SenderMobile.Trim();
+            transaction.PaymentScreenshot = req.PaymentScreenshot.Trim();
             transaction.Status = "Payment Verification Pending";
             transaction.RejectionReason = null; // Clear rejection reason
             transaction.UpdatedAt = DateTime.UtcNow;
+
+            // Add Timeline Event
+            _context.TimelineEvents.Add(new TimelineEvent
+            {
+                ReferenceId = transaction.Id,
+                Type = "Order",
+                Status = "Payment Verification Pending",
+                Description = $"Customer resubmitted payment proof (Ref: {transaction.PaymentRefId}). Verification in progress.",
+                EventDateTime = DateTime.UtcNow,
+                CreatedBy = "Customer",
+                IsCurrent = true,
+                IsCompleted = false
+            });
 
             // Notify Admin
             _context.Notifications.Add(new Notification
