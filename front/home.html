@@ -120,25 +120,33 @@
         .hero-content {
             position: relative;
             z-index: 2;
+            max-width: 1000px;
+            padding: 0 1.5rem;
+            margin: 0 auto;
         }
 
-        .hero h1 {
+        .hero-title, .hero h1 {
+            font-family: var(--font-heading);
             font-size: 3.5rem;
             color: #fff;
             margin-bottom: 1rem;
-            text-transform: none;
-            letter-spacing: 1px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
             text-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            line-height: 1.25;
         }
 
-        .hero h2 {
-            font-size: 1.2rem;
+        .hero-subtitle, .hero h2 {
+            font-size: 1.25rem;
+            font-weight: normal;
+            margin-top: 1rem;
             margin-bottom: 2rem;
             color: #f0f0f0;
-            max-width: 600px;
+            max-width: 800px;
             margin-left: auto;
             margin-right: auto;
             text-shadow: 0 2px 5px rgba(0,0,0,0.5);
+            line-height: 1.6;
         }
 
         .btn-explore {
@@ -309,12 +317,11 @@
 
         .product-img {
             height: 250px;
-            background-color: #eee;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: #999;
-            font-size: 0.9rem;
+            background-color: #f7f7f7;
+            display: block;
+            width: 100%;
+            object-fit: cover;
+            transition: opacity 0.35s ease;
         }
 
         .product-info {
@@ -465,6 +472,28 @@
         }
         
         @media (max-width: 768px) {
+            /* Hero section mobile typography - compact, balanced and elegant */
+            .hero {
+                padding: 3.5rem 1.25rem 2.5rem !important;
+                min-height: 80vh !important;
+            }
+            .hero-content {
+                padding: 0 0.5rem !important;
+            }
+            .hero-title, .hero h1 {
+                font-size: 1.75rem !important;
+                letter-spacing: 1px !important;
+                line-height: 1.3 !important;
+                margin-bottom: 0.75rem !important;
+            }
+            .hero-subtitle, .hero h2 {
+                font-size: 0.92rem !important;
+                line-height: 1.55 !important;
+                max-width: 92% !important;
+                margin-top: 0.5rem !important;
+                margin-bottom: 0 !important;
+            }
+
             /* Add explicit padding to right side of containers to guarantee gap */
             .profile-container, .container, .detail-container, .checkout-grid {
                 padding-left: 20px !important;
@@ -544,9 +573,9 @@
         
         <!-- Text Content -->
         <div class="hero-content">
-            <h1 style="font-family: var(--font-heading); font-size: 3.5rem; text-transform: uppercase; letter-spacing: 2px;">Handmade Peshawari Chappals & Leather Footwear, Crafted in Pakistan</h1>
-            <h2 style="font-size: 1.5rem; font-weight: normal; margin-top: 1rem;">Timeless Craftsmanship - Handcrafted leather goods made with passion, precision, and the finest materials</h2>
-            </div>
+            <h1 class="hero-title">Handmade Peshawari Chappals &amp; Leather Footwear, Crafted in Pakistan</h1>
+            <h2 class="hero-subtitle">Timeless Craftsmanship - Handcrafted leather goods made with passion, precision, and the finest materials</h2>
+        </div>
     </section>
 
     <!-- Featured Categories Section -->
@@ -711,6 +740,15 @@
     </footer>
 
     <script>
+        function getOptimizedThumbnail(src) {
+            if (!src) return 'https://via.placeholder.com/300x250';
+            // If it's a product image and not already a thumb, try the lightweight thumbnail version
+            if (src.includes('/images/products/') && !src.includes('/thumb_')) {
+                return src.replace('/images/products/', '/images/products/thumb_');
+            }
+            return src;
+        }
+
         async function loadFeaturedProducts() {
             try {
                 // Fetch categories and all products simultaneously
@@ -738,11 +776,13 @@
                         `;
 
                         const topNew = allProducts.slice(0, 4);
-                        topNew.forEach(product => {
+                        topNew.forEach((product, idx) => {
+                            const rawImg = product.thumbnail || (product.images && product.images[0]) || 'https://via.placeholder.com/300x250';
+                            const thumbImg = getOptimizedThumbnail(rawImg);
                             html += `
                                 <div class="product-card">
                                     <a href="/product-detail?id=${product.id}" style="text-decoration: none; color: inherit;">
-                                        <img src="${product.thumbnail || (product.images && product.images[0]) || 'https://via.placeholder.com/300x250'}" class="product-img" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='https://via.placeholder.com/300x250';" style="width: 100%; height: 250px; object-fit: cover;">
+                                        <img src="${thumbImg}" class="product-img" ${idx === 0 ? 'fetchpriority="high"' : 'loading="lazy"'} decoding="async" onload="this.style.opacity='1';" onerror="if(!this.dataset.fallback){this.dataset.fallback='1';this.src='${rawImg}';}else{this.onerror=null;this.src='https://via.placeholder.com/300x250';}" alt="${product.name}" style="width: 100%; height: 250px; object-fit: cover; opacity: 0;">
                                     </a>
                                     <div class="product-info">
                                         <div class="product-category">${product.category || ''}</div>
@@ -798,10 +838,12 @@
                         // Render up to 4 products for this category
                         const topItems = items.slice(0, 4);
                         topItems.forEach(product => {
+                            const rawImg = product.thumbnail || (product.images && product.images[0]) || 'https://via.placeholder.com/300x250';
+                            const thumbImg = getOptimizedThumbnail(rawImg);
                             html += `
                                 <div class="product-card">
                                     <a href="/product-detail?id=${product.id}" style="text-decoration: none; color: inherit;">
-                                        <img src="${product.thumbnail || (product.images && product.images[0]) || 'https://via.placeholder.com/300x250'}" class="product-img" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='https://via.placeholder.com/300x250';" style="width: 100%; height: 250px; object-fit: cover;">
+                                        <img src="${thumbImg}" class="product-img" loading="lazy" decoding="async" onload="this.style.opacity='1';" onerror="if(!this.dataset.fallback){this.dataset.fallback='1';this.src='${rawImg}';}else{this.onerror=null;this.src='https://via.placeholder.com/300x250';}" alt="${product.name}" style="width: 100%; height: 250px; object-fit: cover; opacity: 0;">
                                     </a>
                                     <div class="product-info">
                                         <div class="product-category">${product.category || ''}</div>
