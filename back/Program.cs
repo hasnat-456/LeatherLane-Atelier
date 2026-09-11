@@ -166,6 +166,16 @@ if (Directory.Exists(frontPath) || fileProviders.Any())
                     
                     var sb = new System.Text.StringBuilder();
                     
+                    static string GetOptimizedThumbnail(string? src)
+                    {
+                        if (string.IsNullOrWhiteSpace(src)) return "https://via.placeholder.com/300x250";
+                        if (src.Contains("/images/products/") && !src.Contains("/thumb_"))
+                        {
+                            return src.Replace("/images/products/", "/images/products/thumb_");
+                        }
+                        return src;
+                    }
+
                     if (path.Equals("/home.html", StringComparison.OrdinalIgnoreCase))
                     {
                         if (allProducts.Any())
@@ -176,10 +186,14 @@ if (Directory.Exists(frontPath) || fileProviders.Any())
                             if (allProducts.Count > 4) sb.Append("<a href='/products' class='section-view-all-link'>Shop All &rarr;</a>");
                             sb.Append("</div><div class='product-grid' style='margin-bottom: 2rem;'>");
                             
+                            int topIdx = 0;
                             foreach(var p in allProducts.Take(4))
                             {
-                                var img = string.IsNullOrEmpty(p.Thumbnail) ? "https://via.placeholder.com/300x250" : p.Thumbnail;
-                                sb.Append($"<div class='product-card'><a href='/product-detail?id={p.Id}' style='text-decoration: none; color: inherit;'><img src='{img}' class='product-img' loading='lazy' style='width: 100%; height: 250px; object-fit: cover;'><div class='product-info'><div class='product-category'>{p.Category}</div><h3 class='product-title'>{p.Name}</h3><div class='product-price'>Rs {p.Price:N0}</div></div></a></div>");
+                                var rawImg = string.IsNullOrEmpty(p.Thumbnail) ? (p.Images != null && p.Images.Count > 0 ? p.Images[0] : "https://via.placeholder.com/300x250") : p.Thumbnail;
+                                var thumbImg = GetOptimizedThumbnail(rawImg);
+                                var priorityAttr = topIdx == 0 ? "fetchpriority='high'" : "loading='lazy'";
+                                topIdx++;
+                                sb.Append($"<div class='product-card'><a href='/product-detail?id={p.Id}' style='text-decoration: none; color: inherit;'><img src='{thumbImg}' class='product-img' {priorityAttr} decoding='async' onload=\"this.style.opacity='1';\" onerror=\"if(!this.dataset.fallback){{this.dataset.fallback='1';this.src='{rawImg}';}}else{{this.onerror=null;this.src='https://via.placeholder.com/300x250';}}\" alt='{System.Net.WebUtility.HtmlEncode(p.Name)}' style='width: 100%; height: 250px; object-fit: cover; opacity: 0;'><div class='product-info'><div class='product-category'>{p.Category}</div><h3 class='product-title'>{p.Name}</h3><div class='product-price'>Rs {p.Price:N0}</div></div></a></div>");
                             }
                             sb.Append("</div></section>");
                         }
@@ -201,8 +215,9 @@ if (Directory.Exists(frontPath) || fileProviders.Any())
                             
                             foreach(var p in items.Take(4))
                             {
-                                var img = string.IsNullOrEmpty(p.Thumbnail) ? "https://via.placeholder.com/300x250" : p.Thumbnail;
-                                sb.Append($"<div class='product-card'><a href='/product-detail?id={p.Id}' style='text-decoration: none; color: inherit;'><img src='{img}' class='product-img' loading='lazy' style='width: 100%; height: 250px; object-fit: cover;'><div class='product-info'><div class='product-category'>{p.Category}</div><h3 class='product-title'>{p.Name}</h3><div class='product-price'>Rs {p.Price:N0}</div></div></a></div>");
+                                var rawImg = string.IsNullOrEmpty(p.Thumbnail) ? (p.Images != null && p.Images.Count > 0 ? p.Images[0] : "https://via.placeholder.com/300x250") : p.Thumbnail;
+                                var thumbImg = GetOptimizedThumbnail(rawImg);
+                                sb.Append($"<div class='product-card'><a href='/product-detail?id={p.Id}' style='text-decoration: none; color: inherit;'><img src='{thumbImg}' class='product-img' loading='lazy' decoding='async' onload=\"this.style.opacity='1';\" onerror=\"if(!this.dataset.fallback){{this.dataset.fallback='1';this.src='{rawImg}';}}else{{this.onerror=null;this.src='https://via.placeholder.com/300x250';}}\" alt='{System.Net.WebUtility.HtmlEncode(p.Name)}' style='width: 100%; height: 250px; object-fit: cover; opacity: 0;'><div class='product-info'><div class='product-category'>{p.Category}</div><h3 class='product-title'>{p.Name}</h3><div class='product-price'>Rs {p.Price:N0}</div></div></a></div>");
                             }
                             sb.Append("</div></section>");
                         }
@@ -221,7 +236,7 @@ if (Directory.Exists(frontPath) || fileProviders.Any())
                                 var sCat = string.IsNullOrEmpty(story.Category) ? "Journal" : story.Category;
                                 storySb.Append($@"
                                 <div style='background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); transition: transform 0.3s; cursor: pointer;' onmouseover=""this.style.transform='translateY(-5px)'"" onmouseout=""this.style.transform='translateY(0)'"" onclick=""window.location.href='/story?id={story.Id}'"">
-                                    <img src='{sImg}' style='width: 100%; height: 250px; object-fit: cover;' loading='lazy'>
+                                    <img src='{sImg}' style='width: 100%; height: 250px; object-fit: cover; opacity: 0;' loading='lazy' decoding='async' onload=""this.style.opacity='1';"" onerror=""this.onerror=null;this.src='https://via.placeholder.com/400x250';"">
                                     <div style='padding: 1.5rem;'>
                                         <div style='color: var(--primary-gold); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; margin-bottom: 0.5rem;'>{sCat}</div>
                                         <h4 style='font-family: var(--font-heading); color: var(--primary-bg); font-size: 1.4rem; margin: 0 0 1rem 0;'>{story.Title}</h4>
@@ -242,8 +257,9 @@ if (Directory.Exists(frontPath) || fileProviders.Any())
                     {
                         foreach(var p in allProducts)
                         {
-                            var img = string.IsNullOrEmpty(p.Thumbnail) ? "https://via.placeholder.com/300x250" : p.Thumbnail;
-                            sb.Append($"<div class='product-card' data-category='{p.Category?.ToLower()}' data-price='{p.Price}'><a href='/product-detail?id={p.Id}' style='text-decoration: none; color: inherit;'><img src='{img}' class='product-img' loading='lazy' style='width: 100%; height: 250px; object-fit: cover;'><div class='product-info'><div class='product-category'>{p.Category}</div><h3 class='product-title'>{p.Name}</h3><div class='product-price'>Rs {p.Price:N0}</div></div></a></div>");
+                            var rawImg = string.IsNullOrEmpty(p.Thumbnail) ? (p.Images != null && p.Images.Count > 0 ? p.Images[0] : "https://via.placeholder.com/300x250") : p.Thumbnail;
+                            var thumbImg = GetOptimizedThumbnail(rawImg);
+                            sb.Append($"<div class='product-card' data-category='{p.Category?.ToLower()}' data-price='{p.Price}'><a href='/product-detail?id={p.Id}' style='text-decoration: none; color: inherit;'><img src='{thumbImg}' class='product-img' loading='lazy' decoding='async' onload=\"this.style.opacity='1';\" onerror=\"if(!this.dataset.fallback){{this.dataset.fallback='1';this.src='{rawImg}';}}else{{this.onerror=null;this.src='https://via.placeholder.com/300x250';}}\" style='width: 100%; height: 250px; object-fit: cover; opacity: 0;'><div class='product-info'><div class='product-category'>{p.Category}</div><h3 class='product-title'>{p.Name}</h3><div class='product-price'>Rs {p.Price:N0}</div></div></a></div>");
                         }
                         
                         var targetString = @"<div style=""padding: 40px; text-align: center; color:#666; grid-column: 1/-1;"">Loading collection...</div>";

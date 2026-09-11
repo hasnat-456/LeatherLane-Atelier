@@ -605,7 +605,7 @@ namespace LeatherLane_Atelier.Services
             <table width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""margin-top: 15px;"">
                 <tr>
                     <td align=""center"">
-                        <a href=""{SiteBaseUrl}/orders.html"" target=""_blank"" style=""display: inline-block; background-color: #C79A52; color: #111111 !important; text-decoration: none !important; padding: 14px 35px; border-radius: 4px; font-weight: bold; font-size: 13px; letter-spacing: 2px; text-transform: uppercase;""><span style=""color: #111111 !important; text-decoration: none !important; font-weight: bold;"">&starf;&starf;&starf;&starf;&starf; Write a Review &amp; Rate Product</span></a>
+                        <a href=""{SiteBaseUrl}/transactions"" target=""_blank"" style=""display: inline-block; background-color: #C79A52; color: #111111 !important; text-decoration: none !important; padding: 14px 35px; border-radius: 4px; font-weight: bold; font-size: 13px; letter-spacing: 2px; text-transform: uppercase;""><span style=""color: #111111 !important; text-decoration: none !important; font-weight: bold;""><span style=""font-size: 15px; letter-spacing: 2px;"">&#9733;&#9733;&#9733;&#9733;&#9733;</span> Write a Review &amp; Rate Product</span></a>
                     </td>
                 </tr>
             </table>";

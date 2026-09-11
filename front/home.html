@@ -750,6 +750,12 @@
         }
 
         async function loadFeaturedProducts() {
+            // If SSR already rendered products into dynamicFeaturedCategories, do not re-fetch or re-render
+            const existingCards = document.querySelectorAll('#dynamicFeaturedCategories .product-card');
+            if (existingCards.length > 0) {
+                return;
+            }
+
             try {
                 // Fetch categories and all products simultaneously
                 const [catRes, prodRes] = await Promise.all([
@@ -874,18 +880,24 @@
             }
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            loadFeaturedProducts();
-            loadCraftSlider();
-            loadHeroSlider();
-            loadJournalStories();
-        });
+        // Shared settings cache to avoid duplicate API requests
+        let _siteSettingsCache = null;
+        async function fetchSiteSettings() {
+            if (_siteSettingsCache) return _siteSettingsCache;
+            try {
+                const res = await fetch('/api/settings');
+                if (res.ok) {
+                    _siteSettingsCache = await res.json();
+                    return _siteSettingsCache;
+                }
+            } catch (e) {}
+            return null;
+        }
 
         async function loadHeroSlider() {
             try {
-                const res = await fetch('/api/settings');
-                if (!res.ok) return;
-                const settings = await res.json();
+                const settings = await fetchSiteSettings();
+                if (!settings) return;
                 
                 let images = [];
                 try { images = JSON.parse(settings.heroSliderImages || '[]'); } catch(e) {}
@@ -894,34 +906,38 @@
                 if (!wrapper) return;
                 
                 if (images.length === 0) {
-                    // Fallback default image if none exist
                     wrapper.innerHTML = `<div class="hero-slide" style="background-image: url('https://images.unsplash.com/photo-1547949003-9792a18a2601?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80'); opacity: 1; animation: none;"></div>`;
                     return;
                 }
                 
-                let slidesHtml = '';
-                // Since the CSS animation 'slideAnimation' expects each to be delayed by (TotalAnimationTime / Count),
-                // we calculate an animation duration (e.g. 5s per image)
-                const durationPerSlide = 5; 
-                const totalDuration = images.length * durationPerSlide;
-                
-                images.forEach((src, i) => {
-                    const delay = i * durationPerSlide;
-                    const urlPath = src.startsWith('/') ? src : '/' + src;
-                    slidesHtml += `<div class="hero-slide" style="
-                        background-image: url('${urlPath}');
-                        animation: slideAnimation ${totalDuration}s infinite;
-                        animation-delay: ${delay}s;
-                    "></div>`;
-                });
-                
-                wrapper.innerHTML = slidesHtml;
+                // 1. Instantly display Slide 1 (no delay, high priority)
+                const firstUrlPath = images[0].startsWith('/') ? images[0] : '/' + images[0];
+                wrapper.innerHTML = `<div class="hero-slide" style="background-image: url('${firstUrlPath}'); opacity: 1; animation: none;"></div>`;
+
+                // 2. Preload and start animation for remaining slides after 1.5s
+                if (images.length > 1) {
+                    setTimeout(() => {
+                        let slidesHtml = '';
+                        const durationPerSlide = 5; 
+                        const totalDuration = images.length * durationPerSlide;
+                        
+                        images.forEach((src, i) => {
+                            const delay = i * durationPerSlide;
+                            const urlPath = src.startsWith('/') ? src : '/' + src;
+                            slidesHtml += `<div class="hero-slide" style="
+                                background-image: url('${urlPath}');
+                                animation: slideAnimation ${totalDuration}s infinite;
+                                animation-delay: ${delay}s;
+                            "></div>`;
+                        });
+                        
+                        wrapper.innerHTML = slidesHtml;
+                    }, 1500);
+                }
             } catch (err) {
                 console.error(err);
             }
         }
-
-
 
         // ── Craft Slider State ──
         let _craftImages = [];
@@ -966,9 +982,8 @@
 
         async function loadCraftSlider() {
             try {
-                const res = await fetch('/api/settings');
-                if (!res.ok) return;
-                const settings = await res.json();
+                const settings = await fetchSiteSettings();
+                if (!settings) return;
 
                 let images = [];
                 try { images = JSON.parse(settings.craftSliderImages || '[]'); } catch(e) {}
@@ -980,7 +995,6 @@
                 if (!wrapper) return;
 
                 if (images.length === 0) {
-                    // No images uploaded — hide arrows and dots, keep plain background
                     if (prevBtn) prevBtn.style.display = 'none';
                     if (nextBtn) nextBtn.style.display = 'none';
                     return;
@@ -1029,7 +1043,32 @@
             }
         }
 
+        function initCraftSliderObserver() {
+            const craftSection = document.getElementById('craftSection');
+            if (!craftSection) {
+                loadCraftSlider();
+                return;
+            }
+            if ('IntersectionObserver' in window) {
+                const observer = new IntersectionObserver((entries, obs) => {
+                    if (entries[0].isIntersecting) {
+                        loadCraftSlider();
+                        obs.disconnect();
+                    }
+                }, { rootMargin: '350px 0px' });
+                observer.observe(craftSection);
+            } else {
+                setTimeout(loadCraftSlider, 2000);
+            }
+        }
+
         async function loadJournalStories() {
+            // If SSR already rendered journal stories, avoid duplicate fetch
+            const existingStories = document.querySelectorAll('#dynamicJournalGrid > div');
+            if (existingStories.length > 0) {
+                return;
+            }
+
             try {
                 const res = await fetch('/api/blogs');
                 if (res.ok) {
@@ -1049,7 +1088,7 @@
                     recentStories.forEach(story => {
                         html += `
                             <div style="background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); transition: transform 0.3s; cursor: pointer;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'" onclick="window.location.href='/story?id=${story.id}'">
-                                <img src="${story.image || 'https://via.placeholder.com/400x250'}" style="width: 100%; height: 250px; object-fit: cover;" loading="lazy" decoding="async">
+                                <img src="${story.image || 'https://via.placeholder.com/400x250'}" style="width: 100%; height: 250px; object-fit: cover; opacity: 0;" loading="lazy" decoding="async" onload="this.style.opacity='1';" onerror="this.onerror=null;this.src='https://via.placeholder.com/400x250';">
                                 <div style="padding: 1.5rem;">
                                     <div style="color: var(--primary-gold); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; margin-bottom: 0.5rem;">${story.category || 'Journal'}</div>
                                     <h4 style="font-family: var(--font-heading); color: var(--primary-bg); font-size: 1.4rem; margin: 0 0 1rem 0;">${story.title}</h4>
@@ -1064,6 +1103,32 @@
                 console.error("Failed to load stories", e);
             }
         }
+
+        function initJournalObserver() {
+            const journalSection = document.getElementById('atelierJournalSection');
+            if (!journalSection) {
+                loadJournalStories();
+                return;
+            }
+            if ('IntersectionObserver' in window) {
+                const observer = new IntersectionObserver((entries, obs) => {
+                    if (entries[0].isIntersecting) {
+                        loadJournalStories();
+                        obs.disconnect();
+                    }
+                }, { rootMargin: '350px 0px' });
+                observer.observe(journalSection);
+            } else {
+                setTimeout(loadJournalStories, 3000);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadHeroSlider();
+            loadFeaturedProducts();
+            initCraftSliderObserver();
+            initJournalObserver();
+        });
     </script>
     <script src="js/auth.js?v=1788610000"></script>
     <script src="js/security.js?v=1787391006"></script>

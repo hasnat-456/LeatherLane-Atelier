@@ -10,6 +10,13 @@
           <environmentVariable name="ASPNETCORE_ENVIRONMENT" value="Production" />
         </environmentVariables>
       </aspNetCore>
+      <staticContent>
+        <clientCache cacheControlMode="UseMaxAge" cacheControlMaxAge="30.00:00:00" />
+        <remove fileExtension=".webp" />
+        <mimeMap fileExtension=".webp" mimeType="image/webp" />
+        <remove fileExtension=".avif" />
+        <mimeMap fileExtension=".avif" mimeType="image/avif" />
+      </staticContent>
     </system.webServer>
   </location>
 </configuration>
