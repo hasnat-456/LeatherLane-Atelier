@@ -742,10 +742,6 @@
     <script>
         function getOptimizedThumbnail(src) {
             if (!src) return 'https://via.placeholder.com/300x250';
-            // If it's a product image and not already a thumb, try the lightweight thumbnail version
-            if (src.includes('/images/products/') && !src.includes('/thumb_')) {
-                return src.replace('/images/products/', '/images/products/thumb_');
-            }
             return src;
         }
 
