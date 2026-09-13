@@ -24,5 +24,7 @@ front/temp_backup/
 *.zip
 
 # Sensitive settings
-back/appsettings.json
-back/appsettings.Development.json
+**/appsettings*.json
+appsettings*.json
+test_extract/
+temp_backup/
