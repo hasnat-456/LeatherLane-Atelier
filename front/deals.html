@@ -945,7 +945,7 @@
                     <div style="position: relative;">
                         ${statusBadge}
                         <a href="/product-detail?id=${product.id}" style="text-decoration: none; color: inherit;">
-                            <img src="${thumbImg}" class="product-img" loading="lazy" decoding="async" onload="this.style.opacity='1';" onerror="if(!this.dataset.fallback){this.dataset.fallback='1';this.src='${rawImg}';}else{this.onerror=null;this.src='https://via.placeholder.com/300x250';}" alt="${product.name}" style="width: 100%; object-fit: cover; opacity: 0; transition: opacity 0.3s ease;">
+                            <img src="${thumbImg}" class="product-img" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='https://via.placeholder.com/300x250';" alt="${product.name}" style="width: 100%; object-fit: cover;">
                         </a>
                     </div>
                     <div class="product-info">
