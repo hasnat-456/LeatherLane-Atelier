@@ -23,8 +23,14 @@ front/uploads/
 front/temp_backup/
 *.zip
 
-# Sensitive settings
+# Sensitive settings & credentials
 **/appsettings*.json
 appsettings*.json
+appsettings.json
+appsettings.*.json
+*.env
+*.env.*
+*.secret
+secrets.json
 test_extract/
 temp_backup/
