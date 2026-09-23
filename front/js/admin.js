@@ -545,6 +545,7 @@ function renderProducts(products) {
                 <td><img src="${thumbUrl}" alt="${p.name}" loading="lazy" decoding="async" onerror="if(this.src !== '${fullImg}') { this.src='${fullImg}'; } else { this.onerror=null; this.src='https://via.placeholder.com/50'; }" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;"></td>
                 <td style="font-weight: 700; color: #8C5E3C; font-family: monospace; font-size: 0.85rem;">${p.productId || 'N/A'}</td>
                 <td style="font-weight: 500;">${p.name}</td>
+                <td><span style="background-color: rgba(74, 21, 21, 0.08); color: var(--primary-bg); padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: 600;">${p.audience || 'Men'}</span></td>
                 <td>${p.category}</td>
                 <td>Rs. ${p.price.toFixed(2)}</td>
                 <td><span style="background-color: ${badgeColor}; color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: 600;">${status}</span></td>
@@ -564,11 +565,14 @@ async function showAddProduct() {
     editingProductId = null;
     document.getElementById('formTitle').innerText = 'Add New Product';
     
+    const audSelect = document.getElementById('pAudience');
+    if (audSelect) audSelect.value = 'Men';
+
     // Ensure category dropdown options are ready
     if (!adminAllCategories || adminAllCategories.length === 0) {
         await fetchCategoriesList();
     } else {
-        populateCategorySelect('');
+        populateCategorySelect('', 'Men');
     }
 
     // Clear form
@@ -606,6 +610,10 @@ function populateProductForm(product) {
     
     document.getElementById('pName').value = product.name || '';
     
+    const productAudience = product.audience || 'Men';
+    const audSelect = document.getElementById('pAudience');
+    if (audSelect) audSelect.value = productAudience;
+    
     // Set category select value by categoryId or matching name fallback
     let targetCatVal = '';
     if (product.categoryId) {
@@ -615,7 +623,7 @@ function populateProductForm(product) {
         const catObj = catList.find(c => c.name && c.name.toLowerCase() === (product.category || '').toLowerCase());
         targetCatVal = catObj ? String(catObj.id) : (product.category || '');
     }
-    populateCategorySelect(targetCatVal);
+    populateCategorySelect(targetCatVal, productAudience);
     
     document.getElementById('pAvailabilityStatus').value = product.availabilityStatus || 'Available';
     document.getElementById('pPrice').value = product.price != null ? product.price : '';
@@ -705,10 +713,34 @@ async function editProduct(id) {
 
 async function saveProduct() {
     const name = document.getElementById('pName').value.trim();
+    const audience = document.getElementById('pAudience') ? document.getElementById('pAudience').value : 'Men';
     const catVal = document.getElementById('pCategory').value;
     const catId = parseInt(catVal) || null;
     const availabilityStatus = document.getElementById('pAvailabilityStatus').value;
     const price = parseFloat(document.getElementById('pPrice').value);
+
+    if (!name) {
+        alert("Please enter a product name.");
+        return;
+    }
+
+    if (!catId) {
+        alert("Please select a category.");
+        return;
+    }
+
+    const selectedCatObj = (adminAllCategories || []).find(c => c.id == catId);
+    if (!selectedCatObj) {
+        alert("Please select a valid category.");
+        return;
+    }
+    const catAudience = selectedCatObj.audience || 'Men';
+    if (catAudience.toLowerCase() !== audience.toLowerCase()) {
+        alert(`The selected category belongs to ${catAudience}, which does not match the product's audience (${audience}).`);
+        return;
+    }
+    
+    const categoryName = selectedCatObj.name;
     
     const descObj = {
         description: document.getElementById('pDesc_Desc').value,
@@ -793,11 +825,9 @@ async function saveProduct() {
         submitBtn.innerText = 'Saving...';
     }
 
-    const selectedCatObj = (adminAllCategories || []).find(c => c.id == catId);
-    const categoryName = selectedCatObj ? selectedCatObj.name : catVal;
-
     const payload = {
         name: name,
+        audience: audience,
         category: categoryName,
         categoryId: catId,
         availabilityStatus: availabilityStatus,
@@ -1183,28 +1213,65 @@ async function savePaymentSettings() {
 
 // Categories CRUD Management
 let adminAllCategories = [];
+let adminCurrentAudienceFilter = 'All';
 
-function populateCategorySelect(selectedVal) {
+function filterCategoriesByAudience(aud, btn) {
+    adminCurrentAudienceFilter = aud;
+    const btns = document.querySelectorAll('.btn-category-aud-filter');
+    btns.forEach(b => {
+        if (b === btn) {
+            b.classList.add('active');
+            b.style.background = 'var(--primary-bg)';
+            b.style.color = '#fff';
+        } else {
+            b.classList.remove('active');
+            b.style.background = 'transparent';
+            b.style.color = '#555';
+        }
+    });
+    renderAdminCategoriesTable();
+}
+
+function populateCategorySelect(selectedVal, audience) {
     const select = document.getElementById('pCategory');
     if (!select) return;
+    
+    const targetAudience = audience || (document.getElementById('pAudience') ? document.getElementById('pAudience').value : 'Men') || 'Men';
+    const hint = document.getElementById('categoryAudienceHint');
+    if (hint) {
+        hint.innerText = `Showing categories for ${targetAudience}`;
+    }
+    
     const currentVal = (selectedVal !== undefined && selectedVal !== null && selectedVal !== '')
         ? String(selectedVal)
-        : select.value;
+        : '';
     
-    select.innerHTML = '<option value="">Select Category</option>';
+    select.innerHTML = `<option value="">Select Category (${targetAudience})</option>`;
+    let hasMatch = false;
     if (adminAllCategories && adminAllCategories.length > 0) {
         adminAllCategories.forEach(c => {
-            if (c.isActive) {
+            const catAud = c.audience || 'Men';
+            if (c.isActive && catAud.toLowerCase() === targetAudience.toLowerCase()) {
                 const opt = document.createElement('option');
                 opt.value = c.id;
                 opt.textContent = c.name;
+                if (currentVal && (String(c.id) === currentVal || c.name.toLowerCase() === currentVal.toLowerCase())) {
+                    opt.selected = true;
+                    hasMatch = true;
+                }
                 select.appendChild(opt);
             }
         });
     }
-    if (currentVal) {
-        select.value = currentVal;
+    if (!hasMatch) {
+        select.value = '';
     }
+}
+
+function onProductAudienceChanged() {
+    const audSelect = document.getElementById('pAudience');
+    const aud = audSelect ? audSelect.value : 'Men';
+    populateCategorySelect('', aud);
 }
 
 async function fetchCategoriesList() {
@@ -1216,8 +1283,9 @@ async function fetchCategoriesList() {
         if (res.ok) {
             adminAllCategories = await res.json() || [];
             
-            // Populate category select element in product add/edit form
-            populateCategorySelect();
+            // Populate category select element in product add/edit form for current audience
+            const currentAud = document.getElementById('pAudience') ? document.getElementById('pAudience').value : 'Men';
+            populateCategorySelect(document.getElementById('pCategory')?.value, currentAud);
             
             renderAdminCategoriesTable();
         }
@@ -1230,25 +1298,33 @@ function renderAdminCategoriesTable() {
     const tbody = document.getElementById('adminCategoriesTableBody');
     if (!tbody) return;
 
-    if (adminAllCategories.length === 0) {
+    let list = adminAllCategories || [];
+    if (adminCurrentAudienceFilter && adminCurrentAudienceFilter !== 'All') {
+        list = list.filter(c => (c.audience || 'Men').toLowerCase() === adminCurrentAudienceFilter.toLowerCase());
+    }
+
+    if (list.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="5" style="text-align:center; color:#666; padding:2rem;">No categories found.</td>
+                <td colspan="6" style="text-align:center; color:#666; padding:2rem;">No categories found for audience "${adminCurrentAudienceFilter}".</td>
             </tr>
         `;
         return;
     }
 
     let html = '';
-    adminAllCategories.forEach(c => {
+    list.forEach(c => {
         const statusBadge = c.isActive 
             ? `<span style="background-color: #2e6b4d; color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: 600;">Active</span>`
             : `<span style="background-color: #dc3545; color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: 600;">Inactive</span>`;
         
+        const audBadge = `<span style="background-color: #4A1515; color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: 600;">${c.audience || 'Men'}</span>`;
+
         html += `
             <tr>
                 <td style="font-weight: bold;">${c.orderNumber || '#' + c.id}</td>
                 <td>${c.name}</td>
+                <td>${audBadge}</td>
                 <td>${statusBadge}</td>
                 <td>${c.displayOrder}</td>
                 <td>
@@ -1266,6 +1342,7 @@ function renderAdminCategoriesTable() {
 function openAddCategoryModal() {
     document.getElementById('editCategoryId').value = '';
     document.getElementById('categoryNameInput').value = '';
+    document.getElementById('categoryAudienceInput').value = (adminCurrentAudienceFilter && adminCurrentAudienceFilter !== 'All') ? adminCurrentAudienceFilter : 'Men';
     document.getElementById('categoryOrderInput').value = '0';
     document.getElementById('categoryActiveInput').checked = true;
     document.getElementById('categoryModalTitle').innerText = 'Add Category';
@@ -1278,6 +1355,7 @@ function openEditCategoryModal(id) {
 
     document.getElementById('editCategoryId').value = cat.id;
     document.getElementById('categoryNameInput').value = cat.name;
+    document.getElementById('categoryAudienceInput').value = cat.audience || 'Men';
     document.getElementById('categoryOrderInput').value = cat.displayOrder;
     document.getElementById('categoryActiveInput').checked = cat.isActive;
     document.getElementById('categoryModalTitle').innerText = 'Edit Category';
@@ -1291,6 +1369,7 @@ function closeCategoryModal() {
 async function saveCategory() {
     const id = document.getElementById('editCategoryId').value;
     const name = document.getElementById('categoryNameInput').value.trim();
+    const audience = document.getElementById('categoryAudienceInput').value;
     const order = parseInt(document.getElementById('categoryOrderInput').value) || 0;
     const isActive = document.getElementById('categoryActiveInput').checked;
 
@@ -1301,6 +1380,7 @@ async function saveCategory() {
 
     const payload = {
         name: name,
+        audience: audience,
         displayOrder: order,
         isActive: isActive
     };
@@ -2063,6 +2143,11 @@ async function loadSliderSettings() {
             heroSliderImages = parsedHero || [];
             craftSliderImages = parsedCraft || [];
             renderSliders();
+            
+            // Load Collection Covers
+            document.getElementById('menCollectionPreview').src = data.menCollectionImage || 'https://via.placeholder.com/300';
+            document.getElementById('womenCollectionPreview').src = data.womenCollectionImage || 'https://via.placeholder.com/300';
+            document.getElementById('childrenCollectionPreview').src = data.childrenCollectionImage || 'https://via.placeholder.com/300';
         }
     } catch (e) {
         console.error('Error loading slider settings', e);
@@ -2182,6 +2267,100 @@ async function saveSliderSettings() {
         alert('Error saving sliders.');
     } finally {
         btn.innerText = 'Save Sliders';
+    }
+}
+
+// Tracks uploaded URLs waiting to be saved
+const pendingCollectionImages = { Men: null, Women: null, Children: null };
+
+async function previewCollectionImage(audience, silent = false) {
+    const fileInput = document.getElementById(audience.toLowerCase() + 'CollectionFile');
+    const file = fileInput.files[0];
+    if (!file) {
+        if (!silent) alert("Please select an image file first.");
+        return false;
+    }
+
+    const token = localStorage.getItem('token') || localStorage.getItem('adminToken');
+    const compressedFile = await compressImageFile(file, 800, 800, 0.85);
+    const formData = new FormData();
+    formData.append('imageFile', compressedFile);
+
+    try {
+        const res = await fetch('/api/adminapi/slider-image', {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` },
+            body: formData
+        });
+
+        if (res.ok) {
+            const data = await res.json();
+            pendingCollectionImages[audience] = data.url;
+            document.getElementById(audience.toLowerCase() + 'CollectionPreview').src = data.url;
+            fileInput.value = '';
+            if (!silent) alert(`${audience}'s cover image uploaded. Click "Save Collection Covers" to apply.`);
+            return true;
+        } else {
+            if (!silent) alert("Upload failed.");
+            return false;
+        }
+    } catch (e) {
+        console.error(e);
+        if (!silent) alert('Error uploading cover.');
+        return false;
+    }
+}
+
+async function saveCollectionCovers() {
+    const btn = document.getElementById('saveCollectionCoversBtn');
+    
+    btn.innerText = 'Uploading & Saving...';
+    btn.disabled = true;
+
+    // Auto-upload any files they chose but forgot to hit 'Upload' for
+    if (document.getElementById('menCollectionFile').files[0]) await previewCollectionImage('Men', true);
+    if (document.getElementById('womenCollectionFile').files[0]) await previewCollectionImage('Women', true);
+    if (document.getElementById('childrenCollectionFile').files[0]) await previewCollectionImage('Children', true);
+    
+    if (!pendingCollectionImages.Men && !pendingCollectionImages.Women && !pendingCollectionImages.Children) {
+        alert("No new cover images to save. Please choose a file first.");
+        btn.innerText = 'Save Collection Covers';
+        btn.disabled = false;
+        return;
+    }
+
+    try {
+        const token = localStorage.getItem('token') || localStorage.getItem('adminToken');
+        const res1 = await fetch('/api/settings');
+        const currentData = await res1.json();
+
+        if (pendingCollectionImages.Men) currentData.menCollectionImage = pendingCollectionImages.Men;
+        if (pendingCollectionImages.Women) currentData.womenCollectionImage = pendingCollectionImages.Women;
+        if (pendingCollectionImages.Children) currentData.childrenCollectionImage = pendingCollectionImages.Children;
+
+        const res2 = await fetch('/api/settings', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(currentData)
+        });
+
+        if (res2.ok) {
+            pendingCollectionImages.Men = null;
+            pendingCollectionImages.Women = null;
+            pendingCollectionImages.Children = null;
+            alert('Collection covers saved successfully!');
+        } else {
+            alert('Failed to save collection covers.');
+        }
+    } catch (e) {
+        console.error(e);
+        alert('Error saving collection covers.');
+    } finally {
+        btn.innerText = 'Save Collection Covers';
+        btn.disabled = false;
     }
 }
 

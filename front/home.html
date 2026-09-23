@@ -589,6 +589,33 @@
         </div>
     </section>
 
+    <!-- Shop By Collection -->
+    <section id="shopByCollectionSection" class="products-section" style="padding: 4rem 2rem 1rem; background-color: var(--light-bg); display: none;">
+        <div class="section-header-row" style="justify-content: center; margin-bottom: 3rem;">
+            <h3 class="section-header-title">Shop By Collection</h3>
+        </div>
+        <div style="display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap; max-width: 1200px; margin: 0 auto;">
+            <a id="menCollectionCard" href="/products?audience=Men" style="text-decoration: none; color: inherit; width: 300px; text-align: center; display: none; overflow: hidden; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); transition: transform 0.2s; background: #fff;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+                <div id="menCollectionCover" style="height: 350px; background-image: url('https://images.unsplash.com/photo-1617137968427-85924c800a22?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80'); background-size: cover; background-position: center;"></div>
+                <div style="padding: 1.5rem;">
+                    <h4 style="font-family: var(--font-heading); font-size: 1.25rem; color: var(--primary-bg); margin: 0;">MEN</h4>
+                </div>
+            </a>
+            <a id="womenCollectionCard" href="/products?audience=Women" style="text-decoration: none; color: inherit; width: 300px; text-align: center; display: none; overflow: hidden; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); transition: transform 0.2s; background: #fff;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+                <div id="womenCollectionCover" style="height: 350px; background-image: url('https://images.unsplash.com/photo-1543163521-1bf539c55dd2?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80'); background-size: cover; background-position: center;"></div>
+                <div style="padding: 1.5rem;">
+                    <h4 style="font-family: var(--font-heading); font-size: 1.25rem; color: var(--primary-bg); margin: 0;">WOMEN</h4>
+                </div>
+            </a>
+            <a id="childrenCollectionCard" href="/products?audience=Children" style="text-decoration: none; color: inherit; width: 300px; text-align: center; display: none; overflow: hidden; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); transition: transform 0.2s; background: #fff;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+                <div id="childrenCollectionCover" style="height: 350px; background-image: url('https://images.unsplash.com/photo-1514090458221-65bb69cf63e6?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80'); background-size: cover; background-position: center;"></div>
+                <div style="padding: 1.5rem;">
+                    <h4 style="font-family: var(--font-heading); font-size: 1.25rem; color: var(--primary-bg); margin: 0;">CHILDREN</h4>
+                </div>
+            </a>
+        </div>
+    </section>
+
     <!-- Featured Categories Section -->
     <div id="dynamicFeaturedCategories">
         <!-- Content will be loaded dynamically here -->
@@ -823,23 +850,23 @@
                         `;
                     }
 
-                    // Group all products by category name
+                    // Group all products by audience
                     const groupedProducts = {};
                     if (allProducts && allProducts.length > 0) {
                         allProducts.forEach(p => {
-                            const catName = p.category || 'Other';
-                            if (!groupedProducts[catName]) groupedProducts[catName] = [];
-                            groupedProducts[catName].push(p);
+                            const audienceName = p.audience || 'Men';
+                            if (!groupedProducts[audienceName]) groupedProducts[audienceName] = [];
+                            groupedProducts[audienceName].push(p);
                         });
                     }
 
-                    // 2. Loop through ALL active categories to render their sections
-                    categories.forEach((cat, index) => {
-                        const categoryName = cat.name;
-                        const items = groupedProducts[categoryName] || [];
+                    // 2. Loop through Audiences to render their sections
+                    const audiences = ['Men', 'Women', 'Children'];
+                    audiences.forEach((audienceName, index) => {
+                        const items = groupedProducts[audienceName] || [];
                         
                         if (items.length === 0) {
-                            return; // Skip categories with no products
+                            return; // Skip audiences with no products
                         }
 
                         // Alternate background color for visual distinction
@@ -848,8 +875,8 @@
                         html += `
                         <section class="products-section" style="padding: 4rem 2rem; background-color: ${bgColor}; border-bottom: 1px solid #eaeaea;">
                             <div class="section-header-row">
-                                <h3 class="section-header-title">${categoryName}</h3>
-                                ${items.length > 4 ? `<a href="/products?category=${encodeURIComponent(categoryName)}" class="section-view-all-link">See More &rarr;</a>` : ''}
+                                <h3 class="section-header-title">${audienceName}'s Collection</h3>
+                                ${items.length > 4 ? `<a href="/products?audience=${encodeURIComponent(audienceName)}" class="section-view-all-link">See More &rarr;</a>` : ''}
                             </div>
                             <div class="product-grid" style="margin-bottom: 2rem;">
                         `;
@@ -1075,11 +1102,52 @@
             }
         }
 
+        async function loadCollectionCovers() {
+            try {
+                const settings = await fetchSiteSettings();
+                if (settings) {
+                    if (settings.menCollectionImage) {
+                        document.getElementById('menCollectionCover').style.backgroundImage = `url('${settings.menCollectionImage}')`;
+                    }
+                    if (settings.womenCollectionImage) {
+                        document.getElementById('womenCollectionCover').style.backgroundImage = `url('${settings.womenCollectionImage}')`;
+                    }
+                    if (settings.childrenCollectionImage) {
+                        document.getElementById('childrenCollectionCover').style.backgroundImage = `url('${settings.childrenCollectionImage}')`;
+                    }
+                }
+                
+                // Show/hide cards based on inventory
+                const res = await fetch('/api/products');
+                if (res.ok) {
+                    const allProducts = await res.json();
+                    let hasMen = false, hasWomen = false, hasChildren = false;
+                    allProducts.forEach(p => {
+                        const a = p.audience || 'Men';
+                        if (a === 'Men') hasMen = true;
+                        if (a === 'Women') hasWomen = true;
+                        if (a === 'Children') hasChildren = true;
+                    });
+                    
+                    if (hasMen) document.getElementById('menCollectionCard').style.display = 'block';
+                    if (hasWomen) document.getElementById('womenCollectionCard').style.display = 'block';
+                    if (hasChildren) document.getElementById('childrenCollectionCard').style.display = 'block';
+                    
+                    if (hasMen || hasWomen || hasChildren) {
+                        document.getElementById('shopByCollectionSection').style.display = 'block';
+                    }
+                }
+            } catch (e) {
+                console.error("Failed to load collection covers", e);
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             loadHeroSlider();
             loadFeaturedProducts();
             loadCraftSlider();
             loadJournalStories();
+            loadCollectionCovers();
         });
     </script>
     <script src="js/auth.js?v=1788610000"></script>

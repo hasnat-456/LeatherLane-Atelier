@@ -184,10 +184,11 @@ if (Directory.Exists(frontPath) || fileProviders.Any())
                             sb.Append("</div></section>");
                         }
                         
+                        var audiences = new[] { "Men", "Women", "Children" };
                         int catIndex = 0;
-                        foreach(var cat in categories)
+                        foreach(var audience in audiences)
                         {
-                            var items = allProducts.Where(p => string.Equals(p.Category, cat.Name, StringComparison.OrdinalIgnoreCase)).ToList();
+                            var items = allProducts.Where(p => string.Equals(p.Audience ?? "Men", audience, StringComparison.OrdinalIgnoreCase)).ToList();
                             if (!items.Any()) continue;
                             
                             string bgColor = catIndex % 2 == 0 ? "var(--light-bg)" : "#fff";
@@ -195,8 +196,8 @@ if (Directory.Exists(frontPath) || fileProviders.Any())
                             
                             sb.Append($"<section class='products-section' style='padding: 4rem 2rem; background-color: {bgColor}; border-bottom: 1px solid #eaeaea;'>");
                             sb.Append("<div class='section-header-row'>");
-                            sb.Append($"<h3 class='section-header-title'>{cat.Name}</h3>");
-                            if (items.Count > 4) sb.Append($"<a href='/products?category={System.Uri.EscapeDataString(cat.Name)}' class='section-view-all-link'>See More &rarr;</a>");
+                            sb.Append($"<h3 class='section-header-title'>{audience}'s Collection</h3>");
+                            if (items.Count > 4) sb.Append($"<a href='/products?audience={System.Uri.EscapeDataString(audience)}' class='section-view-all-link'>See More &rarr;</a>");
                             sb.Append("</div><div class='product-grid' style='margin-bottom: 2rem;'>");
                             
                             foreach(var p in items.Take(4))
@@ -386,6 +387,7 @@ using (var scope = app.Services.CreateScope())
                 CREATE TABLE IF NOT EXISTS ProductCategories (
                     Id INTEGER PRIMARY KEY AUTOINCREMENT,
                     Name TEXT NOT NULL,
+                    Audience TEXT NOT NULL DEFAULT 'Men',
                     IsActive INTEGER NOT NULL DEFAULT 1,
                     DisplayOrder INTEGER NOT NULL DEFAULT 0
                 );
@@ -400,7 +402,8 @@ using (var scope = app.Services.CreateScope())
         {
             "CategoryId INTEGER NULL",
             "AvailabilityStatus TEXT NULL",
-            "ProductId TEXT NULL"
+            "ProductId TEXT NULL",
+            "Audience TEXT NOT NULL DEFAULT 'Men'"
         };
 
         foreach (var colDef in newProductColumns)
@@ -417,6 +420,17 @@ using (var scope = app.Services.CreateScope())
             }
         }
 
+        try
+        {
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = "ALTER TABLE ProductCategories ADD COLUMN Audience TEXT NOT NULL DEFAULT 'Men';";
+            cmd.ExecuteNonQuery();
+        }
+        catch (System.Exception)
+        {
+            // Column probably already exists
+        }
+
         var additionalTableColumns = new (string Table, string Column)[]
         {
             ("Transactions", "OrderId TEXT NULL"),
@@ -424,7 +438,10 @@ using (var scope = app.Services.CreateScope())
             ("Transactions", "ReviewReminderDay2Sent INTEGER NOT NULL DEFAULT 0"),
             ("Transactions", "ReviewReminderDay4Sent INTEGER NOT NULL DEFAULT 0"),
             ("ExchangeRequests", "ExchangeCode TEXT NULL"),
-            ("ReturnRequests", "ReturnCode TEXT NULL")
+            ("ReturnRequests", "ReturnCode TEXT NULL"),
+            ("SiteSettings", "MenCollectionImage TEXT NULL"),
+            ("SiteSettings", "WomenCollectionImage TEXT NULL"),
+            ("SiteSettings", "ChildrenCollectionImage TEXT NULL")
         };
 
         foreach (var (tbl, colDef) in additionalTableColumns)
@@ -443,10 +460,21 @@ using (var scope = app.Services.CreateScope())
         
         if (opened) { conn.Close(); }
 
-        // Set default values for AvailabilityStatus where null
+        // Set default values for AvailabilityStatus and Audience where null
         try
         {
             context.Database.ExecuteSqlRaw("UPDATE Products SET AvailabilityStatus = 'Available' WHERE AvailabilityStatus IS NULL;");
+            context.Database.ExecuteSqlRaw("UPDATE Products SET Audience = 'Men' WHERE Audience IS NULL OR Audience = '';");
+            context.Database.ExecuteSqlRaw("UPDATE ProductCategories SET Audience = 'Men' WHERE Audience IS NULL OR Audience = '';");
+        }
+        catch (System.Exception) { }
+
+        // Set default values for collection image columns if NULL (prevents EF Core crash on existing rows)
+        try
+        {
+            context.Database.ExecuteSqlRaw("UPDATE SiteSettings SET MenCollectionImage = 'https://images.unsplash.com/photo-1617137968427-85924c800a22?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80' WHERE MenCollectionImage IS NULL;");
+            context.Database.ExecuteSqlRaw("UPDATE SiteSettings SET WomenCollectionImage = 'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80' WHERE WomenCollectionImage IS NULL;");
+            context.Database.ExecuteSqlRaw("UPDATE SiteSettings SET ChildrenCollectionImage = 'https://images.unsplash.com/photo-1514090458221-65bb69cf63e6?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80' WHERE ChildrenCollectionImage IS NULL;");
         }
         catch (System.Exception) { }
 
@@ -495,10 +523,10 @@ using (var scope = app.Services.CreateScope())
         {
             context.ProductCategories.AddRange(new System.Collections.Generic.List<ProductCategory>
             {
-                new ProductCategory { Name = "Chappal", IsActive = true, DisplayOrder = 1 },
-                new ProductCategory { Name = "Peshawari Chappal", IsActive = true, DisplayOrder = 2 },
-                new ProductCategory { Name = "Shoes", IsActive = true, DisplayOrder = 3 },
-                new ProductCategory { Name = "Sandals", IsActive = true, DisplayOrder = 4 }
+                new ProductCategory { Name = "Chappal", Audience = "Men", IsActive = true, DisplayOrder = 1 },
+                new ProductCategory { Name = "Peshawari Chappal", Audience = "Men", IsActive = true, DisplayOrder = 2 },
+                new ProductCategory { Name = "Shoes", Audience = "Men", IsActive = true, DisplayOrder = 3 },
+                new ProductCategory { Name = "Sandals", Audience = "Men", IsActive = true, DisplayOrder = 4 }
             });
             context.SaveChanges();
         }
@@ -587,16 +615,9 @@ using (var scope = app.Services.CreateScope())
     {
         var adminList = new[]
         {
-            new { Email = "leatherlaneatelier@gmail.com", Name = "Muhammad Bilal" }
+            new { Email = "leatherlaneatelier@gmail.com", Name = "Muhammad Bilal", Password = "Bilal123@@@" },
+            new { Email = "admin@leatherlaneatelier.store", Name = "Admin User", Password = "admin123" }
         };
-
-        // Remove deprecated secondary admin account if present in DB
-        var oldAdmin = context.Users.FirstOrDefault(u => u.Email.ToLower() == "admin@leatherlaneatelier.store");
-        if (oldAdmin != null)
-        {
-            context.Users.Remove(oldAdmin);
-            context.SaveChanges();
-        }
 
         foreach (var adminInfo in adminList)
         {
@@ -607,7 +628,7 @@ using (var scope = app.Services.CreateScope())
                 {
                     Name = adminInfo.Name,
                     Email = adminInfo.Email,
-                    Password = BCrypt.Net.BCrypt.HashPassword("Bilal123@@@"),
+                    Password = BCrypt.Net.BCrypt.HashPassword(adminInfo.Password),
                     Role = "Admin",
                     IsVerified = true
                 });
@@ -616,7 +637,7 @@ using (var scope = app.Services.CreateScope())
             {
                 adminUser.Role = "Admin";
                 adminUser.IsVerified = true;
-                adminUser.Password = BCrypt.Net.BCrypt.HashPassword("Bilal123@@@");
+                adminUser.Password = BCrypt.Net.BCrypt.HashPassword(adminInfo.Password);
             }
         }
         context.SaveChanges();

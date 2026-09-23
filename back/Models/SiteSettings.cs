@@ -23,5 +23,9 @@ namespace LeatherLane_Atelier.Models
         
         public string HeroSliderImages { get; set; } = "[\"images/1.jpeg\",\"images/2.jpeg\",\"images/3.jpeg\",\"images/4.jpeg\"]";
         public string CraftSliderImages { get; set; } = "[\"upload/iiiii.mp4\",\"upload/2.webp\",\"upload/3.jpg\",\"upload/4.avif\",\"upload/5.jpg\",\"upload/6.jpg\",\"upload/7.avif\"]";
+        
+        public string? MenCollectionImage { get; set; } = "https://images.unsplash.com/photo-1617137968427-85924c800a22?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80";
+        public string? WomenCollectionImage { get; set; } = "https://images.unsplash.com/photo-1543163521-1bf539c55dd2?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80";
+        public string? ChildrenCollectionImage { get; set; } = "https://images.unsplash.com/photo-1514090458221-65bb69cf63e6?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80";
     }
 }

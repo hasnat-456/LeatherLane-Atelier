@@ -28,9 +28,12 @@ namespace LeatherLane_Atelier.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetProducts([FromQuery] string? category, [FromQuery] string? search, [FromQuery] bool? isFeatured)
+        public async Task<IActionResult> GetProducts([FromQuery] string? category, [FromQuery] string? search, [FromQuery] bool? isFeatured, [FromQuery] string? audience)
         {
             var query = _context.Products.AsNoTracking().Where(p => p.AvailabilityStatus == null || p.AvailabilityStatus != "Discontinued").AsQueryable();
+
+            if (!string.IsNullOrEmpty(audience))
+                query = query.Where(p => (p.Audience ?? "Men") == audience);
 
             if (!string.IsNullOrEmpty(category))
                 query = query.Where(p => p.Category == category);
@@ -65,6 +68,7 @@ namespace LeatherLane_Atelier.Controllers
                     p.OriginalPrice,
                     p.Category,
                     p.CategoryId,
+                    Audience = p.Audience ?? "Men",
                     AvailabilityStatus = p.AvailabilityStatus ?? "Available",
                     p.Subcategory,
                     p.Thumbnail,
@@ -84,10 +88,16 @@ namespace LeatherLane_Atelier.Controllers
         }
 
         [HttpGet("categories")]
-        public async Task<IActionResult> GetActiveCategories()
+        public async Task<IActionResult> GetActiveCategories([FromQuery] string? audience)
         {
-            var categories = await _context.ProductCategories
+            var query = _context.ProductCategories
                 .Where(c => c.IsActive)
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(audience))
+                query = query.Where(c => (c.Audience ?? "Men") == audience);
+
+            var categories = await query
                 .OrderBy(c => c.DisplayOrder)
                 .ThenBy(c => c.Name)
                 .ToListAsync();
@@ -120,21 +130,49 @@ namespace LeatherLane_Atelier.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateProduct([FromBody] Product product)
         {
+            if (string.IsNullOrWhiteSpace(product.Audience))
+            {
+                product.Audience = "Men";
+            }
+            product.Audience = product.Audience.Trim();
+            if (!new[] { "Men", "Women", "Children" }.Contains(product.Audience, StringComparer.OrdinalIgnoreCase))
+            {
+                return BadRequest(new { message = "Invalid audience. Supported audiences are: Men, Women, Children." });
+            }
+            product.Gender = product.Audience;
+
+            ProductCategory? category = null;
             if (product.CategoryId.HasValue)
             {
-                var category = await _context.ProductCategories.FindAsync(product.CategoryId.Value);
-                if (category != null)
+                category = await _context.ProductCategories.FindAsync(product.CategoryId.Value);
+                if (category == null)
                 {
-                    product.Category = category.Name;
+                    return BadRequest(new { message = "Selected category does not exist." });
                 }
+                product.Category = category.Name;
             }
             else if (!string.IsNullOrEmpty(product.Category))
             {
-                var category = await _context.ProductCategories.FirstOrDefaultAsync(c => c.Name == product.Category);
-                if (category != null)
+                category = await _context.ProductCategories.FirstOrDefaultAsync(c => c.Name == product.Category && (c.Audience ?? "Men") == product.Audience);
+                if (category == null)
                 {
-                    product.CategoryId = category.Id;
+                    var otherCat = await _context.ProductCategories.FirstOrDefaultAsync(c => c.Name == product.Category);
+                    if (otherCat != null)
+                    {
+                        return BadRequest(new { message = $"Category '{otherCat.Name}' belongs to audience '{otherCat.Audience}', but product audience is '{product.Audience}'. The category must match the product's audience." });
+                    }
+                    return BadRequest(new { message = "Selected category does not exist." });
                 }
+                product.CategoryId = category.Id;
+            }
+            else
+            {
+                return BadRequest(new { message = "Category is required." });
+            }
+
+            if (category != null && !string.Equals(category.Audience ?? "Men", product.Audience, StringComparison.OrdinalIgnoreCase))
+            {
+                return BadRequest(new { message = $"Category '{category.Name}' belongs to audience '{category.Audience}', but product audience is '{product.Audience}'. The category must match the product's audience." });
             }
 
             if (string.IsNullOrEmpty(product.AvailabilityStatus))
@@ -256,21 +294,51 @@ namespace LeatherLane_Atelier.Controllers
             var uploadsFolder = Path.Combine(frontPath, "images", "products");
             Directory.CreateDirectory(uploadsFolder);
 
+            if (string.IsNullOrWhiteSpace(product.Audience))
+            {
+                product.Audience = existingProduct.Audience ?? "Men";
+            }
+            product.Audience = product.Audience.Trim();
+            if (!new[] { "Men", "Women", "Children" }.Contains(product.Audience, StringComparer.OrdinalIgnoreCase))
+            {
+                return BadRequest(new { message = "Invalid audience. Supported audiences are: Men, Women, Children." });
+            }
+
             existingProduct.Name = product.Name;
-            existingProduct.CategoryId = product.CategoryId;
             existingProduct.IsFeatured = product.IsFeatured;
-            
+            existingProduct.Audience = product.Audience;
+            existingProduct.Gender = product.Audience;
+
+            ProductCategory? category = null;
             if (product.CategoryId.HasValue)
             {
-                var category = await _context.ProductCategories.FindAsync(product.CategoryId.Value);
-                if (category != null)
+                category = await _context.ProductCategories.FindAsync(product.CategoryId.Value);
+                if (category == null)
                 {
-                    existingProduct.Category = category.Name;
+                    return BadRequest(new { message = "Selected category does not exist." });
                 }
+                existingProduct.Category = category.Name;
+                existingProduct.CategoryId = category.Id;
             }
-            else
+            else if (!string.IsNullOrEmpty(product.Category))
             {
-                existingProduct.Category = product.Category;
+                category = await _context.ProductCategories.FirstOrDefaultAsync(c => c.Name == product.Category && (c.Audience ?? "Men") == product.Audience);
+                if (category == null)
+                {
+                    var otherCat = await _context.ProductCategories.FirstOrDefaultAsync(c => c.Name == product.Category);
+                    if (otherCat != null)
+                    {
+                        return BadRequest(new { message = $"Category '{otherCat.Name}' belongs to audience '{otherCat.Audience}', but product audience is '{product.Audience}'. The category must match the product's audience." });
+                    }
+                    return BadRequest(new { message = "Selected category does not exist." });
+                }
+                existingProduct.Category = category.Name;
+                existingProduct.CategoryId = category.Id;
+            }
+
+            if (category != null && !string.Equals(category.Audience ?? "Men", product.Audience, StringComparison.OrdinalIgnoreCase))
+            {
+                return BadRequest(new { message = $"Category '{category.Name}' belongs to audience '{category.Audience}', but product audience is '{product.Audience}'. The category must match the product's audience." });
             }
 
             existingProduct.Price = product.Price;

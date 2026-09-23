@@ -55,6 +55,9 @@ namespace LeatherLane_Atelier.Controllers
             settings.SizeGuideData = updatedSettings.SizeGuideData;
             settings.HeroSliderImages = updatedSettings.HeroSliderImages ?? settings.HeroSliderImages;
             settings.CraftSliderImages = updatedSettings.CraftSliderImages ?? settings.CraftSliderImages;
+            settings.MenCollectionImage = updatedSettings.MenCollectionImage ?? settings.MenCollectionImage;
+            settings.WomenCollectionImage = updatedSettings.WomenCollectionImage ?? settings.WomenCollectionImage;
+            settings.ChildrenCollectionImage = updatedSettings.ChildrenCollectionImage ?? settings.ChildrenCollectionImage;
 
             await _context.SaveChangesAsync();
 

@@ -742,9 +742,14 @@ namespace LeatherLane_Atelier.Controllers
 
         // Category Management Endpoints
         [HttpGet("categories")]
-        public async Task<IActionResult> GetCategories()
+        public async Task<IActionResult> GetCategories([FromQuery] string? audience)
         {
-            var categories = await _context.ProductCategories
+            var query = _context.ProductCategories.AsQueryable();
+            if (!string.IsNullOrEmpty(audience))
+            {
+                query = query.Where(c => (c.Audience ?? "Men") == audience);
+            }
+            var categories = await query
                 .OrderBy(c => c.DisplayOrder)
                 .ThenBy(c => c.Name)
                 .ToListAsync();
@@ -757,6 +762,16 @@ namespace LeatherLane_Atelier.Controllers
             if (string.IsNullOrEmpty(category.Name))
             {
                 return BadRequest(new { message = "Category name is required." });
+            }
+
+            if (string.IsNullOrWhiteSpace(category.Audience))
+            {
+                category.Audience = "Men";
+            }
+            category.Audience = category.Audience.Trim();
+            if (!new[] { "Men", "Women", "Children" }.Contains(category.Audience, StringComparer.OrdinalIgnoreCase))
+            {
+                return BadRequest(new { message = "Invalid audience. Supported audiences are: Men, Women, Children." });
             }
 
             _context.ProductCategories.Add(category);
@@ -775,8 +790,25 @@ namespace LeatherLane_Atelier.Controllers
                 return BadRequest(new { message = "Category name is required." });
             }
 
+            var targetAudience = string.IsNullOrWhiteSpace(dto.Audience) ? (category.Audience ?? "Men") : dto.Audience.Trim();
+            if (!new[] { "Men", "Women", "Children" }.Contains(targetAudience, StringComparer.OrdinalIgnoreCase))
+            {
+                return BadRequest(new { message = "Invalid audience. Supported audiences are: Men, Women, Children." });
+            }
+
+            // If audience is changing, verify no products are assigned to this category
+            if (!string.Equals(category.Audience ?? "Men", targetAudience, StringComparison.OrdinalIgnoreCase))
+            {
+                var associatedProductsCount = await _context.Products.CountAsync(p => p.CategoryId == id || p.Category == category.Name);
+                if (associatedProductsCount > 0)
+                {
+                    return BadRequest(new { message = $"Cannot change category audience from '{category.Audience}' to '{targetAudience}' because it contains {associatedProductsCount} associated product(s). Please reassign or update those products first." });
+                }
+            }
+
             var oldName = category.Name;
             category.Name = dto.Name;
+            category.Audience = targetAudience;
             category.IsActive = dto.IsActive;
             category.DisplayOrder = dto.DisplayOrder;
 

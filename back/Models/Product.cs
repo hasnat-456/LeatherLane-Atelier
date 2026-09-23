@@ -28,6 +28,7 @@ namespace LeatherLane_Atelier.Models
         public List<string> Sizes { get; set; } = new();
         public string? Material { get; set; }
         public string? Gender { get; set; }
+        public string Audience { get; set; } = "Men";
         
         public int Stock { get; set; } = 0;
         public double Rating { get; set; } = 0;
