@@ -1102,52 +1102,11 @@
             }
         }
 
-        async function loadCollectionCovers() {
-            try {
-                const settings = await fetchSiteSettings();
-                if (settings) {
-                    if (settings.menCollectionImage) {
-                        document.getElementById('menCollectionCover').style.backgroundImage = `url('${settings.menCollectionImage}')`;
-                    }
-                    if (settings.womenCollectionImage) {
-                        document.getElementById('womenCollectionCover').style.backgroundImage = `url('${settings.womenCollectionImage}')`;
-                    }
-                    if (settings.childrenCollectionImage) {
-                        document.getElementById('childrenCollectionCover').style.backgroundImage = `url('${settings.childrenCollectionImage}')`;
-                    }
-                }
-                
-                // Show/hide cards based on inventory
-                const res = await fetch('/api/products');
-                if (res.ok) {
-                    const allProducts = await res.json();
-                    let hasMen = false, hasWomen = false, hasChildren = false;
-                    allProducts.forEach(p => {
-                        const a = p.audience || 'Men';
-                        if (a === 'Men') hasMen = true;
-                        if (a === 'Women') hasWomen = true;
-                        if (a === 'Children') hasChildren = true;
-                    });
-                    
-                    if (hasMen) document.getElementById('menCollectionCard').style.display = 'block';
-                    if (hasWomen) document.getElementById('womenCollectionCard').style.display = 'block';
-                    if (hasChildren) document.getElementById('childrenCollectionCard').style.display = 'block';
-                    
-                    if (hasMen || hasWomen || hasChildren) {
-                        document.getElementById('shopByCollectionSection').style.display = 'block';
-                    }
-                }
-            } catch (e) {
-                console.error("Failed to load collection covers", e);
-            }
-        }
-
         document.addEventListener('DOMContentLoaded', () => {
             loadHeroSlider();
             loadFeaturedProducts();
             loadCraftSlider();
             loadJournalStories();
-            loadCollectionCovers();
         });
     </script>
     <script src="js/auth.js?v=1788610000"></script>

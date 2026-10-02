@@ -35,7 +35,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
             ValidateIssuer = false,
             ValidateAudience = false,
-            ValidateLifetime = true
+            ValidateLifetime = true,
+            RoleClaimType = "role"
         };
     });
 
@@ -168,6 +169,23 @@ if (Directory.Exists(frontPath) || fileProviders.Any())
 
                     if (path.Equals("/home.html", StringComparison.OrdinalIgnoreCase))
                     {
+                        var siteSettings = await dbContext.SiteSettings.FirstOrDefaultAsync();
+                        if (siteSettings != null)
+                        {
+                            if (!string.IsNullOrEmpty(siteSettings.MenCollectionImage)) htmlContent = htmlContent.Replace("url('https://images.unsplash.com/photo-1617137968427-85924c800a22?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80')", $"url('{siteSettings.MenCollectionImage}')");
+                            if (!string.IsNullOrEmpty(siteSettings.WomenCollectionImage)) htmlContent = htmlContent.Replace("url('https://images.unsplash.com/photo-1543163521-1bf539c55dd2?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80')", $"url('{siteSettings.WomenCollectionImage}')");
+                            if (!string.IsNullOrEmpty(siteSettings.ChildrenCollectionImage)) htmlContent = htmlContent.Replace("url('https://images.unsplash.com/photo-1514090458221-65bb69cf63e6?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80')", $"url('{siteSettings.ChildrenCollectionImage}')");
+                        }
+
+                        bool hasMen = allProducts.Any(p => (p.Audience ?? "Men") == "Men");
+                        bool hasWomen = allProducts.Any(p => (p.Audience ?? "Men") == "Women");
+                        bool hasChildren = allProducts.Any(p => (p.Audience ?? "Men") == "Children");
+                        
+                        if (hasMen) htmlContent = htmlContent.Replace("id=\"menCollectionCard\" href=\"/products?audience=Men\" style=\"text-decoration: none; color: inherit; width: 300px; text-align: center; display: none;", "id=\"menCollectionCard\" href=\"/products?audience=Men\" style=\"text-decoration: none; color: inherit; width: 300px; text-align: center; display: block;");
+                        if (hasWomen) htmlContent = htmlContent.Replace("id=\"womenCollectionCard\" href=\"/products?audience=Women\" style=\"text-decoration: none; color: inherit; width: 300px; text-align: center; display: none;", "id=\"womenCollectionCard\" href=\"/products?audience=Women\" style=\"text-decoration: none; color: inherit; width: 300px; text-align: center; display: block;");
+                        if (hasChildren) htmlContent = htmlContent.Replace("id=\"childrenCollectionCard\" href=\"/products?audience=Children\" style=\"text-decoration: none; color: inherit; width: 300px; text-align: center; display: none;", "id=\"childrenCollectionCard\" href=\"/products?audience=Children\" style=\"text-decoration: none; color: inherit; width: 300px; text-align: center; display: block;");
+                        if (hasMen || hasWomen || hasChildren) htmlContent = htmlContent.Replace("id=\"shopByCollectionSection\" class=\"products-section\" style=\"padding: 4rem 2rem 1rem; background-color: var(--light-bg); display: none;\"", "id=\"shopByCollectionSection\" class=\"products-section\" style=\"padding: 4rem 2rem 1rem; background-color: var(--light-bg); display: block;\"");
+
                         if (allProducts.Any())
                         {
                             sb.Append("<section class='products-section' style='padding: 4rem 2rem; background-color: #fff; border-bottom: 1px solid #eaeaea;'>");

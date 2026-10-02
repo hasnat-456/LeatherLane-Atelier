@@ -11,7 +11,7 @@ namespace LeatherLane_Atelier.Controllers
 {
     [Route("api/admin/orders")]
     [ApiController]
-    [Authorize]
+    [Authorize(Roles = "Admin")]
     public class AdminOrderController : ControllerBase
     {
         private readonly ApplicationDbContext _context;

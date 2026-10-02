@@ -76,6 +76,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     navLinks.innerHTML = standardLinks + iconsRowHtml;
 
+    // Fix Back Button Ghost Logins (BFCache)
+    window.addEventListener('pageshow', function (event) {
+        if (event.persisted || performance.getEntriesByType('navigation')[0].type === 'back_forward') {
+            const hasToken = localStorage.getItem('token');
+            const hasProfileDropdown = document.querySelector('.profile-dropdown');
+            if (!hasToken && hasProfileDropdown) {
+                window.location.reload();
+            }
+        }
+    });
+
     // Update cart badge logic if not overridden by page
     const badge = document.getElementById('cartBadge');
     if (badge) {

@@ -10,7 +10,7 @@ namespace LeatherLane_Atelier.Controllers
 {
     [Route("api/admin/exchanges")]
     [ApiController]
-    [Authorize]
+    [Authorize(Roles = "Admin")]
     public class AdminExchangeController : ControllerBase
     {
         private readonly ApplicationDbContext _context;

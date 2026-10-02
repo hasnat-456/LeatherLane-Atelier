@@ -11,7 +11,7 @@ namespace LeatherLane_Atelier.Controllers
 {
     [Route("api/admin/returns")]
     [ApiController]
-    [Authorize]
+    [Authorize(Roles = "Admin")]
     public class AdminReturnController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
