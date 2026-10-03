@@ -250,6 +250,36 @@
         /* 2. Remove the ugly 120px bottom gap */
         html { padding-bottom: 0 !important; overflow-x: hidden !important; max-width: 100vw !important; }
         body { padding-bottom: 0 !important; overflow-x: hidden !important; max-width: 100vw !important; }
+
+        /* Size guide table scroll fix: stretch cleanly with no right-side blank gap */
+        .size-table-scroll {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            width: 100%;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            margin-bottom: 3rem;
+            background: #fff;
+        }
+        .size-table-scroll table {
+            width: 100% !important;
+            min-width: 550px !important;
+            max-width: none !important;
+            border-collapse: collapse;
+            table-layout: auto;
+        }
+        .size-table-scroll th,
+        .size-table-scroll td {
+            padding: 14px 12px !important;
+            white-space: nowrap !important;
+            text-align: center !important;
+        }
+
+        @media (max-width: 640px) {
+            .size-guide-section {
+                padding: 3rem 1rem !important;
+            }
+        }
         
         /* 3. Elegantly prevent WhatsApp from blocking footer text WITHOUT a bottom gap */
         
@@ -272,7 +302,7 @@
             min-width: 100% !important;
             display: table-cell !important;
         }
-        table { max-width: 100% !important; }
+        .size-table-scroll table { max-width: none !important; }
 
         /* 6. FIX HORIZONTAL OVERFLOW SCROLLING */
         .size-options { flex-wrap: wrap !important; }
@@ -391,13 +421,13 @@
         </div>
     </nav>
 
-        <section style="background-color: #fff; padding: 6rem 2rem; color: #333; font-family: var(--font-body); line-height: 1.8;">
+        <section class="size-guide-section" style="background-color: #fff; padding: 6rem 2rem; color: #333; font-family: var(--font-body); line-height: 1.8;">
         <div style="max-width: 800px; margin: 0 auto; text-align: center;">
             <h1 style="color: var(--primary-bg); font-family: var(--font-heading); margin-bottom: 1rem; font-size: 2.5rem;">Size Guide</h1>
             <p style="color: #666; margin-bottom: 3rem; font-size: 1.1rem;">Find your perfect fit. Our sizes run true to standard international sizing. In Pakistan, we follow the exact same sizing standard as the UK.</p>
             
-            <div style="overflow-x: auto; width: 100%; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 3rem;">
-                <table style="width: 100%; border-collapse: collapse; min-width: 600px;">
+            <div class="size-table-scroll">
+                <table>
                     <thead>
                         <tr style="background-color: var(--primary-gold); color: #111;">
                             <th style="padding: 15px; font-weight: 600; text-align: center;">PK Size</th>
