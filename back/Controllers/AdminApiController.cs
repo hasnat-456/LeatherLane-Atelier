@@ -43,7 +43,7 @@ namespace LeatherLane_Atelier.Controllers
         }
 
         [HttpPost("site-image")]
-        public async Task<IActionResult> UploadSiteImage(IFormFile imageFile, [FromForm] string target)
+        public async Task<IActionResult> UploadSiteImage([FromForm] IFormFile imageFile, [FromForm] string target)
         {
             if (imageFile == null || imageFile.Length == 0) return BadRequest("No image provided");
 
@@ -68,7 +68,7 @@ namespace LeatherLane_Atelier.Controllers
         }
 
         [HttpPost("slider-image")]
-        public async Task<IActionResult> UploadSliderImage(IFormFile imageFile)
+        public async Task<IActionResult> UploadSliderImage([FromForm] IFormFile imageFile)
         {
             if (imageFile == null || imageFile.Length == 0) return BadRequest("No image provided");
 
