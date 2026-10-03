@@ -36,7 +36,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateIssuer = false,
             ValidateAudience = false,
             ValidateLifetime = true,
-            RoleClaimType = "role"
+            RoleClaimType = System.Security.Claims.ClaimTypes.Role
         };
     });
 
