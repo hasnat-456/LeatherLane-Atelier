@@ -320,6 +320,7 @@ async function uploadAboutImage() {
     msg.style.color = '#333';
     msg.innerText = 'Optimizing & Uploading...';
     
+    const token = localStorage.getItem('token') || localStorage.getItem('adminToken');
     const compressedFile = await compressImageFile(fileInput.files[0], 1600, 1600, 0.85);
     const formData = new FormData();
     formData.append('imageFile', compressedFile);
@@ -328,6 +329,7 @@ async function uploadAboutImage() {
     try {
         const res = await fetch('/api/adminapi/site-image', {
             method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` },
             body: formData
         });
         
@@ -348,7 +350,10 @@ async function uploadAboutImage() {
 // Data Management
 async function fetchDashboardStats() {
     try {
-        const res = await fetch('/api/adminapi/stats');
+        const token = localStorage.getItem('token') || localStorage.getItem('adminToken');
+        const res = await fetch('/api/adminapi/stats', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
         if (res.ok) {
             const data = await res.json();
             document.getElementById('statOrders').innerText = data.totalOrders;
@@ -364,7 +369,10 @@ let allAdminProducts = [];
 
 async function fetchOrders() {
     try {
-        const res = await fetch('/api/adminapi/orders');
+        const token = localStorage.getItem('token') || localStorage.getItem('adminToken');
+        const res = await fetch('/api/adminapi/orders', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
         if (res.ok) {
             allAdminOrders = await res.json();
             const searchVal = document.getElementById('adminOrderSearch')?.value || '';
